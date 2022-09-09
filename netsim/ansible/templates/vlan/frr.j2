@@ -5,23 +5,33 @@ set -e # Exit immediately when any command fails
 
 {% if vlans is defined %}
 
-# Create VLAN bridges and bring them up. Leave STP running for now
-{% for vname,vdata in vlans.items() %}
-{% set br_name = "vlan" + vdata.id|string %}
-if [ ! -e /sys/devices/virtual/net/{{br_name}} ]; then
-brctl addbr {{ br_name }}
+# Create single bridge for all VLANs, with single STP instance
+{% set br_name = "br0" %}
+if [ ! -e /sys/devices/virtual/net/{{ br_name }} ]; then
+ip link add name {{ br_name }} type bridge
+ip link set {{ br_name }} type bridge vlan_filtering 1
+ip link set dev {{ br_name }} up
 fi
-# brctl stp {{ br_name }} off
-ip link set up dev {{ br_name }}
+
+# Iterate over all trunk ports to configure (native) vlans
+{% for i in interfaces if i.vlan is defined and i.vlan.trunk_id is defined %}
+ip link set {{ i.ifname }} master {{ br_name }}
+{%  for v in i.vlan.trunk %}
+{%   set vlan = vlans[v] %}
+bridge vlan add dev {{ i.ifname }} vid {{ vlan.id }}{%- if v==i.vlan.native|default('') %} pvid untagged
+bridge vlan delete dev {{ i.ifname }} vid 1
+{%   endif %}
+
+{%  endfor %}
 {% endfor %}
 
 # Assumes listing order of interfaces is vlan_members before svi interfaces
 {% for i in interfaces if i.type in ['vlan_member','svi'] %}
 
 {% if i.type=='vlan_member' %}
-{% set vlan_name = i.parent_ifname + "." + i.vlan.access_id|string %}
-ip link add link {{ i.parent_ifname }} name {{ vlan_name }} type vlan id {{ i.vlan.access_id }}
-brctl addif vlan{{ i.vlan.access_id }} {{ vlan_name }}
+{% set vlan_name = "vlan" + i.vlan.access_id|string %}
+bridge vlan add dev {{ br_name }} vid {{ i.vlan.access_id }} self
+ip link add link {{ br_name }} name {{ vlan_name }} type vlan id {{ i.vlan.access_id }}
 ip link set dev {{ vlan_name }} up
 {% else %}
 ip addr flush dev {{ i.ifname }}
