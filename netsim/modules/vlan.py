@@ -501,7 +501,7 @@ def create_vlan_links(link: Box, v_attr: Box, topology: Box) -> None:
           intf.vlan.mode = 'route'
         print( f"JvB: routed_access_vlan {vname} -> LEAVE {link_data.prefix} don't set to {prefix}" )
         # if 'prefix' not in link_data:
-        #  link_data.prefix = prefix  
+        link_data.prefix = prefix  
       else:
         print( f"JvB: NO routed_access_vlan {vname} -> REPLACE {link_data.prefix} with {prefix}" )
         link_data.prefix = prefix
