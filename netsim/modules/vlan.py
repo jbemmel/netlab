@@ -186,17 +186,17 @@ def validate_vlan_attributes(obj: Box, topology: Box) -> None:
       common.error(f'VNI {vdata.vni} for VLAN {vname} in {obj_name} must be between 2 and 16777215',common.IncorrectValue,'vlan')
       continue
 
-    if vdata.get('mode',default_fwd_mode) != 'route':               # Only set global prefix for 'irb' or 'bridge' mode vlans
-      vdata.prefix = allocate_prefix( vdata, False, topology )      # 'route' mode vlans are set during interface creation
+    # if vdata.get('mode',default_fwd_mode) != 'route':             # Only set global prefix for 'irb' or 'bridge' mode vlans?
+    vdata.prefix = allocate_prefix( vdata, topology )               # Cannot do that: 'mode' may be modified locally
 
 """
 Allocates an ipv4/ipv6 prefix from a pool for the given vlan
 
 Note: May update/normalize vlan.prefix internally
 """
-def allocate_prefix(vlan: Box, is_routed: bool, topology: Box) -> dict:
+def allocate_prefix(vlan: Box, topology: Box) -> dict:
   vlan_pool = [ vlan.pool ] if 'pool' in vlan else []
-  vlan_pool.extend(['vlan','p2p' if is_routed else 'lan'])
+  vlan_pool.extend(['vlan','lan'])                                  # Cannot selectively use different pools for 'route' (p2p)
   pfx_list = links.augment_link_prefix(vlan,vlan_pool,topology.pools)
   return addressing.rebuild_prefix(pfx_list)
 
@@ -482,7 +482,7 @@ def create_vlan_links(link: Box, v_attr: Box, topology: Box) -> None:
       fix_vlan_mode_attribute(link_data)
 
       if vname in topology.get('vlans',{}):                     # We need an IP prefix for the VLAN link
-        prefix = get_from_box(topology,f"vlans.{vname}.prefix") # Hopefully we can get it from the global VLAN pool (for mode=irb)
+        prefix = get_from_box(topology,f"vlans.{vname}.prefix") # Hopefully we can get it from the global VLAN pool
 
       for intf in link.interfaces:
         if 'vlan' in intf and vname in intf.vlan.get('trunk',{}):
@@ -502,8 +502,8 @@ def create_vlan_links(link: Box, v_attr: Box, topology: Box) -> None:
             if not prefix:                                               # Still no usable IP prefix? Try to get it from the node VLAN pool
               prefix = get_from_box(topology,f"nodes.{intf.node}.vlans.{vname}.prefix")
 
-              if not prefix and vlan_mode=='route':                      # For routed vlans, allocate from pool
-                prefix = allocate_prefix(link_data, True, topology)      # This sets link_data.prefix using p2p pool
+              if not prefix and vlan_mode=='route':                      # For routed vlans, allocate from pool now?
+                prefix = allocate_prefix(link_data, topology)            # This sets link_data.prefix using configured pool
 
           link_data.interfaces.append(intf_data)            # Append the interface to vlan link
 
