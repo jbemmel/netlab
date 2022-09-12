@@ -1,0 +1,58 @@
+defaults.device: srlinux
+provider: clab
+
+module: [vlan]
+
+addressing:
+  lan:
+    ipv4: 192.168.0.0/20
+    prefix: 24
+
+  p2p:
+    ipv4: 172.16.0.0/16
+    prefix: 30
+
+  routed-pool-1:
+    ipv4: 100.0.0.0/24
+    prefix: 31
+
+  routed-pool-2:
+    ipv4: 200.0.0.0/24
+    prefix: 31
+
+vlans:
+  routed-1:
+    mode: route
+    pool: routed-pool-1 # Default == lan for irb, p2p for routed vlans
+
+  irb-1:
+    mode: irb
+
+
+nodes:
+  r1:
+  r2:
+  r3:
+    vlans:
+      routed-1:
+        pool: routed-pool-2  # Override at node level
+
+links:
+- r1:
+  r2:
+  vlan.access: routed-1
+
+- r2:
+  r3:
+  vlan.access: routed-1 # Outside of trunk, should get overridden by r3.vlans.routed-1.pool
+
+- r1:
+  r3:
+  vlan.trunk: [ routed-1 ] # Inside trunk, should get overridden by r3.vlans.routed-1.pool
+
+- r1:
+    vlan.trunk:
+      routed-1:
+        pool: routed-pool-2  # Override at trunk level
+  r2:
+  vlan.trunk: [ irb-1, routed-1 ]
