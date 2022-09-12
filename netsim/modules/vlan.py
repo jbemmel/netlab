@@ -186,7 +186,7 @@ def validate_vlan_attributes(obj: Box, topology: Box) -> None:
       common.error(f'VNI {vdata.vni} for VLAN {vname} in {obj_name} must be between 2 and 16777215',common.IncorrectValue,'vlan')
       continue
 
-    if vdata.get('mode',default_fwd_mode) == 'irb':                 # Only set global prefix for 'irb' mode vlans
+    if vdata.get('mode',default_fwd_mode) != 'route':               # Only set global prefix for 'irb' or 'bridge' mode vlans
       vdata.prefix = allocate_prefix( vdata, False, topology )      # 'route' mode vlans are set during interface creation
 
 """
