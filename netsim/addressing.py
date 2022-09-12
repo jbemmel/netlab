@@ -76,6 +76,17 @@ def rebuild_prefix(pfx: typing.Union[dict,Box]) -> dict:
       out_pfx[af] = str(pfx[af]) if not isinstance(pfx[af],bool) else pfx[af]
   return out_pfx
 
+#
+# Checks whether a given prefix represents an unnumbered prefix. If both ipv4 and ipv6 are set, both must be True
+#
+def is_unnumbered_prefix( pfx: Box ) -> bool:
+  if 'unnumbered' in pfx:
+    return True
+  elif 'ipv4' in pfx:
+    return pfx.ipv4 == True and ('ipv6' not in pfx or pfx.ipv6 == True)
+  else: 
+    return 'ipv6' in pfx and pfx.ipv6
+
 def setup_pools(addr_pools: typing.Optional[Box] = None, defaults: typing.Optional[Box] = None) -> Box:
   addrs = addr_pools or Box({},default_box=True)
   defaults = defaults or Box({},default_box=True)
