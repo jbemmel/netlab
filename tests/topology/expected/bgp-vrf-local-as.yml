@@ -83,7 +83,7 @@ links:
   - bgp:
       local_as: 65001
     ifindex: 3
-    ipv4: 10.1.0.17/30
+    ipv4: 10.1.0.1/30
     node: r2
     vlan:
       access: vrf-leak
@@ -92,7 +92,7 @@ links:
   - bgp:
       local_as: 65002
     ifindex: 4
-    ipv4: 10.1.0.18/30
+    ipv4: 10.1.0.2/30
     node: r2
     vlan:
       access: vrf-leak
@@ -100,16 +100,16 @@ links:
     vrf: blue
   left:
     ifname: Ethernet3
-    ipv4: 10.1.0.17/30
+    ipv4: 10.1.0.1/30
     node: r2
   linkindex: 3
   name: r2 - r2
   node_count: 2
   prefix:
-    ipv4: 10.1.0.16/30
+    ipv4: 10.1.0.0/30
   right:
     ifname: Ethernet4
-    ipv4: 10.1.0.18/30
+    ipv4: 10.1.0.2/30
     node: r2
   type: p2p
   vlan:
@@ -153,11 +153,11 @@ nodes:
     - bridge_group: 1
       ifindex: 2
       ifname: Ethernet1.1
-      ipv4: 10.1.0.1/30
+      ipv4: 172.16.3.1/24
       name: r1 -> [r2]
       neighbors:
       - ifname: Ethernet1.1
-        ipv4: 10.1.0.2/30
+        ipv4: 172.16.3.2/24
         node: r2
       parent_ifindex: 1
       parent_ifname: Ethernet1
@@ -172,11 +172,11 @@ nodes:
     - bridge_group: 2
       ifindex: 3
       ifname: Ethernet1.2
-      ipv4: 10.1.0.5/30
+      ipv4: 172.16.4.1/24
       name: r1 -> [r2]
       neighbors:
       - ifname: Ethernet1.2
-        ipv4: 10.1.0.6/30
+        ipv4: 172.16.4.2/24
         node: r2
       parent_ifindex: 1
       parent_ifname: Ethernet1
@@ -207,12 +207,16 @@ nodes:
         bridge_group: 1
         id: 1001
         mode: route
+        prefix:
+          ipv4: 172.16.1.0/24
         vni: 101001
         vrf: blue
       red:
         bridge_group: 2
         id: 1000
         mode: route
+        prefix:
+          ipv4: 172.16.0.0/24
         vni: 101000
         vrf: red
     vrf:
@@ -225,7 +229,7 @@ nodes:
           neighbors:
           - as: 65000
             ifindex: 2
-            ipv4: 10.1.0.2
+            ipv4: 172.16.3.2
             name: r2
             type: ebgp
         export:
@@ -242,7 +246,7 @@ nodes:
           neighbors:
           - as: 65000
             ifindex: 3
-            ipv4: 10.1.0.6
+            ipv4: 172.16.4.2
             name: r2
             type: ebgp
         export:
@@ -297,14 +301,14 @@ nodes:
       bridge_group: 1
       ifindex: 3
       ifname: Ethernet3
-      ipv4: 10.1.0.17/30
+      ipv4: 10.1.0.1/30
       linkindex: 3
       name: r2 -> r2
       neighbors:
       - bgp:
           local_as: 65002
         ifname: Ethernet4
-        ipv4: 10.1.0.18/30
+        ipv4: 10.1.0.2/30
         node: r2
         vrf: blue
       type: p2p
@@ -316,14 +320,14 @@ nodes:
       bridge_group: 1
       ifindex: 4
       ifname: Ethernet4
-      ipv4: 10.1.0.18/30
+      ipv4: 10.1.0.2/30
       linkindex: 3
       name: r2 -> r2
       neighbors:
       - bgp:
           local_as: 65001
         ifname: Ethernet3
-        ipv4: 10.1.0.17/30
+        ipv4: 10.1.0.1/30
         node: r2
         vrf: red
       type: p2p
@@ -333,11 +337,11 @@ nodes:
     - bridge_group: 2
       ifindex: 5
       ifname: Ethernet1.1
-      ipv4: 10.1.0.2/30
+      ipv4: 172.16.3.2/24
       name: r2 -> [r1]
       neighbors:
       - ifname: Ethernet1.1
-        ipv4: 10.1.0.1/30
+        ipv4: 172.16.3.1/24
         node: r1
       parent_ifindex: 1
       parent_ifname: Ethernet1
@@ -352,11 +356,11 @@ nodes:
     - bridge_group: 3
       ifindex: 6
       ifname: Ethernet1.2
-      ipv4: 10.1.0.6/30
+      ipv4: 172.16.4.2/24
       name: r2 -> [r1]
       neighbors:
       - ifname: Ethernet1.2
-        ipv4: 10.1.0.5/30
+        ipv4: 172.16.4.1/24
         node: r1
       parent_ifindex: 1
       parent_ifname: Ethernet1
@@ -371,11 +375,11 @@ nodes:
     - bridge_group: 2
       ifindex: 7
       ifname: Ethernet2.1
-      ipv4: 10.1.0.10/30
+      ipv4: 172.16.5.2/24
       name: r2 -> [r3]
       neighbors:
       - ifname: Ethernet1.1
-        ipv4: 10.1.0.11/30
+        ipv4: 172.16.5.3/24
         node: r3
       parent_ifindex: 2
       parent_ifname: Ethernet2
@@ -390,11 +394,11 @@ nodes:
     - bridge_group: 3
       ifindex: 8
       ifname: Ethernet2.2
-      ipv4: 10.1.0.14/30
+      ipv4: 172.16.6.2/24
       name: r2 -> [r3]
       neighbors:
       - ifname: Ethernet1.2
-        ipv4: 10.1.0.15/30
+        ipv4: 172.16.6.3/24
         node: r3
       parent_ifindex: 2
       parent_ifname: Ethernet2
@@ -425,18 +429,24 @@ nodes:
         bridge_group: 2
         id: 1001
         mode: route
+        prefix:
+          ipv4: 172.16.1.0/24
         vni: 101001
         vrf: blue
       red:
         bridge_group: 3
         id: 1000
         mode: route
+        prefix:
+          ipv4: 172.16.0.0/24
         vni: 101000
         vrf: red
       vrf-leak:
         bridge_group: 1
         id: 1002
         mode: route
+        prefix:
+          ipv4: 172.16.2.0/24
         vni: 101002
     vrf:
       as: 65000
@@ -448,18 +458,18 @@ nodes:
           neighbors:
           - as: 65001
             ifindex: 4
-            ipv4: 10.1.0.17
+            ipv4: 10.1.0.1
             local_as: 65002
             name: r2
             type: ebgp
           - as: 65100
             ifindex: 5
-            ipv4: 10.1.0.1
+            ipv4: 172.16.3.1
             name: r1
             type: ebgp
           - as: 65101
             ifindex: 7
-            ipv4: 10.1.0.11
+            ipv4: 172.16.5.3
             name: r3
             type: ebgp
           router_id: 172.32.0.2
@@ -477,18 +487,18 @@ nodes:
           neighbors:
           - as: 65002
             ifindex: 3
-            ipv4: 10.1.0.18
+            ipv4: 10.1.0.2
             local_as: 65001
             name: r2
             type: ebgp
           - as: 65100
             ifindex: 6
-            ipv4: 10.1.0.5
+            ipv4: 172.16.4.1
             name: r1
             type: ebgp
           - as: 65101
             ifindex: 8
-            ipv4: 10.1.0.15
+            ipv4: 172.16.6.3
             name: r3
             type: ebgp
           router_id: 172.31.0.1
@@ -532,11 +542,11 @@ nodes:
     - bridge_group: 1
       ifindex: 2
       ifname: Ethernet1.1
-      ipv4: 10.1.0.11/30
+      ipv4: 172.16.5.3/24
       name: r3 -> [r2]
       neighbors:
       - ifname: Ethernet2.1
-        ipv4: 10.1.0.10/30
+        ipv4: 172.16.5.2/24
         node: r2
       parent_ifindex: 1
       parent_ifname: Ethernet1
@@ -551,11 +561,11 @@ nodes:
     - bridge_group: 2
       ifindex: 3
       ifname: Ethernet1.2
-      ipv4: 10.1.0.15/30
+      ipv4: 172.16.6.3/24
       name: r3 -> [r2]
       neighbors:
       - ifname: Ethernet2.2
-        ipv4: 10.1.0.14/30
+        ipv4: 172.16.6.2/24
         node: r2
       parent_ifindex: 1
       parent_ifname: Ethernet1
@@ -586,12 +596,16 @@ nodes:
         bridge_group: 1
         id: 1001
         mode: route
+        prefix:
+          ipv4: 172.16.1.0/24
         vni: 101001
         vrf: blue
       red:
         bridge_group: 2
         id: 1000
         mode: route
+        prefix:
+          ipv4: 172.16.0.0/24
         vni: 101000
         vrf: red
     vrf:
@@ -604,7 +618,7 @@ nodes:
           neighbors:
           - as: 65000
             ifindex: 2
-            ipv4: 10.1.0.10
+            ipv4: 172.16.5.2
             name: r2
             type: ebgp
         export:
@@ -621,7 +635,7 @@ nodes:
           neighbors:
           - as: 65000
             ifindex: 3
-            ipv4: 10.1.0.14
+            ipv4: 172.16.6.2
             name: r2
             type: ebgp
         export:
@@ -638,16 +652,22 @@ vlans:
   blue:
     id: 1001
     mode: route
+    prefix:
+      ipv4: 172.16.1.0/24
     vni: 101001
     vrf: blue
   red:
     id: 1000
     mode: route
+    prefix:
+      ipv4: 172.16.0.0/24
     vni: 101000
     vrf: red
   vrf-leak:
     id: 1002
     mode: route
+    prefix:
+      ipv4: 172.16.2.0/24
     vni: 101002
 vrf:
   as: 65000
