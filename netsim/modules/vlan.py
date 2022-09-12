@@ -503,7 +503,7 @@ def create_vlan_links(link: Box, v_attr: Box, topology: Box) -> None:
               prefix = get_from_box(topology,f"nodes.{intf.node}.vlans.{vname}.prefix")
 
               if not prefix and vlan_mode=='route':                      # For routed vlans, allocate from pool
-                prefix = allocate_prefix( link_data, True, topology )
+                prefix = allocate_prefix(link_data, True, topology)      # This sets link_data.prefix using p2p pool
 
           link_data.interfaces.append(intf_data)            # Append the interface to vlan link
 
