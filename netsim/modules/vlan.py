@@ -128,6 +128,7 @@ def interface_vlan_mode(intf: Box, node: Box, topology: Box) -> str:
 # * VLAN and VNI
 # * Subnet prefix
 # * VLAN forwarding mode
+# * IP prefix for VLANs in irb mode
 #
 def validate_vlan_attributes(obj: Box, topology: Box) -> None:
   global vlan_ids
@@ -187,13 +188,22 @@ def validate_vlan_attributes(obj: Box, topology: Box) -> None:
       continue
 
     # JvB: For routed VLANs, don't allocate a prefix yet; now done in the context of trunk upon vlan_member creation
-    if vdata.get('mode',None) != 'route':
-      vlan_pool = [ vdata.pool ] if 'pool' in vdata else []
-      vlan_pool.extend(['vlan','lan'])
-      pfx_list = links.augment_link_prefix(vdata,vlan_pool,topology.pools)
-      vdata.prefix = addressing.rebuild_prefix(pfx_list)
+    if vdata.get('mode',None) == 'irb':
+      vdata.prefix = allocate_prefix( vdata, get_from_box(vdata,'pool'), topology )
 
     print( f"validate_vlan_attributes: VLAN {vname} -> {vdata}" )
+
+#
+# Allocate an ipv4/ipv6 prefix from the given pool
+#
+# Note: This may set/change vlan.prefix
+#
+def allocate_prefix( vlan: Box, pool: str, topology: Box ) -> Box:
+  vlan_pool = [ pool ] if pool else []
+  vlan_pool.extend(['vlan','lan'])
+  pfx_list = links.augment_link_prefix(vlan,vlan_pool,topology.pools)
+  print( f"JvB allocate_prefix -> {pfx_list}" )
+  return addressing.rebuild_prefix(pfx_list)
 
 """
 check_link_vlan_attributes: check correctness of VLAN link attributes
@@ -439,6 +449,7 @@ def set_link_vlan_prefix(link: Box, v_attr: Box, topology: Box) -> None:
     node_set = v_attr.native.node_set
   elif 'trunk' in v_attr:
     if not 'role' in link and not 'prefix' in link:   # If the user set prefix or address pool leave it alone
+      print( "JvB set_link_vlan_prefix -> {}" )
       link.prefix = {}                                # ... otherwise we need no IP addressing on trunk links without a native VLAN
     return
 
@@ -476,9 +487,10 @@ def create_vlan_links(link: Box, v_attr: Box, topology: Box) -> None:
       link_data.interfaces = []
       fix_vlan_mode_attribute(link_data)
 
-      if vname in topology.get('vlans',{}):                 # We may need an IP prefix for the VLAN link
-        prefix = topology.vlans[vname].prefix               # Hopefully we can get it from the global VLAN pool
-        pool = topology.vlans[vname].get('pool',None)       # Can be overriden by vlan on local node or trunk
+      if vname in topology.get('vlans',{}):            # We may need an IP prefix for the VLAN link
+        global_vlan = topology.vlans[vname]
+        prefix = get_from_box(global_vlan,'prefix')    # For irb, get it from the global VLAN pool
+        pool = get_from_box(global_vlan,'pool')        # Can be overriden by vlan on local node or trunk
 
       node_prefix = trunk_prefix = None
       node_pool = trunk_pool = None
@@ -496,37 +508,36 @@ def create_vlan_links(link: Box, v_attr: Box, topology: Box) -> None:
             intf_data.ipv4 = False                                              # ... if so, disable addressing on this interface
             intf_data.ipv6 = False
           elif vname in intf_node.get('vlans',{}):
-            if 'prefix' in intf_node.vlans[vname]:
-              node_prefix = intf_node.vlans[vname].prefix          # Override global prefix
-            if 'pool' in intf_node.vlans[vname]:
-              node_pool = intf_node.vlans[vname].pool              # Override global pool
+            node_vlan = intf_node.vlans[vname]
+            print( "JvB: node_vlan={node_vlan}" )
+            if 'prefix' in node_vlan:
+              node_prefix = node_vlan.prefix                       # Overrides global prefix below
+            if 'pool' in node_vlan:
+              node_pool = node_vlan.pool                           # Overrides global pool below
+              print( f"JvB: found node pool: {node_pool}" )
 
             trunk_prefix = intf_data.get('prefix') or trunk_prefix # Override with trunk data
             trunk_pool = intf_data.get('pool') or trunk_pool
+          else:
+            print( f"JvB: vlan {vname} not found in {intf_node}" )
 
           link_data.interfaces.append(intf_data)            # Append the interface to vlan link
 
       # Apply trunk -> node -> global, ensuring consistency across nodes
-      prefix = trunk_prefix or node_prefix or prefix
-      pool = trunk_pool or node_pool or pool
 
       if routed_access_vlan(link_data,topology,vname):
         link_data.vlan.mode = 'route'
         for intf in link_data.interfaces:
           intf.vlan.mode = 'route'
 
-        # JvB if prefix is unnumbered, it can be configured on this routed vlan_member
-        # if addressing.is_unnumbered_prefix( prefix ):
-        #  link_data.prefix = prefix
-        #  print( f"JvB new routed link_data: {link_data}" )
+        # Convert routed vlans with 2 endpoints to p2p for addressing purposes
+        if len(link_data.interfaces) == 2:
+          link_data.type = "p2p"
 
-        vlan_pool = [ pool ] if pool else []
-        vlan_pool.extend(['vlan','lan'])
-        pfx_list = links.augment_link_prefix(link_data,vlan_pool,topology.pools)
-        link_data.prefix = addressing.rebuild_prefix(pfx_list)
-        print( f"JvB new routed link_data: {link_data}" )
+        link_data.prefix = allocate_prefix( link_data, trunk_pool or node_pool or pool, topology )
+        print( f"JvB new routed link_data: {link_data} trunk_pool={trunk_pool} node_pool={node_pool} pool={pool}" )
       else:
-        link_data.prefix = prefix
+        link_data.prefix = trunk_prefix or node_prefix or prefix
 
       topology.links.append(link_data)
 

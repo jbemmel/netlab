@@ -249,7 +249,7 @@ def get_node_link_address(node: Box, ifdata: Box, node_link_data: dict, prefix: 
           node_addr = netaddr.IPNetwork(prefix[af][index])
         except Exception as ex:
           return(
-            f'Cannot assign {af} address from prefix {prefix[af]} to node {node.name} with ID {node.id}\n'+
+            f'get_node_link_address: Cannot assign {af} address from prefix {prefix[af]} to node {node.name} with ID {node.id}\n'+
             f'... {ex}')
         node_addr.prefixlen = prefix[af].prefixlen
 
@@ -268,6 +268,7 @@ def augment_link_prefix(link: Box,pools: typing.List[str],addr_pools: Box) -> di
   if 'role' in link:
     pools = [ link.get('role') ] + pools
   if 'prefix' in link:
+    print( f"JvB: link.prefix={link.prefix}" )
     pfx_list = addressing.parse_prefix(link.prefix)
     if isinstance(link.prefix,str):
       link.prefix = addressing.rebuild_prefix(pfx_list)  # convert str to { ipv4: , ipv6: }
@@ -275,13 +276,11 @@ def augment_link_prefix(link: Box,pools: typing.List[str],addr_pools: Box) -> di
     pfx_list = Box({ 'unnumbered': True })
   else:
     pfx_list = addressing.get(addr_pools,pools)
-    link.prefix = {
-        af: pfx_list[af] if isinstance(pfx_list[af],bool) else str(pfx_list[af])
-              for af in ('ipv4','ipv6') if af in pfx_list
-      }
-    if not link.prefix:
-      link.pop('prefix',None)
+    new_prefix = addressing.rebuild_prefix(pfx_list)
+    if new_prefix:
+      link.prefix = new_prefix
 
+  print( f"JvB after augment_link_prefix: {link} -> {pfx_list}" )
   return pfx_list
 
 def augment_lan_link(link: Box, addr_pools: Box, ndict: dict, defaults: Box) -> None:
