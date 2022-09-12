@@ -186,10 +186,19 @@ def validate_vlan_attributes(obj: Box, topology: Box) -> None:
       common.error(f'VNI {vdata.vni} for VLAN {vname} in {obj_name} must be between 2 and 16777215',common.IncorrectValue,'vlan')
       continue
 
-    vlan_pool = [ vdata.pool ] if 'pool' in vdata else []
-    vlan_pool.extend(['vlan','lan'])
-    pfx_list = links.augment_link_prefix(vdata,vlan_pool,topology.pools)
-    vdata.prefix = addressing.rebuild_prefix(pfx_list)
+    if vdata.get('mode',default_fwd_mode) == 'irb':                 # Only set global prefix for 'irb' mode vlans
+      vdata.prefix = allocate_prefix( vdata, False, topology )      # 'route' mode vlans are set during interface creation
+
+"""
+Allocates an ipv4/ipv6 prefix from a pool for the given vlan
+
+Note: May update/normalize vlan.prefix internally
+"""
+def allocate_prefix(vlan: Box, is_routed: bool, topology: Box) -> Box:
+  vlan_pool = [ vlan.pool ] if 'pool' in vlan else []
+  vlan_pool.extend(['vlan','p2p' if is_routed else 'lan'])
+  pfx_list = links.augment_link_prefix(vlan,vlan_pool,topology.pools)
+  return addressing.rebuild_prefix(pfx_list)
 
 """
 check_link_vlan_attributes: check correctness of VLAN link attributes
@@ -472,8 +481,8 @@ def create_vlan_links(link: Box, v_attr: Box, topology: Box) -> None:
       link_data.interfaces = []
       fix_vlan_mode_attribute(link_data)
 
-      if vname in topology.get('vlans',{}):                 # We need an IP prefix for the VLAN link
-        prefix = topology.vlans[vname].prefix               # Hopefully we can get it from the global VLAN pool
+      if vname in topology.get('vlans',{}):                     # We need an IP prefix for the VLAN link
+        prefix = get_from_box(topology,f"vlans.{vname}.prefix") # Hopefully we can get it from the global VLAN pool (for mode=irb)
 
       for intf in link.interfaces:
         if 'vlan' in intf and vname in intf.vlan.get('trunk',{}):
@@ -485,13 +494,16 @@ def create_vlan_links(link: Box, v_attr: Box, topology: Box) -> None:
           if 'mode' in intf.vlan and not get_from_box(intf_data,'vlan.mode'):
             intf_data.vlan.mode = intf.vlan.mode            # vlan.mode is inherited from trunk dictionary or parent interface
 
-          if interface_vlan_mode(intf_data,intf_node,topology) == 'bridge':     # Is this VLAN interface in bridge mode?
-            intf_data.ipv4 = False                                              # ... if so, disable addressing on this interface
+          vlan_mode = interface_vlan_mode(intf_data,intf_node,topology)
+          if vlan_mode == 'bridge':                                      # Is this VLAN interface in bridge mode?
+            intf_data.ipv4 = False                                       # ... if so, disable addressing on this interface
             intf_data.ipv6 = False
           else:
-            if not prefix:                                  # Still no usable IP prefix? Try to get it from the node VLAN pool
-              if vname in intf_node.get('vlans',{}):
-                prefix = topology.node[intf.node].vlans[vname].prefix
+            if not prefix:                                               # Still no usable IP prefix? Try to get it from the node VLAN pool
+              prefix = get_from_box(topology,f"nodes.{intf.node}.vlans.{vname}.prefix")
+
+              if not prefix and vlan_mode=='route':                      # For routed vlans, allocate from pool
+                prefix = allocate_prefix( link_data, True, topology )
 
           link_data.interfaces.append(intf_data)            # Append the interface to vlan link
 

@@ -1,0 +1,41 @@
+#
+# Illustrates the difference between a regular routed p2p interface and an interface with a routed vlan as part of a trunk
+#
+
+defaults.device: srlinux
+
+provider: clab
+
+module: [vlan]
+
+addressing:
+  lan:
+    ipv4: 192.168.0.0/20
+    prefix: 24
+
+  p2p:
+    ipv4: 172.16.0.0/16
+    prefix: 31
+
+vlans:
+  routed:
+    mode: route
+
+  irb:
+    mode: irb
+
+nodes:
+  r1:
+  r2:
+
+links:
+- r1: # ip taken from 'p2p' pool, regular link
+  r2:
+
+- r1:
+  r2:
+  vlan.access: routed          # Taken from 'p2p' pool
+
+- r1:
+  r2:
+  vlan.trunk: [ routed, irb ]  # Both taken from the 'lan' pool
