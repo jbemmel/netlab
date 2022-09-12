@@ -4,10 +4,10 @@ input:
 links:
 - bridge: input_1
   gateway:
-    ipv4: 172.16.3.1/24
+    ipv4: 172.16.2.1/24
   interfaces:
   - ifindex: 1
-    ipv4: 172.16.3.1/24
+    ipv4: 172.16.2.1/24
     node: r1
     vlan:
       mode: route
@@ -17,7 +17,7 @@ links:
         pxeboot: {}
         red: {}
   - ifindex: 1
-    ipv4: 172.16.3.2/24
+    ipv4: 172.16.2.2/24
     node: r2
     vlan:
       mode: route
@@ -27,12 +27,12 @@ links:
         pxeboot: {}
         red: {}
   - ifindex: 1
-    ipv4: 172.16.3.3/24
+    ipv4: 172.16.2.3/24
     node: h1
   linkindex: 1
   node_count: 3
   prefix:
-    ipv4: 172.16.3.0/24
+    ipv4: 172.16.2.0/24
   type: lan
   vlan:
     mode: route
@@ -54,18 +54,18 @@ nodes:
     interfaces:
     - bridge: input_1
       gateway:
-        ipv4: 172.16.3.1/24
+        ipv4: 172.16.2.1/24
       ifindex: 1
       ifname: eth1
-      ipv4: 172.16.3.3/24
+      ipv4: 172.16.2.3/24
       linkindex: 1
       name: h1 -> [r1,r2]
       neighbors:
       - ifname: GigabitEthernet0/1
-        ipv4: 172.16.3.1/24
+        ipv4: 172.16.2.1/24
         node: r1
       - ifname: GigabitEthernet0/1
-        ipv4: 172.16.3.2/24
+        ipv4: 172.16.2.2/24
         node: r2
       type: lan
     mgmt:
@@ -86,15 +86,15 @@ nodes:
       bridge_group: 1
       ifindex: 1
       ifname: GigabitEthernet0/1
-      ipv4: 172.16.3.1/24
+      ipv4: 172.16.2.1/24
       linkindex: 1
       name: r1 -> [r2,h1]
       neighbors:
       - ifname: GigabitEthernet0/1
-        ipv4: 172.16.3.2/24
+        ipv4: 172.16.2.2/24
         node: r2
       - ifname: eth1
-        ipv4: 172.16.3.3/24
+        ipv4: 172.16.2.3/24
         node: h1
       subif_index: 2
       type: lan
@@ -174,8 +174,6 @@ nodes:
         bridge_group: 1
         id: 1002
         mode: route
-        prefix:
-          ipv4: 172.16.2.0/24
         vni: 101002
       red:
         bridge_group: 3
@@ -195,15 +193,15 @@ nodes:
       bridge_group: 1
       ifindex: 1
       ifname: GigabitEthernet0/1
-      ipv4: 172.16.3.2/24
+      ipv4: 172.16.2.2/24
       linkindex: 1
       name: r2 -> [r1,h1]
       neighbors:
       - ifname: GigabitEthernet0/1
-        ipv4: 172.16.3.1/24
+        ipv4: 172.16.2.1/24
         node: r1
       - ifname: eth1
-        ipv4: 172.16.3.3/24
+        ipv4: 172.16.2.3/24
         node: h1
       subif_index: 2
       type: lan
@@ -290,8 +288,6 @@ nodes:
         bridge_group: 1
         id: 1002
         mode: route
-        prefix:
-          ipv4: 172.16.2.0/24
         vni: 101002
       red:
         bridge_group: 3
@@ -327,8 +323,6 @@ vlans:
   pxeboot:
     id: 1002
     mode: route
-    prefix:
-      ipv4: 172.16.2.0/24
     vni: 101002
   red:
     host_count: 0
