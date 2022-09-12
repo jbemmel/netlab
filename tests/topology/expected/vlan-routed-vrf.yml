@@ -58,12 +58,12 @@ links:
       access: green
       mode: bridge
   - ifindex: 1
-    ipv4: 172.16.2.7/24
+    ipv4: 172.16.3.7/24
     node: h3
   linkindex: 3
   node_count: 2
   prefix:
-    ipv4: 172.16.2.0/24
+    ipv4: 172.16.3.0/24
   type: lan
   vrf: green
 - interfaces:
@@ -247,18 +247,18 @@ nodes:
     interfaces:
     - bridge: input_3
       gateway:
-        ipv4: 172.16.2.1/24
+        ipv4: 10.1.0.1/30
       ifindex: 1
       ifname: eth1
-      ipv4: 172.16.2.7/24
+      ipv4: 172.16.3.7/24
       linkindex: 3
       name: h3 -> [r1,r2,s2,s1]
       neighbors:
       - ifname: GigabitEthernet0/1.2
-        ipv4: 172.16.2.1/24
+        ipv4: 10.1.0.1/30
         node: r1
       - ifname: Ethernet1.2
-        ipv4: 172.16.2.2/24
+        ipv4: 10.1.0.6/30
         node: r2
       - ifname: BVI2
         node: s2
@@ -320,18 +320,18 @@ nodes:
     - bridge_group: 2
       ifindex: 3
       ifname: GigabitEthernet0/1.2
-      ipv4: 172.16.2.1/24
+      ipv4: 10.1.0.1/30
       name: r1 -> [r2,s2,s1,h3]
       neighbors:
       - ifname: Ethernet1.2
-        ipv4: 172.16.2.2/24
+        ipv4: 10.1.0.6/30
         node: r2
       - ifname: BVI2
         node: s2
       - ifname: Vlan1002
         node: s1
       - ifname: eth1
-        ipv4: 172.16.2.7/24
+        ipv4: 172.16.3.7/24
         node: h3
       parent_ifindex: 1
       parent_ifname: GigabitEthernet0/1
@@ -392,8 +392,6 @@ nodes:
         bridge_group: 2
         id: 1002
         mode: route
-        prefix:
-          ipv4: 172.16.2.0/24
         vni: 101002
         vrf: green
       red:
@@ -483,18 +481,18 @@ nodes:
     - bridge_group: 2
       ifindex: 3
       ifname: Ethernet1.2
-      ipv4: 172.16.2.2/24
+      ipv4: 10.1.0.6/30
       name: r2 -> [r1,s2,s1,h3]
       neighbors:
       - ifname: GigabitEthernet0/1.2
-        ipv4: 172.16.2.1/24
+        ipv4: 10.1.0.1/30
         node: r1
       - ifname: BVI2
         node: s2
       - ifname: Vlan1002
         node: s1
       - ifname: eth1
-        ipv4: 172.16.2.7/24
+        ipv4: 172.16.3.7/24
         node: h3
       parent_ifindex: 1
       parent_ifname: Ethernet1
@@ -555,8 +553,6 @@ nodes:
         bridge_group: 2
         id: 1002
         mode: route
-        prefix:
-          ipv4: 172.16.2.0/24
         vni: 101002
         vrf: green
       red:
@@ -701,15 +697,15 @@ nodes:
       name: VLAN green (1002) -> [r1,r2,s2,h3]
       neighbors:
       - ifname: GigabitEthernet0/1.2
-        ipv4: 172.16.2.1/24
+        ipv4: 10.1.0.1/30
         node: r1
       - ifname: Ethernet1.2
-        ipv4: 172.16.2.2/24
+        ipv4: 10.1.0.6/30
         node: r2
       - ifname: BVI2
         node: s2
       - ifname: eth1
-        ipv4: 172.16.2.7/24
+        ipv4: 172.16.3.7/24
         node: h3
       type: svi
       virtual_interface: true
@@ -952,15 +948,15 @@ nodes:
       name: VLAN green (1002) -> [r1,r2,s1,h3]
       neighbors:
       - ifname: GigabitEthernet0/1.2
-        ipv4: 172.16.2.1/24
+        ipv4: 10.1.0.1/30
         node: r1
       - ifname: Ethernet1.2
-        ipv4: 172.16.2.2/24
+        ipv4: 10.1.0.6/30
         node: r2
       - ifname: Vlan1002
         node: s1
       - ifname: eth1
-        ipv4: 172.16.2.7/24
+        ipv4: 172.16.3.7/24
         node: h3
       type: svi
       virtual_interface: true
@@ -1033,20 +1029,18 @@ nodes:
         mode: route
         neighbors:
         - ifname: GigabitEthernet0/1.2
-          ipv4: 172.16.2.1/24
+          ipv4: 10.1.0.1/30
           node: r1
         - ifname: Ethernet1.2
-          ipv4: 172.16.2.2/24
+          ipv4: 10.1.0.6/30
           node: r2
         - ifname: BVI2
           node: s2
         - ifname: Vlan1002
           node: s1
         - ifname: eth1
-          ipv4: 172.16.2.7/24
+          ipv4: 172.16.3.7/24
           node: h3
-        prefix:
-          ipv4: 172.16.2.0/24
         vni: 101002
         vrf: green
       red:
@@ -1134,20 +1128,18 @@ vlans:
     mode: route
     neighbors:
     - ifname: GigabitEthernet0/1.2
-      ipv4: 172.16.2.1/24
+      ipv4: 10.1.0.1/30
       node: r1
     - ifname: Ethernet1.2
-      ipv4: 172.16.2.2/24
+      ipv4: 10.1.0.6/30
       node: r2
     - ifname: BVI2
       node: s2
     - ifname: Vlan1002
       node: s1
     - ifname: eth1
-      ipv4: 172.16.2.7/24
+      ipv4: 172.16.3.7/24
       node: h3
-    prefix:
-      ipv4: 172.16.2.0/24
     vni: 101002
     vrf: green
   red:

@@ -194,7 +194,7 @@ Allocates an ipv4/ipv6 prefix from a pool for the given vlan
 
 Note: May update/normalize vlan.prefix internally
 """
-def allocate_prefix(vlan: Box, is_routed: bool, topology: Box) -> Box:
+def allocate_prefix(vlan: Box, is_routed: bool, topology: Box) -> dict:
   vlan_pool = [ vlan.pool ] if 'pool' in vlan else []
   vlan_pool.extend(['vlan','p2p' if is_routed else 'lan'])
   pfx_list = links.augment_link_prefix(vlan,vlan_pool,topology.pools)
