@@ -48,17 +48,17 @@ links:
   vrf: blue
 - bridge: input_3
   gateway:
-    ipv4: 172.16.2.1/24
+    ipv4: 172.16.2.0/24
   interfaces:
   - ifindex: 2
-    ipv4: 172.16.2.1/24
+    ipv4: 172.16.2.0/24
     ipv6: false
     node: s2
     vlan:
       access: green
       mode: bridge
   - ifindex: 1
-    ipv4: 172.16.2.2/24
+    ipv4: 172.16.2.1/24
     node: h3
   linkindex: 3
   node_count: 2
@@ -247,10 +247,10 @@ nodes:
     interfaces:
     - bridge: input_3
       gateway:
-        ipv4: 172.16.2.1/24
+        ipv4: 172.16.2.0/24
       ifindex: 1
       ifname: eth1
-      ipv4: 172.16.2.2/24
+      ipv4: 172.16.2.1/24
       linkindex: 3
       name: h3 -> [r1,r2,s2,s1]
       neighbors:
@@ -331,7 +331,7 @@ nodes:
       - ifname: Vlan1002
         node: s1
       - ifname: eth1
-        ipv4: 172.16.2.2/24
+        ipv4: 172.16.2.1/24
         node: h3
       parent_ifindex: 1
       parent_ifname: GigabitEthernet0/1
@@ -494,7 +494,7 @@ nodes:
       - ifname: Vlan1002
         node: s1
       - ifname: eth1
-        ipv4: 172.16.2.2/24
+        ipv4: 172.16.2.1/24
         node: h3
       parent_ifindex: 1
       parent_ifname: Ethernet1
@@ -709,7 +709,7 @@ nodes:
       - ifname: BVI2
         node: s2
       - ifname: eth1
-        ipv4: 172.16.2.2/24
+        ipv4: 172.16.2.1/24
         node: h3
       type: svi
       virtual_interface: true
@@ -960,7 +960,7 @@ nodes:
       - ifname: Vlan1002
         node: s1
       - ifname: eth1
-        ipv4: 172.16.2.2/24
+        ipv4: 172.16.2.1/24
         node: h3
       type: svi
       virtual_interface: true
@@ -1043,7 +1043,7 @@ nodes:
         - ifname: Vlan1002
           node: s1
         - ifname: eth1
-          ipv4: 172.16.2.2/24
+          ipv4: 172.16.2.1/24
           node: h3
         prefix:
           ipv4: 172.16.2.0/24
@@ -1144,7 +1144,7 @@ vlans:
     - ifname: Vlan1002
       node: s1
     - ifname: eth1
-      ipv4: 172.16.2.2/24
+      ipv4: 172.16.2.1/24
       node: h3
     prefix:
       ipv4: 172.16.2.0/24

@@ -75,10 +75,10 @@ links:
 - bridge: input_3
   interfaces:
   - ifindex: 1
-    ipv4: 172.16.0.2/24
+    ipv4: 172.16.0.1/24
     node: r1
   - ifindex: 2
-    ipv4: 172.16.0.1/24
+    ipv4: 172.16.0.0/24
     ipv6: false
     node: s1
     vlan:
@@ -91,10 +91,10 @@ links:
 - bridge: input_4
   interfaces:
   - ifindex: 1
-    ipv4: 172.16.1.2/24
+    ipv4: 172.16.1.1/24
     node: r2
   - ifindex: 3
-    ipv4: 172.16.1.1/24
+    ipv4: 172.16.1.0/24
     ipv6: false
     node: s1
     vlan:
@@ -119,14 +119,14 @@ nodes:
     - bridge: input_3
       ifindex: 1
       ifname: Ethernet1
-      ipv4: 172.16.0.2/24
+      ipv4: 172.16.0.1/24
       linkindex: 3
       name: r1 -> [s1,s2,ros]
       neighbors:
       - ifname: Vlan1000
         node: s1
       - ifname: Vlan1000
-        ipv4: 172.16.0.2/24
+        ipv4: 172.16.0.1/24
         node: s2
       - ifname: Ethernet1.2
         ipv4: 172.16.0.2/24
@@ -159,14 +159,14 @@ nodes:
     - bridge: input_4
       ifindex: 1
       ifname: Ethernet1
-      ipv4: 172.16.1.2/24
+      ipv4: 172.16.1.1/24
       linkindex: 4
       name: r2 -> [s1,s2,ros]
       neighbors:
       - ifname: Vlan1001
         node: s1
       - ifname: Vlan1001
-        ipv4: 172.16.1.2/24
+        ipv4: 172.16.1.1/24
         node: s2
       - ifname: Ethernet1.1
         ipv4: 172.16.1.2/24
@@ -212,12 +212,12 @@ nodes:
       name: ros -> [r2,s1,s2]
       neighbors:
       - ifname: Ethernet1
-        ipv4: 172.16.1.2/24
+        ipv4: 172.16.1.1/24
         node: r2
       - ifname: Vlan1001
         node: s1
       - ifname: Vlan1001
-        ipv4: 172.16.1.2/24
+        ipv4: 172.16.1.1/24
         node: s2
       ospf:
         area: 0.0.0.0
@@ -236,12 +236,12 @@ nodes:
       name: ros -> [r1,s1,s2]
       neighbors:
       - ifname: Ethernet1
-        ipv4: 172.16.0.2/24
+        ipv4: 172.16.0.1/24
         node: r1
       - ifname: Vlan1000
         node: s1
       - ifname: Vlan1000
-        ipv4: 172.16.0.2/24
+        ipv4: 172.16.0.1/24
         node: s2
       ospf:
         area: 0.0.0.0
@@ -278,12 +278,12 @@ nodes:
         mode: route
         neighbors:
         - ifname: Ethernet1
-          ipv4: 172.16.1.2/24
+          ipv4: 172.16.1.1/24
           node: r2
         - ifname: Vlan1001
           node: s1
         - ifname: Vlan1001
-          ipv4: 172.16.1.2/24
+          ipv4: 172.16.1.1/24
           node: s2
         - ifname: Ethernet1.1
           ipv4: 172.16.1.2/24
@@ -297,12 +297,12 @@ nodes:
         mode: route
         neighbors:
         - ifname: Ethernet1
-          ipv4: 172.16.0.2/24
+          ipv4: 172.16.0.1/24
           node: r1
         - ifname: Vlan1000
           node: s1
         - ifname: Vlan1000
-          ipv4: 172.16.0.2/24
+          ipv4: 172.16.0.1/24
           node: s2
         - ifname: Ethernet1.2
           ipv4: 172.16.0.2/24
@@ -354,10 +354,10 @@ nodes:
       name: VLAN red (1000) -> [r1,s2,ros]
       neighbors:
       - ifname: Ethernet1
-        ipv4: 172.16.0.2/24
+        ipv4: 172.16.0.1/24
         node: r1
       - ifname: Vlan1000
-        ipv4: 172.16.0.2/24
+        ipv4: 172.16.0.1/24
         node: s2
       - ifname: Ethernet1.2
         ipv4: 172.16.0.2/24
@@ -372,10 +372,10 @@ nodes:
       name: VLAN blue (1001) -> [r2,s2,ros]
       neighbors:
       - ifname: Ethernet1
-        ipv4: 172.16.1.2/24
+        ipv4: 172.16.1.1/24
         node: r2
       - ifname: Vlan1001
-        ipv4: 172.16.1.2/24
+        ipv4: 172.16.1.1/24
         node: s2
       - ifname: Ethernet1.1
         ipv4: 172.16.1.2/24
@@ -451,11 +451,11 @@ nodes:
     - bridge_group: 1
       ifindex: 7
       ifname: Vlan1001
-      ipv4: 172.16.1.2/24
+      ipv4: 172.16.1.1/24
       name: VLAN blue (1001) -> [r2,s1,ros]
       neighbors:
       - ifname: Ethernet1
-        ipv4: 172.16.1.2/24
+        ipv4: 172.16.1.1/24
         node: r2
       - ifname: Vlan1001
         node: s1
@@ -469,11 +469,11 @@ nodes:
     - bridge_group: 2
       ifindex: 8
       ifname: Vlan1000
-      ipv4: 172.16.0.2/24
+      ipv4: 172.16.0.1/24
       name: VLAN red (1000) -> [r1,s1,ros]
       neighbors:
       - ifname: Ethernet1
-        ipv4: 172.16.0.2/24
+        ipv4: 172.16.0.1/24
         node: r1
       - ifname: Vlan1000
         node: s1
@@ -503,12 +503,12 @@ nodes:
         mode: irb
         neighbors:
         - ifname: Ethernet1
-          ipv4: 172.16.1.2/24
+          ipv4: 172.16.1.1/24
           node: r2
         - ifname: Vlan1001
           node: s1
         - ifname: Vlan1001
-          ipv4: 172.16.1.2/24
+          ipv4: 172.16.1.1/24
           node: s2
         - ifname: Ethernet1.1
           ipv4: 172.16.1.2/24
@@ -522,12 +522,12 @@ nodes:
         mode: irb
         neighbors:
         - ifname: Ethernet1
-          ipv4: 172.16.0.2/24
+          ipv4: 172.16.0.1/24
           node: r1
         - ifname: Vlan1000
           node: s1
         - ifname: Vlan1000
-          ipv4: 172.16.0.2/24
+          ipv4: 172.16.0.1/24
           node: s2
         - ifname: Ethernet1.2
           ipv4: 172.16.0.2/24
@@ -546,12 +546,12 @@ vlans:
     id: 1001
     neighbors:
     - ifname: Ethernet1
-      ipv4: 172.16.1.2/24
+      ipv4: 172.16.1.1/24
       node: r2
     - ifname: Vlan1001
       node: s1
     - ifname: Vlan1001
-      ipv4: 172.16.1.2/24
+      ipv4: 172.16.1.1/24
       node: s2
     - ifname: Ethernet1.1
       ipv4: 172.16.1.2/24
@@ -564,12 +564,12 @@ vlans:
     id: 1000
     neighbors:
     - ifname: Ethernet1
-      ipv4: 172.16.0.2/24
+      ipv4: 172.16.0.1/24
       node: r1
     - ifname: Vlan1000
       node: s1
     - ifname: Vlan1000
-      ipv4: 172.16.0.2/24
+      ipv4: 172.16.0.1/24
       node: s2
     - ifname: Ethernet1.2
       ipv4: 172.16.0.2/24

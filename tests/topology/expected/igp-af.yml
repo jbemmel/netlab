@@ -102,7 +102,7 @@ links:
 - bridge: input_5
   interfaces:
   - ifindex: 2
-    ipv6: 2001:db8:1:0:ffff:ffff:ffff:ffff/64
+    ipv6: 2001:db8:1::5/64
     node: r5
   linkindex: 5
   node_count: 1
@@ -405,7 +405,7 @@ nodes:
     - bridge: input_5
       ifindex: 2
       ifname: Ethernet2
-      ipv6: 2001:db8:1:0:ffff:ffff:ffff:ffff/64
+      ipv6: 2001:db8:1::5/64
       isis:
         passive: true
       linkindex: 5

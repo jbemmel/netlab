@@ -57,16 +57,16 @@ links:
   type: lan
 - bridge: input_4
   gateway:
-    ipv4: 172.16.1.1/24
+    ipv4: 172.16.1.0/24
   interfaces:
   - ifindex: 3
-    ipv4: 172.16.1.1/24
+    ipv4: 172.16.1.0/24
     ipv6: false
     node: s2
     vlan:
       access: blue
   - ifindex: 2
-    ipv4: 172.16.1.2/24
+    ipv4: 172.16.1.1/24
     node: h2
   linkindex: 4
   node_count: 2
@@ -158,15 +158,15 @@ nodes:
       type: lan
     - bridge: input_4
       gateway:
-        ipv4: 172.16.1.1/24
+        ipv4: 172.16.1.0/24
       ifindex: 2
       ifname: eth2
-      ipv4: 172.16.1.2/24
+      ipv4: 172.16.1.1/24
       linkindex: 4
       name: h2 -> [s2]
       neighbors:
       - ifname: GigabitEthernet0/3
-        ipv4: 172.16.1.1/24
+        ipv4: 172.16.1.0/24
         node: s2
       type: lan
     mgmt:
@@ -313,7 +313,7 @@ nodes:
       name: VLAN blue (1000) -> [h2]
       neighbors:
       - ifname: eth2
-        ipv4: 172.16.1.2/24
+        ipv4: 172.16.1.1/24
         node: h2
       role: stub
       type: svi
@@ -340,7 +340,7 @@ nodes:
         mode: bridge
         neighbors:
         - ifname: eth2
-          ipv4: 172.16.1.2/24
+          ipv4: 172.16.1.1/24
           node: h2
         - ifname: BVI2
           node: s2

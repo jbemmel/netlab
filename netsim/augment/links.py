@@ -300,7 +300,6 @@ def get_node_static_ip(node: Box, node_link_data: dict, prefix: dict) -> dict:
           ret[af] = check_index(node_link_data[af],prefix[af])
         else:                                   # static IP address
           try:
-            # print(f"Process {node_link_data[af]}")
             node_addr = netaddr.IPNetwork(node_link_data[af])
             if '/' not in node_link_data[af]:
               node_addr.prefixlen = prefix[af].prefixlen
@@ -390,7 +389,7 @@ def augment_lan_link(link: Box, addr_pools: Box, ndict: dict, defaults: Box) -> 
             if common.debug_active('links'):
               print( f"Auto-assigned assigned {ndict[node_id].name}({node_id}) = {prefix[ip_index]}({ip_index})" )
 
-  print( f"Resulting IP map: {node_2_ip_index}" )
+  # print( f"Resulting IP map: {node_2_ip_index}" )
 
   # 3. Iterate over links
   link_cnt = 0

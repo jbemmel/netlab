@@ -196,7 +196,7 @@ links:
   interfaces:
   - ifindex: 5
     ipv4: 172.19.2.1/24
-    ipv6: 2001:db8:1:2::1/64
+    ipv6: 2001:db8:1:2::3/64
     node: a_eos
   linkindex: 9
   node_count: 1
@@ -320,7 +320,7 @@ nodes:
       ifindex: 5
       ifname: Ethernet5
       ipv4: 172.19.2.1/24
-      ipv6: 2001:db8:1:2::1/64
+      ipv6: 2001:db8:1:2::3/64
       linkindex: 9
       neighbors: []
       ospf:

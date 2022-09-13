@@ -94,7 +94,7 @@ links:
 - bridge: input_6
   interfaces:
   - ifindex: 3
-    ipv4: 172.16.2.1/24
+    ipv4: 172.16.2.0/24
     ipv6: false
     node: s1
     vlan:
@@ -102,7 +102,7 @@ links:
         blue: {}
         red: {}
   - ifindex: 4
-    ipv4: 172.16.2.2/24
+    ipv4: 172.16.2.1/24
     node: s2
     vlan:
       native: green
@@ -338,7 +338,7 @@ nodes:
     - bridge: input_6
       ifindex: 3
       ifname: GigabitEthernet0/3
-      ipv4: 172.16.2.1/24
+      ipv4: 172.16.2.0/24
       linkindex: 6
       name: s1 -> [s2,h5]
       neighbors:

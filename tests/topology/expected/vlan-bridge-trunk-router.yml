@@ -49,13 +49,13 @@ links:
       red: {}
 - bridge: input_2
   gateway:
-    ipv4: 172.16.0.2/24
+    ipv4: 172.16.0.0/24
   interfaces:
   - ifindex: 1
     ipv4: 172.16.0.1/24
     node: h1
   - ifindex: 2
-    ipv4: 172.16.0.2/24
+    ipv4: 172.16.0.0/24
     ipv6: false
     node: s1
     vlan:
@@ -67,13 +67,13 @@ links:
   type: lan
 - bridge: input_3
   gateway:
-    ipv4: 172.16.1.2/24
+    ipv4: 172.16.1.0/24
   interfaces:
   - ifindex: 1
     ipv4: 172.16.1.1/24
     node: h2
   - ifindex: 3
-    ipv4: 172.16.1.2/24
+    ipv4: 172.16.1.0/24
     ipv6: false
     node: s1
     vlan:
@@ -89,7 +89,7 @@ links:
     ipv4: 172.16.0.1/24
     node: r1
   - ifindex: 2
-    ipv4: 172.16.0.2/24
+    ipv4: 172.16.0.0/24
     ipv6: false
     node: s2
     vlan:
@@ -105,7 +105,7 @@ links:
     ipv4: 172.16.1.1/24
     node: r1
   - ifindex: 3
-    ipv4: 172.16.1.2/24
+    ipv4: 172.16.1.0/24
     ipv6: false
     node: s2
     vlan:
@@ -128,7 +128,7 @@ nodes:
     interfaces:
     - bridge: input_2
       gateway:
-        ipv4: 172.16.0.2/24
+        ipv4: 172.16.0.0/24
       ifindex: 1
       ifname: eth1
       ipv4: 172.16.0.1/24
@@ -158,7 +158,7 @@ nodes:
     interfaces:
     - bridge: input_3
       gateway:
-        ipv4: 172.16.1.2/24
+        ipv4: 172.16.1.0/24
       ifindex: 1
       ifname: eth1
       ipv4: 172.16.1.1/24
