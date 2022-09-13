@@ -360,15 +360,21 @@ def augment_lan_link(link: Box, addr_pools: Box, ndict: dict, defaults: Box) -> 
     start_index = 1 if pfx_list['ipv4'].prefixlen < 31 else 0
     for node_id in sorted( [ ndict[n.node].id for n in link[IFATTR] ] ):
       if not node_id in node_2_ip_index:
-        # Assign next free IP, insert it (except for unnumbered prefixes)
-        ip_index = max( node_2_ip_index.values() ) + 1 if node_2_ip_index else start_index
-        if ip_index >= (pfx_list['ipv4'].size - start_index):
+
+        # Determine lowest next free IP, insert it
+        def get_next_ip_index() -> typing.Optional[int]:
+          for i in range(start_index,pfx_list['ipv4'].size-start_index):
+            if i not in node_2_ip_index.values():
+              return i
           common.error(f"Out of IP addresses for LAN subnet {pfx_list['ipv4']}; node_2_ip={node_2_ip_index}",
                        common.IncorrectValue,'links')
-          continue
-        node_2_ip_index[ node_id ] = ip_index
-        if common.debug_active('links'):
-          print( f"Auto-assigned assigned {ndict[node_id].name}({node_id}) = {pfx_list['ipv4'][ip_index]}({ip_index})" )
+          return None
+        
+        ip_index = get_next_ip_index()
+        if ip_index:
+          node_2_ip_index[ node_id ] = ip_index
+          if common.debug_active('links'):
+            print( f"Auto-assigned assigned {ndict[node_id].name}({node_id}) = {pfx_list['ipv4'][ip_index]}({ip_index})" )
 
   # print( f"Resulting IP map: {node_2_ip_index}" )
 
