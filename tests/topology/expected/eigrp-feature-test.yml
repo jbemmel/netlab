@@ -80,7 +80,7 @@ links:
 - bridge: input_5
   interfaces:
   - ifindex: 4
-    ipv4: 172.16.1.2/24
+    ipv4: 172.16.1.1/24
     node: c_csr
   linkindex: 5
   node_count: 1
@@ -90,7 +90,7 @@ links:
 - bridge: input_6
   interfaces:
   - ifindex: 4
-    ipv4: 172.16.2.3/24
+    ipv4: 172.16.2.1/24
     node: c_ios
   linkindex: 6
   node_count: 1
@@ -169,7 +169,7 @@ nodes:
         passive: true
       ifindex: 4
       ifname: GigabitEthernet4
-      ipv4: 172.16.1.2/24
+      ipv4: 172.16.1.1/24
       linkindex: 5
       neighbors: []
       type: stub
@@ -261,7 +261,7 @@ nodes:
         passive: true
       ifindex: 4
       ifname: GigabitEthernet0/4
-      ipv4: 172.16.2.3/24
+      ipv4: 172.16.2.1/24
       linkindex: 6
       neighbors: []
       type: stub

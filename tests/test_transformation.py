@@ -79,6 +79,7 @@ def test_error_cases():
     common.err_count = 0
     with pytest.raises(common.ErrorAbort):
       topo = run_test(test_case)
+      print("Test case DONE: %s" % test_case)
 
 @pytest.mark.filterwarnings("ignore::PendingDeprecationWarning")
 def test_minimal_cases():
