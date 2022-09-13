@@ -281,7 +281,7 @@ def must_be_x(
       min_value:  typing.Optional[int] = None,          # Minimum value
       max_value:  typing.Optional[int] = None,          # Maximum value
       valid_values: typing.Optional[list] = None,       # List of valid values
-              ) -> typing.Optional[Any]:
+              ) -> typing.Optional[typing.Any]:
 
   value = get_from_box(parent,key)
   if value is None:
