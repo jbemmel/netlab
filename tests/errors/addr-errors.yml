@@ -99,3 +99,16 @@ links:
     ipv6: 2001:db8:1:1::1/127
   r3:
     ipv4: 5 # This overlaps with 1.2.3.5
+
+- name: Duplicate static IPv6 assignment
+  type: lan
+  prefix:
+    ipv4: 1.2.3.0/29
+    ipv6: 2001:db8:1:1::/64
+  r1:
+    ipv4: 1.2.3.5
+  r2:
+    ipv4: 1.2.3.4/29
+    ipv6: 2001:db8:1:1::1/64
+  r3:
+    ipv6: 1 # This overlaps with 2001:db8:1:1::1/64
