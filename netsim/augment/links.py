@@ -292,11 +292,11 @@ def get_node_static_ip(node: Box, node_link_data: dict, prefix: dict) -> dict:
           if not isinstance(node_link_data[af],bool):
             common.error(f'Node {node.name} defines a static IP {node_link_data[af]} ' +
                           'on an unnumbered link',common.IncorrectValue,'links')
-          continue
-        if isinstance(node_link_data[af],bool): # unnumbered node or ipv[x]=False, leave it alone        
-          continue
-  
-        if isinstance(node_link_data[af],int):  # host portion of IP address specified as an integer
+          ret[af] = node_link_data[af]
+        elif isinstance(node_link_data[af],bool): # unnumbered node or ipv[x]=False
+          if node_link_data[af]==False:
+            ret[af] = False  # Honor user request to not assign an IP
+        elif isinstance(node_link_data[af],int):  # host portion of IP address specified as an integer
           ret[af] = check_index(node_link_data[af],prefix[af])
         else:                                   # static IP address
           try:
@@ -359,10 +359,11 @@ def augment_lan_link(link: Box, addr_pools: Box, ndict: dict, defaults: Box) -> 
       node = ndict[value.node]
       static_ips = get_node_static_ip(node,value,pfx_list)  # ipv4/ipv6
       for af,ip_index in static_ips.items():
-        if ip_index not in node_2_ip_index[af].values():
+        if isinstance(ip_index,bool) or ip_index not in node_2_ip_index[af].values():
           node_2_ip_index[af][node.id] = ip_index
-          if common.debug_active('links'):
-            print( f"Statically assigned {node.name}[id={node.id}] = {pfx_list[af][ip_index]}" )
+          if common.debug_active('links'):     # pragma: no cover (debugging)
+            print( f"Statically assigned {node.name}[id={node.id}] = \
+                     {ip_index if isinstance(ip_index,bool) else pfx_list[af][ip_index]}" )
         else:
           mapping = { n: str(pfx_list[af][i]) for n,i in node_2_ip_index[af].items() }
           common.error(f"Error: node {node.name}({node.id}) uses a duplicate static IP for {af}({static_ips}) others={mapping}",
