@@ -245,6 +245,7 @@ def get_node_link_address(node: Box, ifdata: Box, node_link_data: dict, prefix: 
           node_link_data[af] = prefix[af]
       else:
         try:
+          # XXX on LAN links the node_id cannot be used as index into a /31 prefix
           index = node_id-1 if af == 'ipv4' and prefix[af].prefixlen==31 else node_id
           node_addr = netaddr.IPNetwork(prefix[af][index])
         except Exception as ex:
@@ -297,6 +298,9 @@ def augment_lan_link(link: Box, addr_pools: Box, ndict: dict, defaults: Box) -> 
   if common.debug_active('links'):     # pragma: no cover (debugging)
     print(f'... on-link prefixes: {pfx_list}')
 
+  # Use a relative index, not node ID
+  nodes = sorted( [ ndict[n.node].id for n in link[IFATTR] ] )
+
   link_cnt = 0
   for value in link[IFATTR]:
     node = value.node
@@ -306,7 +310,7 @@ def augment_lan_link(link: Box, addr_pools: Box, ndict: dict, defaults: Box) -> 
       ifdata=ifaddr,
       node_link_data=value,
       prefix=pfx_list,
-      node_id=ndict[node].id)
+      node_id=nodes.index(ndict[node].id)+1) # NOT ndict[node].id. 1-based
     if errmsg:
       common.error(
         f'{errmsg}\n'+
