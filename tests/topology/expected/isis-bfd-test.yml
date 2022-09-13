@@ -20,7 +20,7 @@ links:
     ipv4: 172.16.0.2/24
     node: srlinux_r2
   - ifindex: 1
-    ipv4: 172.16.0.6/24
+    ipv4: 172.16.0.3/24
     node: n6
   linkindex: 1
   name: Regular link, BFD enabled
@@ -394,7 +394,7 @@ nodes:
         name: e1-1
       ifindex: 1
       ifname: ethernet-1/1
-      ipv4: 172.16.0.6/24
+      ipv4: 172.16.0.3/24
       isis:
         passive: false
       linkindex: 1
@@ -457,7 +457,7 @@ nodes:
         ipv4: 172.16.0.1/24
         node: sros_r1
       - ifname: ethernet-1/1
-        ipv4: 172.16.0.6/24
+        ipv4: 172.16.0.3/24
         node: n6
       type: lan
     - bfd: false
@@ -638,7 +638,7 @@ nodes:
         ipv4: 172.16.0.2/24
         node: srlinux_r2
       - ifname: ethernet-1/1
-        ipv4: 172.16.0.6/24
+        ipv4: 172.16.0.3/24
         node: n6
       type: lan
     - bfd: false

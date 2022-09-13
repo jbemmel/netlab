@@ -36,10 +36,10 @@ links:
 - bridge: input_2
   interfaces:
   - ifindex: 1
-    ipv4: 172.16.0.3/24
+    ipv4: 172.16.0.2/24
     node: r2
   - ifindex: 2
-    ipv4: 172.16.0.2/24
+    ipv4: 172.16.0.1/24
     node: s1
     vlan:
       access: red
@@ -128,12 +128,12 @@ nodes:
         name: et1
       ifindex: 1
       ifname: Ethernet1
-      ipv4: 172.16.0.3/24
+      ipv4: 172.16.0.2/24
       linkindex: 2
       name: r2 -> [s1]
       neighbors:
       - ifname: Ethernet2
-        ipv4: 172.16.0.2/24
+        ipv4: 172.16.0.1/24
         node: s1
       type: lan
     loopback:
@@ -187,7 +187,7 @@ nodes:
         ipv4: 172.16.0.1/24
         node: r1
       - ifname: Ethernet1
-        ipv4: 172.16.0.3/24
+        ipv4: 172.16.0.2/24
         node: r2
       type: svi
       virtual_interface: true
@@ -219,7 +219,7 @@ nodes:
           ipv4: 172.16.0.2/24
           node: s1
         - ifname: Ethernet1
-          ipv4: 172.16.0.3/24
+          ipv4: 172.16.0.2/24
           node: r2
         prefix:
           ipv4: 172.16.0.0/24

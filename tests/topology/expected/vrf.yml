@@ -67,7 +67,7 @@ links:
 - bridge: input_3
   interfaces:
   - ifindex: 2
-    ipv4: 172.16.0.3/24
+    ipv4: 172.16.0.1/24
     node: r3
     vrf: yellow
   linkindex: 3
@@ -78,7 +78,7 @@ links:
 - bridge: input_4
   interfaces:
   - ifindex: 2
-    ipv4: 172.16.1.2/24
+    ipv4: 172.16.1.1/24
     node: r2
     vrf: black
   linkindex: 4
@@ -293,7 +293,7 @@ nodes:
         name: et2
       ifindex: 2
       ifname: Ethernet2
-      ipv4: 172.16.1.2/24
+      ipv4: 172.16.1.1/24
       linkindex: 4
       neighbors: []
       type: stub
@@ -384,7 +384,7 @@ nodes:
         name: et2
       ifindex: 2
       ifname: Ethernet2
-      ipv4: 172.16.0.3/24
+      ipv4: 172.16.0.1/24
       linkindex: 3
       neighbors: []
       type: stub

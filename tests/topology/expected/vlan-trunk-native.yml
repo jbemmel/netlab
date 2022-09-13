@@ -12,7 +12,7 @@ links:
     vlan:
       access: red
   - ifindex: 1
-    ipv4: 172.16.0.3/24
+    ipv4: 172.16.0.2/24
     node: h1
   linkindex: 1
   node_count: 2
@@ -31,7 +31,7 @@ links:
     vlan:
       access: blue
   - ifindex: 1
-    ipv4: 172.16.1.4/24
+    ipv4: 172.16.1.2/24
     node: h2
   linkindex: 2
   node_count: 2
@@ -40,15 +40,15 @@ links:
   type: lan
 - bridge: input_3
   gateway:
-    ipv4: 172.16.0.2/24
+    ipv4: 172.16.0.1/24
   interfaces:
   - ifindex: 1
-    ipv4: 172.16.0.2/24
+    ipv4: 172.16.0.1/24
     node: s2
     vlan:
       access: red
   - ifindex: 1
-    ipv4: 172.16.0.5/24
+    ipv4: 172.16.0.2/24
     node: h3
   linkindex: 3
   node_count: 2
@@ -59,15 +59,15 @@ links:
   type: lan
 - bridge: input_4
   gateway:
-    ipv4: 172.16.1.2/24
+    ipv4: 172.16.1.1/24
   interfaces:
   - ifindex: 2
-    ipv4: 172.16.1.2/24
+    ipv4: 172.16.1.1/24
     node: s2
     vlan:
       access: blue
   - ifindex: 1
-    ipv4: 172.16.1.6/24
+    ipv4: 172.16.1.2/24
     node: h4
   linkindex: 4
   node_count: 2
@@ -76,15 +76,15 @@ links:
   type: lan
 - bridge: input_5
   gateway:
-    ipv4: 172.16.2.2/24
+    ipv4: 172.16.2.1/24
   interfaces:
   - ifindex: 3
-    ipv4: 172.16.2.2/24
+    ipv4: 172.16.2.1/24
     node: s2
     vlan:
       access: green
   - ifindex: 1
-    ipv4: 172.16.2.7/24
+    ipv4: 172.16.2.2/24
     node: h5
   linkindex: 5
   node_count: 2
@@ -94,7 +94,7 @@ links:
 - bridge: input_6
   interfaces:
   - ifindex: 3
-    ipv4: false
+    ipv4: 172.16.2.1/24
     ipv6: false
     node: s1
     vlan:
@@ -167,7 +167,7 @@ nodes:
         ipv4: 172.16.0.1/24
       ifindex: 1
       ifname: eth1
-      ipv4: 172.16.0.3/24
+      ipv4: 172.16.0.2/24
       linkindex: 1
       name: h1 -> [s1,s2,h3]
       neighbors:
@@ -175,10 +175,10 @@ nodes:
         ipv4: 172.16.0.1/24
         node: s1
       - ifname: Vlan1000
-        ipv4: 172.16.0.2/24
+        ipv4: 172.16.0.1/24
         node: s2
       - ifname: eth1
-        ipv4: 172.16.0.5/24
+        ipv4: 172.16.0.2/24
         node: h3
       type: lan
     mgmt:
@@ -199,7 +199,7 @@ nodes:
         ipv4: 172.16.1.1/24
       ifindex: 1
       ifname: eth1
-      ipv4: 172.16.1.4/24
+      ipv4: 172.16.1.2/24
       linkindex: 2
       name: h2 -> [s1,s2,h4]
       neighbors:
@@ -207,10 +207,10 @@ nodes:
         ipv4: 172.16.1.1/24
         node: s1
       - ifname: Vlan1001
-        ipv4: 172.16.1.2/24
+        ipv4: 172.16.1.1/24
         node: s2
       - ifname: eth1
-        ipv4: 172.16.1.6/24
+        ipv4: 172.16.1.2/24
         node: h4
       type: lan
     mgmt:
@@ -228,21 +228,21 @@ nodes:
     interfaces:
     - bridge: input_3
       gateway:
-        ipv4: 172.16.0.2/24
+        ipv4: 172.16.0.1/24
       ifindex: 1
       ifname: eth1
-      ipv4: 172.16.0.5/24
+      ipv4: 172.16.0.2/24
       linkindex: 3
       name: h3 -> [h1,s1,s2]
       neighbors:
       - ifname: eth1
-        ipv4: 172.16.0.3/24
+        ipv4: 172.16.0.2/24
         node: h1
       - ifname: BVI1
         ipv4: 172.16.0.1/24
         node: s1
       - ifname: Vlan1000
-        ipv4: 172.16.0.2/24
+        ipv4: 172.16.0.1/24
         node: s2
       type: lan
     mgmt:
@@ -260,21 +260,21 @@ nodes:
     interfaces:
     - bridge: input_4
       gateway:
-        ipv4: 172.16.1.2/24
+        ipv4: 172.16.1.1/24
       ifindex: 1
       ifname: eth1
-      ipv4: 172.16.1.6/24
+      ipv4: 172.16.1.2/24
       linkindex: 4
       name: h4 -> [h2,s1,s2]
       neighbors:
       - ifname: eth1
-        ipv4: 172.16.1.4/24
+        ipv4: 172.16.1.2/24
         node: h2
       - ifname: BVI2
         ipv4: 172.16.1.1/24
         node: s1
       - ifname: Vlan1001
-        ipv4: 172.16.1.2/24
+        ipv4: 172.16.1.1/24
         node: s2
       type: lan
     mgmt:
@@ -292,15 +292,15 @@ nodes:
     interfaces:
     - bridge: input_5
       gateway:
-        ipv4: 172.16.2.2/24
+        ipv4: 172.16.2.1/24
       ifindex: 1
       ifname: eth1
-      ipv4: 172.16.2.7/24
+      ipv4: 172.16.2.2/24
       linkindex: 5
       name: h5 -> [s2,s1]
       neighbors:
       - ifname: Vlan1002
-        ipv4: 172.16.2.2/24
+        ipv4: 172.16.2.1/24
         node: s2
       - ifname: BVI3
         ipv4: 172.16.2.1/24
@@ -338,15 +338,19 @@ nodes:
     - bridge: input_6
       ifindex: 3
       ifname: GigabitEthernet0/3
+      ipv4: 172.16.2.1/24
       linkindex: 6
       name: s1 -> [s2,h5]
       neighbors:
       - ifname: Vlan1002
-        ipv4: 172.16.2.2/24
+        ipv4: 172.16.2.1/24
         node: s2
       - ifname: eth1
-        ipv4: 172.16.2.7/24
+        ipv4: 172.16.2.2/24
         node: h5
+      ospf:
+        area: 0.0.0.0
+        passive: false
       subif_index: 2
       type: lan
     - bridge: input_7
@@ -407,13 +411,13 @@ nodes:
       name: VLAN red (1000) -> [h1,s2,h3]
       neighbors:
       - ifname: eth1
-        ipv4: 172.16.0.3/24
+        ipv4: 172.16.0.2/24
         node: h1
       - ifname: Vlan1000
-        ipv4: 172.16.0.2/24
+        ipv4: 172.16.0.1/24
         node: s2
       - ifname: eth1
-        ipv4: 172.16.0.5/24
+        ipv4: 172.16.0.2/24
         node: h3
       ospf:
         area: 0.0.0.0
@@ -430,13 +434,13 @@ nodes:
       name: VLAN blue (1001) -> [h2,s2,h4]
       neighbors:
       - ifname: eth1
-        ipv4: 172.16.1.4/24
+        ipv4: 172.16.1.2/24
         node: h2
       - ifname: Vlan1001
-        ipv4: 172.16.1.2/24
+        ipv4: 172.16.1.1/24
         node: s2
       - ifname: eth1
-        ipv4: 172.16.1.6/24
+        ipv4: 172.16.1.2/24
         node: h4
       ospf:
         area: 0.0.0.0
@@ -452,10 +456,10 @@ nodes:
       name: VLAN green (1002) -> [s2,h5]
       neighbors:
       - ifname: Vlan1002
-        ipv4: 172.16.2.2/24
+        ipv4: 172.16.2.1/24
         node: s2
       - ifname: eth1
-        ipv4: 172.16.2.7/24
+        ipv4: 172.16.2.2/24
         node: h5
       ospf:
         area: 0.0.0.0
@@ -572,17 +576,17 @@ nodes:
     - bridge_group: 1
       ifindex: 10
       ifname: Vlan1000
-      ipv4: 172.16.0.2/24
+      ipv4: 172.16.0.1/24
       name: VLAN red (1000) -> [h1,s1,h3]
       neighbors:
       - ifname: eth1
-        ipv4: 172.16.0.3/24
+        ipv4: 172.16.0.2/24
         node: h1
       - ifname: BVI1
         ipv4: 172.16.0.1/24
         node: s1
       - ifname: eth1
-        ipv4: 172.16.0.5/24
+        ipv4: 172.16.0.2/24
         node: h3
       ospf:
         area: 0.0.0.0
@@ -595,17 +599,17 @@ nodes:
     - bridge_group: 2
       ifindex: 11
       ifname: Vlan1001
-      ipv4: 172.16.1.2/24
+      ipv4: 172.16.1.1/24
       name: VLAN blue (1001) -> [h2,s1,h4]
       neighbors:
       - ifname: eth1
-        ipv4: 172.16.1.4/24
+        ipv4: 172.16.1.2/24
         node: h2
       - ifname: BVI2
         ipv4: 172.16.1.1/24
         node: s1
       - ifname: eth1
-        ipv4: 172.16.1.6/24
+        ipv4: 172.16.1.2/24
         node: h4
       ospf:
         area: 0.0.0.0
@@ -617,14 +621,14 @@ nodes:
     - bridge_group: 3
       ifindex: 12
       ifname: Vlan1002
-      ipv4: 172.16.2.2/24
+      ipv4: 172.16.2.1/24
       name: VLAN green (1002) -> [s1,h5]
       neighbors:
       - ifname: BVI3
         ipv4: 172.16.2.1/24
         node: s1
       - ifname: eth1
-        ipv4: 172.16.2.7/24
+        ipv4: 172.16.2.2/24
         node: h5
       ospf:
         area: 0.0.0.0
@@ -658,16 +662,16 @@ nodes:
         mode: irb
         neighbors:
         - ifname: eth1
-          ipv4: 172.16.1.4/24
+          ipv4: 172.16.1.2/24
           node: h2
         - ifname: BVI2
           ipv4: 172.16.1.1/24
           node: s1
         - ifname: Vlan1001
-          ipv4: 172.16.1.2/24
+          ipv4: 172.16.1.1/24
           node: s2
         - ifname: eth1
-          ipv4: 172.16.1.6/24
+          ipv4: 172.16.1.2/24
           node: h4
         prefix:
           ipv4: 172.16.1.0/24
@@ -678,13 +682,13 @@ nodes:
         mode: irb
         neighbors:
         - ifname: Vlan1002
-          ipv4: 172.16.2.2/24
+          ipv4: 172.16.2.1/24
           node: s2
         - ifname: BVI3
           ipv4: 172.16.2.1/24
           node: s1
         - ifname: eth1
-          ipv4: 172.16.2.7/24
+          ipv4: 172.16.2.2/24
           node: h5
         prefix:
           ipv4: 172.16.2.0/24
@@ -695,16 +699,16 @@ nodes:
         mode: irb
         neighbors:
         - ifname: eth1
-          ipv4: 172.16.0.3/24
+          ipv4: 172.16.0.2/24
           node: h1
         - ifname: BVI1
           ipv4: 172.16.0.1/24
           node: s1
         - ifname: Vlan1000
-          ipv4: 172.16.0.2/24
+          ipv4: 172.16.0.1/24
           node: s2
         - ifname: eth1
-          ipv4: 172.16.0.5/24
+          ipv4: 172.16.0.2/24
           node: h3
         ospf:
           cost: 10
@@ -722,16 +726,16 @@ vlans:
     id: 1001
     neighbors:
     - ifname: eth1
-      ipv4: 172.16.1.4/24
+      ipv4: 172.16.1.2/24
       node: h2
     - ifname: BVI2
       ipv4: 172.16.1.1/24
       node: s1
     - ifname: Vlan1001
-      ipv4: 172.16.1.2/24
+      ipv4: 172.16.1.1/24
       node: s2
     - ifname: eth1
-      ipv4: 172.16.1.6/24
+      ipv4: 172.16.1.2/24
       node: h4
     prefix:
       ipv4: 172.16.1.0/24
@@ -741,13 +745,13 @@ vlans:
     id: 1002
     neighbors:
     - ifname: Vlan1002
-      ipv4: 172.16.2.2/24
+      ipv4: 172.16.2.1/24
       node: s2
     - ifname: BVI3
       ipv4: 172.16.2.1/24
       node: s1
     - ifname: eth1
-      ipv4: 172.16.2.7/24
+      ipv4: 172.16.2.2/24
       node: h5
     prefix:
       ipv4: 172.16.2.0/24
@@ -757,16 +761,16 @@ vlans:
     id: 1000
     neighbors:
     - ifname: eth1
-      ipv4: 172.16.0.3/24
+      ipv4: 172.16.0.2/24
       node: h1
     - ifname: BVI1
       ipv4: 172.16.0.1/24
       node: s1
     - ifname: Vlan1000
-      ipv4: 172.16.0.2/24
+      ipv4: 172.16.0.1/24
       node: s2
     - ifname: eth1
-      ipv4: 172.16.0.5/24
+      ipv4: 172.16.0.2/24
       node: h3
     ospf:
       cost: 10
