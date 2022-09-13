@@ -13,7 +13,7 @@ router bgp {{ bgp.as }}
  address-family {{ af }}
 {%   for n in bgp.neighbors if n[af] is defined %}
 {%     if n.allowas_in is defined %}
-  neighbor {{ n[af] }} allowas-in {{ n.allowas_in }}
+  neighbor {{ n[af] }} allowas-in {{ n.allowas_in|int if n.allowas_in|int > 1 else '' }}
 {%     endif %}
 {%     if n.as_override is defined %}
   neighbor {{ n[af] }} as-override
