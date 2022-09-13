@@ -287,11 +287,12 @@ def must_be_x(
   if value is None:
     return None
 
-  if type(value)=="int":
+  typename = type(value).__name__
+  if typename=="int":
     return must_be_int(parent,key,path,true_value,context,module,min_value,max_value)
-  elif type(value)=="bool":
+  elif typename=="bool":
     return must_be_bool(parent,key,path,true_value,context,module)
-  elif type(value)=="str":
+  elif typename=="str":
     return must_be_string(parent,key,path,true_value,context,module,valid_values)
   
   wrong_type_message(path=path, key=key, expected="int,str,or bool", value=value, context=context, module=module)
