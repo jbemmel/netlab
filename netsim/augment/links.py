@@ -275,7 +275,7 @@ def get_node_static_ip(node: Box, node_link_data: dict, prefix: dict) -> dict:
           f".. prefix: {prefix}")
 
   def check_index(ip_index: int, prefix: netaddr.IPNetwork) -> typing.Optional[int]:
-    min_valid = 1 if prefix.prefixlen < 31 else 0
+    min_valid = 1 if prefix.version==4 and prefix.prefixlen < 31 else 0
     max_valid = prefix.size - min_valid
     if ip_index < min_valid or ip_index > max_valid:
       common.error(f'Node {node.name} is using static IP index {ip_index} ' +
