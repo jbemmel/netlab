@@ -275,9 +275,12 @@ def get_node_static_ipv4(node: Box, node_link_data: dict, ipv4_prefix: netaddr.I
           f".. ipv4_prefix: {ipv4_prefix}")
 
   def check_index(ip_index: int) -> typing.Optional[int]:
-    max_valid = ipv4_prefix.size - (1 if ipv4_prefix.prefixlen < 31 else 0)
-    if ip_index > max_valid:
-      print(f'Node {node.name} is using static IP {node_link_data[af]} that is out of range for {ipv4_prefix}')
+    min_valid = 1 if ipv4_prefix.prefixlen < 31 else 0
+    max_valid = ipv4_prefix.size - min_valid
+    if ip_index < min_valid or ip_index > max_valid:
+      common.error(f'Node {node.name} is using static IP index {ip_index} ' +
+                    'that is out of range for {ipv4_prefix}[{min_valid},{max_valid}]',
+                    common.IncorrectValue,'links')
       return None
     return ip_index
 
@@ -288,27 +291,15 @@ def get_node_static_ipv4(node: Box, node_link_data: dict, ipv4_prefix: netaddr.I
 
       if isinstance(node_link_data[af],int):  # host portion of IP address specified as an integer
         return check_index(node_link_data[af])
-
-      else:                                  # static IP address
-        node_addr = None
+      else:                                   # static IP address
         try:
           node_addr = netaddr.IPNetwork(node_link_data[af])
           if '/' not in node_link_data[af]:
             node_addr.prefixlen = ipv4_prefix.prefixlen
+          return check_index( int(node_addr.ip) - int(ipv4_prefix.ip) )
         except:
-          print(f'Invalid {af} link address {node_link_data[af]} for node {node.name}')
+          common.error(f'Invalid {af} link address {node_link_data[af]} for node {node.name}',common.IncorrectValue,'links')
           return None
-        
-        if str(node_addr) == str(node_addr.cidr):        # Check whether the node address includes a host portion
-          lb = not(':' in str(node_addr)) \
-                 and node_addr.prefixlen == 32           # Exception#1: IPv4/32
-          lb = lb or node_addr.prefixlen == 128          # Exception#2: IPv6/128
-          if not lb:
-            print(f'Static node address {node_link_data[af]} for node {node.name} does not include a host portion')
-            return None
-
-        return check_index( int(node_addr.ip) - int(ipv4_prefix.ip) )
-
   return None
 
 def augment_link_prefix(link: Box,pools: typing.List[str],addr_pools: Box) -> dict:
@@ -356,19 +347,25 @@ def augment_lan_link(link: Box, addr_pools: Box, ndict: dict, defaults: Box) -> 
       if static_index:
         if static_index not in node_2_ip_index.values():
           node_2_ip_index[ node.id ] = static_index
+          # print( f"Statically assigned {node.id} = {static_index}" )
         else:
-          print( f"Error: node {node.name} uses a duplicate IP index={static_index} others={node_2_ip_index}")
+          common.error(f"Error: node {node.name} uses a duplicate IP index={static_index} others={node_2_ip_index}",
+                       common.IncorrectValue,'links')
 
     # 2. Fill in any gaps, in order of node id
     start_index = 1 if pfx_list['ipv4'].prefixlen < 31 else 0
     for node_id in sorted( [ ndict[n.node].id for n in link[IFATTR] ] ):
       if not node_id in node_2_ip_index:
         # Assign next free IP, insert it (except for unnumbered prefixes)
-        ip_index = min( node_2_ip_index.values() ) + 1 if node_2_ip_index else start_index
+        ip_index = max( node_2_ip_index.values() ) + 1 if node_2_ip_index else start_index
         if ip_index >= (pfx_list['ipv4'].size - start_index):
-          print( f"Out of IP addresses for LAN subnet {pfx_list['ipv4']}; node_2_ip={node_2_ip_index}" )
+          common.error(f"Out of IP addresses for LAN subnet {pfx_list['ipv4']}; node_2_ip={node_2_ip_index}",
+                       common.IncorrectValue,'links')
           continue
         node_2_ip_index[ node_id ] = ip_index
+        # print( f"Auto-assigned assigned {node_id} = {ip_index}" )
+
+  # print( f"Resulting IP map: {node_2_ip_index}" )
 
   # 3. Iterate over links
   link_cnt = 0
