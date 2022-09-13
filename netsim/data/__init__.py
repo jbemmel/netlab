@@ -291,7 +291,8 @@ def must_be_x(
   if typename=="int":
     return must_be_int(parent,key,path,true_value,context,module,min_value,max_value)
   elif typename=="bool":
-    return must_be_bool(parent,key,path,true_value,context,module)
+    must_be_bool(parent,key,path,context,module)
+    return None
   elif typename=="str":
     return must_be_string(parent,key,path,true_value,context,module,valid_values)
   
