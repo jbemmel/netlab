@@ -25,16 +25,16 @@ links:
 - bridge: input_1
   interfaces:
   - ifindex: 1
-    ipv6: 2001:db8:1:0:ffff:ffff:ffff:ffff/64
+    ipv6: 2001:db8:1::7/64
     node: r1
   - ifindex: 1
-    ipv6: 2001:db8:1:0:ffff:ffff:ffff:ffff/64
+    ipv6: 2001:db8:1::15/64
     node: r2
   - ifindex: 1
     ipv6: 2001:db8:1::800/64
     node: r3
   - ifindex: 1
-    ipv6: 2001:db8:1:0:ffff:ffff:ffff:ffff/64
+    ipv6: 2001:db8:1::1/64
     node: r4
   linkindex: 1
   name: Standard LAN link
@@ -69,10 +69,10 @@ links:
     ipv6: 2001:db8:1:1:ffff:ffff:ffff:ffff/64
     node: r1
   - ifindex: 3
-    ipv6: 2001:db8:1:1:ffff:ffff:ffff:ffff/64
+    ipv6: 2001:db8:1:1::15/64
     node: r2
   - ifindex: 2
-    ipv6: 2001:db8:1:1:ffff:ffff:ffff:ffff/64
+    ipv6: 2001:db8:1:1::2a/64
     node: r3
   linkindex: 3
   name: LLA node in LAN link
@@ -146,20 +146,20 @@ nodes:
     - bridge: input_1
       ifindex: 1
       ifname: GigabitEthernet0/1
-      ipv6: 2001:db8:1:0:ffff:ffff:ffff:ffff/64
+      ipv6: 2001:db8:1::7/64
       isis:
         passive: false
       linkindex: 1
       name: Standard LAN link
       neighbors:
       - ifname: GigabitEthernet0/1
-        ipv6: 2001:db8:1:0:ffff:ffff:ffff:ffff/64
+        ipv6: 2001:db8:1::15/64
         node: r2
       - ifname: GigabitEthernet0/1
         ipv6: 2001:db8:1::800/64
         node: r3
       - ifname: GigabitEthernet0/1
-        ipv6: 2001:db8:1:0:ffff:ffff:ffff:ffff/64
+        ipv6: 2001:db8:1::1/64
         node: r4
       type: lan
     - ifindex: 2
@@ -185,10 +185,10 @@ nodes:
       name: LLA node in LAN link
       neighbors:
       - ifname: GigabitEthernet0/3
-        ipv6: 2001:db8:1:1:ffff:ffff:ffff:ffff/64
+        ipv6: 2001:db8:1:1::15/64
         node: r2
       - ifname: GigabitEthernet0/2
-        ipv6: 2001:db8:1:1:ffff:ffff:ffff:ffff/64
+        ipv6: 2001:db8:1:1::2a/64
         node: r3
       type: lan
     - ifindex: 4
@@ -260,20 +260,20 @@ nodes:
     - bridge: input_1
       ifindex: 1
       ifname: GigabitEthernet0/1
-      ipv6: 2001:db8:1:0:ffff:ffff:ffff:ffff/64
+      ipv6: 2001:db8:1::15/64
       isis:
         passive: false
       linkindex: 1
       name: Standard LAN link
       neighbors:
       - ifname: GigabitEthernet0/1
-        ipv6: 2001:db8:1:0:ffff:ffff:ffff:ffff/64
+        ipv6: 2001:db8:1::7/64
         node: r1
       - ifname: GigabitEthernet0/1
         ipv6: 2001:db8:1::800/64
         node: r3
       - ifname: GigabitEthernet0/1
-        ipv6: 2001:db8:1:0:ffff:ffff:ffff:ffff/64
+        ipv6: 2001:db8:1::1/64
         node: r4
       type: lan
     - ifindex: 2
@@ -292,7 +292,7 @@ nodes:
     - bridge: input_3
       ifindex: 3
       ifname: GigabitEthernet0/3
-      ipv6: 2001:db8:1:1:ffff:ffff:ffff:ffff/64
+      ipv6: 2001:db8:1:1::15/64
       isis:
         passive: false
       linkindex: 3
@@ -302,7 +302,7 @@ nodes:
         ipv6: 2001:db8:1:1:ffff:ffff:ffff:ffff/64
         node: r1
       - ifname: GigabitEthernet0/2
-        ipv6: 2001:db8:1:1:ffff:ffff:ffff:ffff/64
+        ipv6: 2001:db8:1:1::2a/64
         node: r3
       type: lan
     - ifindex: 4
@@ -378,19 +378,19 @@ nodes:
       name: Standard LAN link
       neighbors:
       - ifname: GigabitEthernet0/1
-        ipv6: 2001:db8:1:0:ffff:ffff:ffff:ffff/64
+        ipv6: 2001:db8:1::7/64
         node: r1
       - ifname: GigabitEthernet0/1
-        ipv6: 2001:db8:1:0:ffff:ffff:ffff:ffff/64
+        ipv6: 2001:db8:1::15/64
         node: r2
       - ifname: GigabitEthernet0/1
-        ipv6: 2001:db8:1:0:ffff:ffff:ffff:ffff/64
+        ipv6: 2001:db8:1::1/64
         node: r4
       type: lan
     - bridge: input_3
       ifindex: 2
       ifname: GigabitEthernet0/2
-      ipv6: 2001:db8:1:1:ffff:ffff:ffff:ffff/64
+      ipv6: 2001:db8:1:1::2a/64
       isis:
         passive: false
       linkindex: 3
@@ -400,7 +400,7 @@ nodes:
         ipv6: 2001:db8:1:1:ffff:ffff:ffff:ffff/64
         node: r1
       - ifname: GigabitEthernet0/3
-        ipv6: 2001:db8:1:1:ffff:ffff:ffff:ffff/64
+        ipv6: 2001:db8:1:1::15/64
         node: r2
       type: lan
     isis:
@@ -460,17 +460,17 @@ nodes:
     - bridge: input_1
       ifindex: 1
       ifname: GigabitEthernet0/1
-      ipv6: 2001:db8:1:0:ffff:ffff:ffff:ffff/64
+      ipv6: 2001:db8:1::1/64
       isis:
         passive: false
       linkindex: 1
       name: Standard LAN link
       neighbors:
       - ifname: GigabitEthernet0/1
-        ipv6: 2001:db8:1:0:ffff:ffff:ffff:ffff/64
+        ipv6: 2001:db8:1::7/64
         node: r1
       - ifname: GigabitEthernet0/1
-        ipv6: 2001:db8:1:0:ffff:ffff:ffff:ffff/64
+        ipv6: 2001:db8:1::15/64
         node: r2
       - ifname: GigabitEthernet0/1
         ipv6: 2001:db8:1::800/64

@@ -308,8 +308,8 @@ def get_node_static_ip(node: Box, node_link_data: dict, prefix: dict) -> dict:
           except:
             common.error(f'Invalid {af} link address {node_link_data[af]} for node {node.name}',common.IncorrectValue,'links')
             return {}
-      elif af=='ipv6' and not isinstance(prefix['ipv6'],bool) and 'ipv4' in ret:
-        ret['ipv6'] = ret['ipv4'] # If no static IPv6 address is given, use same index as ipv4
+      elif af=='ipv6' and not isinstance(prefix['ipv6'],bool):    # If no static IPv6 address is given, 
+        ret['ipv6'] = ret['ipv4'] if 'ipv4' in ret else node.id   # use same index as ipv4 if available, else node id
 
   if common.debug_active('links'):     # pragma: no cover (debugging)
     print(f'get_node_static_ip -> {ret}\n')
@@ -389,7 +389,7 @@ def augment_lan_link(link: Box, addr_pools: Box, ndict: dict, defaults: Box) -> 
             if common.debug_active('links'):
               print( f"Auto-assigned assigned {ndict[node_id].name}({node_id}) = {prefix[ip_index]}({ip_index})" )
 
-  # print( f"Resulting IP map: {node_2_ip_index}" )
+  print( f"Resulting IP map: {node_2_ip_index}" )
 
   # 3. Iterate over links
   link_cnt = 0
