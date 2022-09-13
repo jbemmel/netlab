@@ -265,6 +265,52 @@ def get_node_link_address(node: Box, ifdata: Box, node_link_data: dict, prefix: 
     print
   return None
 
+#
+# Determines if the given node has a statically assigned IPv4, and returns the relative index within the given ipv4_prefix
+#
+def get_node_static_ipv4(node: Box, node_link_data: dict, ipv4_prefix: netaddr.IPNetwork ) -> typing.Optional[int]:
+  if common.debug_active('links'):     # pragma: no cover (debugging)
+    print(f"get_node_static_ipv4 for {node.name}:\n"+
+          f".. node_link_data: {node_link_data}\n"+
+          f".. ipv4_prefix: {ipv4_prefix}")
+
+  def check_index(ip_index: int) -> typing.Optional[int]:
+    max_valid = ipv4_prefix.size - (1 if ipv4_prefix.prefixlen < 31 else 0)
+    if ip_index > max_valid:
+      print(f'Node {node.name} is using static IP {node_link_data[af]} that is out of range for {ipv4_prefix}')
+      return None
+    return ip_index
+
+  for af in ('ipv4'): # Only support v4 static ips for now, ipv6 is fixed /64 and can use the same index
+    if af in node_link_data:                  # static IP address or host index
+      if isinstance(node_link_data[af],bool): # unnumbered node or ipv4=False, leave it alone
+        return None
+
+      if isinstance(node_link_data[af],int):  # host portion of IP address specified as an integer
+        return check_index(node_link_data[af])
+
+      else:                                  # static IP address
+        node_addr = None
+        try:
+          node_addr = netaddr.IPNetwork(node_link_data[af])
+          if '/' not in node_link_data[af]:
+            node_addr.prefixlen = ipv4_prefix.prefixlen
+        except:
+          print(f'Invalid {af} link address {node_link_data[af]} for node {node.name}')
+          return None
+        
+        if str(node_addr) == str(node_addr.cidr):        # Check whether the node address includes a host portion
+          lb = not(':' in str(node_addr)) \
+                 and node_addr.prefixlen == 32           # Exception#1: IPv4/32
+          lb = lb or node_addr.prefixlen == 128          # Exception#2: IPv6/128
+          if not lb:
+            print(f'Static node address {node_link_data[af]} for node {node.name} does not include a host portion')
+            return None
+
+        return check_index( int(node_addr.ip) - int(ipv4_prefix.ip) )
+
+  return None
+
 def augment_link_prefix(link: Box,pools: typing.List[str],addr_pools: Box) -> dict:
   if 'role' in link:
     pools = [ link.get('role') ] + pools
@@ -298,41 +344,62 @@ def augment_lan_link(link: Box, addr_pools: Box, ndict: dict, defaults: Box) -> 
   if common.debug_active('links'):     # pragma: no cover (debugging)
     print(f'... on-link prefixes: {pfx_list}')
 
-  # Use a relative index, not node ID
-  nodes = sorted( [ ndict[n.node].id for n in link[IFATTR] ] )
+  # Easier to handle unnumbered links differently from the start
+  is_numbered = ('ipv4' in pfx_list and not isinstance(pfx_list['ipv4'],bool))
 
+  # 1. Build a map of statically assigned IP indexes (relative within ipv4 or ipv6 prefix)
+  node_2_ip_index : typing.Dict[int,int] = {}  # Index node ID -> relative ip offset within prefix (int)
+  if is_numbered:
+    for value in link[IFATTR]:
+      node = ndict[value.node]
+      static_index = get_node_static_ipv4(node,value,pfx_list['ipv4'])
+      if static_index:
+        if static_index not in node_2_ip_index.values():
+          node_2_ip_index[ node.id ] = static_index
+        else:
+          print( f"Error: node {node.name} uses a duplicate IP index={static_index} others={node_2_ip_index}")
+
+    # 2. Fill in any gaps, in order of node id
+    start_index = 1 if pfx_list['ipv4'].prefixlen < 31 else 0
+    for node_id in sorted( [ ndict[n.node].id for n in link[IFATTR] ] ):
+      if not node_id in node_2_ip_index:
+        # Assign next free IP, insert it (except for unnumbered prefixes)
+        ip_index = min( node_2_ip_index.values() ) + 1 if node_2_ip_index else start_index
+        if ip_index >= (pfx_list['ipv4'].size - start_index):
+          print( f"Out of IP addresses for LAN subnet {pfx_list['ipv4']}; node_2_ip={node_2_ip_index}" )
+          continue
+        node_2_ip_index[ node_id ] = ip_index
+
+  # 3. Iterate over links
   link_cnt = 0
   for value in link[IFATTR]:
-    node = value.node
+    node = ndict[value.node]
     ifaddr = Box({},default_box=True)
-    errmsg = get_node_link_address(
-      node=ndict[node],
-      ifdata=ifaddr,
-      node_link_data=value,
-      prefix=pfx_list,
-      node_id=nodes.index(ndict[node].id)+1) # NOT ndict[node].id. 1-based
-    if errmsg:
-      common.error(
-        f'{errmsg}\n'+
-        common.extra_data_printout(f'link data: {link}'),common.IncorrectValue,'links')
+    ip_index = node_2_ip_index[ node.id ] if is_numbered else -1
+    for af in ('ipv4','ipv6'):
+      if af in pfx_list:
+        ifaddr[af] = value[af] = pfx_list[af] if isinstance(pfx_list[af],bool) else \
+                                 str( netaddr.IPNetwork( f"{pfx_list[af][ip_index]}/{pfx_list[af].prefixlen}" ) )
+      elif 'unnumbered' in pfx_list and af in node.loopback:
+        ifaddr[af] = value[af] = True
 
-    ifaddr_add_module(ifaddr,link,ndict[node].get('module'))
-
+    ifaddr_add_module(ifaddr,link,node.get('module'))
     ifaddr = ifaddr + value
     ifaddr.pop('node',None)               # Remove the 'node' attribute from interface data -- now we know where it belongs
     link[IFATTR][link_cnt] = value
 
     if link.type != "stub":
       n_list = [ link[IFATTR][i].node for i in range(0,len(link[IFATTR])) if i != link_cnt ]
-      ifaddr.name = link.get("name") or (node + " -> [" + ",".join(list(n_list))+"]")
+      ifaddr.name = link.get("name") or (value.node + " -> [" + ",".join(list(n_list))+"]")
 
     ifdata = interface_data(link=link,link_attr=link_attr_nomod,ifdata=ifaddr)
-    node_intf = add_node_interface(ndict[node],ifdata,defaults)
+    node_intf = add_node_interface(node,ifdata,defaults)
     value.ifindex = node_intf.ifindex
-    interfaces.append({ 'node': node, 'data':  node_intf })
+    interfaces.append({ 'node': value.node, 'data': node_intf })
 
     link_cnt = link_cnt + 1
 
+  # 4. Process interfaces
   for node_if in interfaces:
     node_if['data'].neighbors = []
     for remote_if in interfaces:
