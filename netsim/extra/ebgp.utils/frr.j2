@@ -1,0 +1,25 @@
+router bgp {{ bgp.as }}
+!
+{% for af in ['ipv4','ipv6'] %}
+{%   for n in bgp.neighbors if n[af] is defined %}
+{%     set peer = n[af] if n[af] is string else n.local_if|default('?') %}
+
+{%     if n.default_originate|default(False) %}
+  neighbor {{ peer }} default-originate
+{%     endif %}
+
+{%   if n.allowas_in is defined %}
+  neighbor {{ peer }} allowas-in {{ 'origin' if n.allowas_in=="origin" else n.allowas_in|int }}
+{%   endif %}
+
+{%   if n.as_override|default(False) %}
+  neighbor {{ peer }} as-override
+{%   endif %}
+
+{%   if n.password is defined %}
+  neighbor {{ peer }} password {{ n.password }}
+{%   endif %}
+
+{%   endfor %}
+{% endfor %}
+!

@@ -10,7 +10,7 @@ fi
 configure
 
 # AllowAS-IN
-{% for n in bgp.neighbors if n.allowas_in is defined %}
+{% for n in bgp.neighbors if n.allowas_in|default(0)|int > 0 %}
 {%   for af in ['ipv4','ipv6'] if n[af] is defined %}
 set protocols bgp neighbor {{ n[af] }} address-family {{ af }}-unicast allowas-in number {{ n.allowas_in }}
 {%   endfor %}
