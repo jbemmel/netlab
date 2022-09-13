@@ -87,3 +87,15 @@ links:
   r3:
   prefix:
     ipv4: 172.42.a.16/22
+
+- name: Duplicate static IPv4 assignment
+  type: lan
+  prefix:
+    ipv4: 1.2.3.0/29
+  r1:
+    ipv4: 1.2.3.5
+  r2:
+    ipv4: 1.2.3.4/29
+    ipv6: 2001:db8:1:1::1/127
+  r3:
+    ipv4: 5 # This overlaps with 1.2.3.5

@@ -63,7 +63,7 @@ links:
     ipv4: 1.2.3.4/29
     ipv6: 2001:db8:1:1::1/127
   r3:
-    ipv4: 5
+    ipv4: 6 # '5' overlaps with 1.2.3.5
 
 - name: v6only link
   r1:
