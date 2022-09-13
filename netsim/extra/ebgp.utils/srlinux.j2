@@ -15,7 +15,7 @@
       ipv6-unicast: {{ activate.ipv6|default(False) }}
 {% endif %}
      as-path-options:
-{%   if n.allowas_in is defined %}
+{%   if n.allowas_in is defined and n.allowas_in|int > 0 %}
       allow-own-as: {{ n.allowas_in|int }}
 {%   endif %}
       replace-peer-as: {{ True if n.as_override|default(False) else False }}

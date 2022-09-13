@@ -5,7 +5,7 @@
   neighbor {{ n[af] }} default-originate
 {%   endif %}
 {%   if n.allowas_in is defined %}
-  neighbor {{ n[af] }} allowas-in {{ n.allowas_in }}
+  neighbor {{ n[af] }} allowas-in {{ n.allowas_in|int if n.allowas_in|int > 0 else '' }}
 {%   endif %}
 {%   if n.as_override is defined %}
   neighbor {{ n[af] }} as-path remote-as replace out

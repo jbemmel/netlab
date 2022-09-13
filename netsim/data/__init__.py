@@ -267,6 +267,36 @@ def must_be_int(
 
   return value
 
+"""
+Combined type checking function that takes multiple optional constraints and decides based on the type found
+"""
+def must_be_x(
+      parent: Box,                                      # Parent object
+      key: str,                                         # Key within the parent object, may include dots.
+      path: str,                                        # Path to parent object, used in error messages
+      true_value: typing.Optional[typing.Any] = None,   # Value to use to replace _true_, remove if _false_
+      context:    typing.Optional[typing.Any] = None,   # Additional context (use when verifying link values)
+      module:     typing.Optional[str] = None,          # Module name to display in error messages
+                                                        # Optional constraints, per type
+      min_value:  typing.Optional[int] = None,          # Minimum value
+      max_value:  typing.Optional[int] = None,          # Maximum value
+      valid_values: typing.Optional[list] = None,       # List of valid values
+              ) -> typing.Optional[Any]:
+
+  value = get_from_box(parent,key)
+  if value is None:
+    return None
+
+  if type(value)=="int":
+    return must_be_int(parent,key,path,true_value,context,module,min_value,max_value)
+  elif type(value)=="bool":
+    return must_be_bool(parent,key,path,true_value,context,module)
+  elif type(value)=="str":
+    return must_be_string(parent,key,path,true_value,context,module,valid_values)
+  
+  wrong_type_message(path=path, key=key, expected="int,str,or bool", value=value, context=context, module=module)
+  return None
+
 #
 # must_be_bool: check whether a parameter is a boolean value and remove False value
 #   to simplify Jinja2 templates
@@ -282,7 +312,6 @@ def must_be_bool(
       path: str,                                        # Path to parent object, used in error messages
       context:    typing.Optional[typing.Any] = None,   # Additional context (use when verifying link values)
       module:     typing.Optional[str] = None,          # Module name to display in error messages
-      valid_values: typing.Optional[list] = None,       # List of valid values
                 ) -> None:
 
   value = get_from_box(parent,key)
