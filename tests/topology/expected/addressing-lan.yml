@@ -25,11 +25,9 @@ links:
     ipv4: 10.42.42.18/32
     node: r1
   - ifindex: 3
-    ipv4: false
     ipv6: 2001:db8:42:44::1/64
     node: r2
   - ifindex: 3
-    ipv4: false
     node: r3
   linkindex: 2
   name: IPv4-only unnumbered link with static IPv4 and IPv6 addresses
@@ -41,13 +39,10 @@ links:
 - bridge: input_3
   interfaces:
   - ifindex: 4
-    ipv4: true
     node: r1
   - ifindex: 4
-    ipv4: true
     node: r2
   - ifindex: 4
-    ipv4: true
     node: r3
   linkindex: 3
   name: Unnumbered link (using unnumbered attribute)
@@ -93,15 +88,15 @@ links:
 - bridge: input_6
   interfaces:
   - ifindex: 7
-    ipv4: 172.17.0.1/25
+    ipv4: 172.17.0.7/25
     ipv6: 2001:db8:3::7/64
     node: r1
   - ifindex: 7
-    ipv4: 172.17.0.2/25
+    ipv4: 172.17.0.21/25
     ipv6: 2001:db8:3::15/64
     node: r2
   - ifindex: 7
-    ipv4: 172.17.0.3/25
+    ipv4: 172.17.0.42/25
     ipv6: 2001:db8:3::2a/64
     node: r3
   linkindex: 6
@@ -154,11 +149,11 @@ links:
     ipv6: true
     node: r1
   - ifindex: 10
-    ipv4: 172.17.1.2/25
+    ipv4: 172.17.1.21/25
     ipv6: true
     node: r2
   - ifindex: 9
-    ipv4: 172.17.1.3/25
+    ipv4: 172.17.1.42/25
     ipv6: 2001:db8:3:2::2a/64
     node: r3
   linkindex: 9
@@ -188,7 +183,7 @@ links:
   - ifindex: 12
     node: r1
   - ifindex: 12
-    ipv4: 10.42.42.17
+    ipv4: 10.42.42.17/32
     node: r2
   - ifindex: 11
     node: r3
@@ -200,13 +195,13 @@ links:
 - bridge: input_12
   interfaces:
   - ifindex: 13
-    ipv4: 172.42.42.1/24
+    ipv4: 172.42.42.7/24
     node: r1
   - ifindex: 13
-    ipv4: 172.42.42.2/24
+    ipv4: 172.42.42.21/24
     node: r2
   - ifindex: 12
-    ipv4: 172.42.42.3/24
+    ipv4: 172.42.42.42/24
     node: r3
   linkindex: 12
   name: Link with static prefix
@@ -217,15 +212,15 @@ links:
 - bridge: input_13
   interfaces:
   - ifindex: 14
-    ipv4: 172.42.32.1/22
+    ipv4: 172.42.32.7/22
     ipv6: 2001:db8:42:42::7/64
     node: r1
   - ifindex: 14
-    ipv4: 172.42.32.2/22
+    ipv4: 172.42.32.21/22
     ipv6: 2001:db8:42:42::15/64
     node: r2
   - ifindex: 13
-    ipv4: 172.42.32.3/22
+    ipv4: 172.42.32.42/22
     ipv6: 2001:db8:42:42::2a/64
     node: r3
   linkindex: 13
@@ -302,15 +297,12 @@ nodes:
     - bridge: input_3
       ifindex: 4
       ifname: GigabitEthernet4
-      ipv4: true
       linkindex: 3
       name: Unnumbered link (using unnumbered attribute)
       neighbors:
       - ifname: GigabitEthernet4
-        ipv4: true
         node: r2
       - ifname: GigabitEthernet4
-        ipv4: true
         node: r3
       role: unnumbered
       type: lan
@@ -347,17 +339,17 @@ nodes:
     - bridge: input_6
       ifindex: 7
       ifname: GigabitEthernet7
-      ipv4: 172.17.0.1/25
+      ipv4: 172.17.0.7/25
       ipv6: 2001:db8:3::7/64
       linkindex: 6
       name: Dual-stack link
       neighbors:
       - ifname: GigabitEthernet7
-        ipv4: 172.17.0.2/25
+        ipv4: 172.17.0.21/25
         ipv6: 2001:db8:3::15/64
         node: r2
       - ifname: GigabitEthernet7
-        ipv4: 172.17.0.3/25
+        ipv4: 172.17.0.42/25
         ipv6: 2001:db8:3::2a/64
         node: r3
       role: dualstack
@@ -401,11 +393,11 @@ nodes:
       name: Link with unnumbered nodes
       neighbors:
       - ifname: GigabitEthernet10
-        ipv4: 172.17.1.2/25
+        ipv4: 172.17.1.21/25
         ipv6: true
         node: r2
       - ifname: GigabitEthernet9
-        ipv4: 172.17.1.3/25
+        ipv4: 172.17.1.42/25
         ipv6: 2001:db8:3:2::2a/64
         node: r3
       role: dualstack
@@ -430,7 +422,7 @@ nodes:
       name: l2only LAN link with a host IP address
       neighbors:
       - ifname: GigabitEthernet12
-        ipv4: 10.42.42.17
+        ipv4: 10.42.42.17/32
         node: r2
       - ifname: GigabitEthernet11
         node: r3
@@ -438,31 +430,31 @@ nodes:
     - bridge: input_12
       ifindex: 13
       ifname: GigabitEthernet13
-      ipv4: 172.42.42.1/24
+      ipv4: 172.42.42.7/24
       linkindex: 12
       name: Link with static prefix
       neighbors:
       - ifname: GigabitEthernet13
-        ipv4: 172.42.42.2/24
+        ipv4: 172.42.42.21/24
         node: r2
       - ifname: GigabitEthernet12
-        ipv4: 172.42.42.3/24
+        ipv4: 172.42.42.42/24
         node: r3
       type: lan
     - bridge: input_13
       ifindex: 14
       ifname: GigabitEthernet14
-      ipv4: 172.42.32.1/22
+      ipv4: 172.42.32.7/22
       ipv6: 2001:db8:42:42::7/64
       linkindex: 13
       name: Link with static dual-stack prefix
       neighbors:
       - ifname: GigabitEthernet14
-        ipv4: 172.42.32.2/22
+        ipv4: 172.42.32.21/22
         ipv6: 2001:db8:42:42::15/64
         node: r2
       - ifname: GigabitEthernet13
-        ipv4: 172.42.32.3/22
+        ipv4: 172.42.32.42/22
         ipv6: 2001:db8:42:42::2a/64
         node: r3
       type: lan
@@ -525,15 +517,12 @@ nodes:
     - bridge: input_3
       ifindex: 4
       ifname: GigabitEthernet4
-      ipv4: true
       linkindex: 3
       name: Unnumbered link (using unnumbered attribute)
       neighbors:
       - ifname: GigabitEthernet4
-        ipv4: true
         node: r1
       - ifname: GigabitEthernet4
-        ipv4: true
         node: r3
       role: unnumbered
       type: lan
@@ -570,17 +559,17 @@ nodes:
     - bridge: input_6
       ifindex: 7
       ifname: GigabitEthernet7
-      ipv4: 172.17.0.2/25
+      ipv4: 172.17.0.21/25
       ipv6: 2001:db8:3::15/64
       linkindex: 6
       name: Dual-stack link
       neighbors:
       - ifname: GigabitEthernet7
-        ipv4: 172.17.0.1/25
+        ipv4: 172.17.0.7/25
         ipv6: 2001:db8:3::7/64
         node: r1
       - ifname: GigabitEthernet7
-        ipv4: 172.17.0.3/25
+        ipv4: 172.17.0.42/25
         ipv6: 2001:db8:3::2a/64
         node: r3
       role: dualstack
@@ -618,7 +607,7 @@ nodes:
     - bridge: input_9
       ifindex: 10
       ifname: GigabitEthernet10
-      ipv4: 172.17.1.2/25
+      ipv4: 172.17.1.21/25
       ipv6: true
       linkindex: 9
       name: Link with unnumbered nodes
@@ -628,7 +617,7 @@ nodes:
         ipv6: true
         node: r1
       - ifname: GigabitEthernet9
-        ipv4: 172.17.1.3/25
+        ipv4: 172.17.1.42/25
         ipv6: 2001:db8:3:2::2a/64
         node: r3
       role: dualstack
@@ -649,7 +638,7 @@ nodes:
     - bridge: input_11
       ifindex: 12
       ifname: GigabitEthernet12
-      ipv4: 10.42.42.17
+      ipv4: 10.42.42.17/32
       linkindex: 11
       name: l2only LAN link with a host IP address
       neighbors:
@@ -661,31 +650,31 @@ nodes:
     - bridge: input_12
       ifindex: 13
       ifname: GigabitEthernet13
-      ipv4: 172.42.42.2/24
+      ipv4: 172.42.42.21/24
       linkindex: 12
       name: Link with static prefix
       neighbors:
       - ifname: GigabitEthernet13
-        ipv4: 172.42.42.1/24
+        ipv4: 172.42.42.7/24
         node: r1
       - ifname: GigabitEthernet12
-        ipv4: 172.42.42.3/24
+        ipv4: 172.42.42.42/24
         node: r3
       type: lan
     - bridge: input_13
       ifindex: 14
       ifname: GigabitEthernet14
-      ipv4: 172.42.32.2/22
+      ipv4: 172.42.32.21/22
       ipv6: 2001:db8:42:42::15/64
       linkindex: 13
       name: Link with static dual-stack prefix
       neighbors:
       - ifname: GigabitEthernet14
-        ipv4: 172.42.32.1/22
+        ipv4: 172.42.32.7/22
         ipv6: 2001:db8:42:42::7/64
         node: r1
       - ifname: GigabitEthernet13
-        ipv4: 172.42.32.3/22
+        ipv4: 172.42.32.42/22
         ipv6: 2001:db8:42:42::2a/64
         node: r3
       type: lan
@@ -748,15 +737,12 @@ nodes:
     - bridge: input_3
       ifindex: 4
       ifname: GigabitEthernet4
-      ipv4: true
       linkindex: 3
       name: Unnumbered link (using unnumbered attribute)
       neighbors:
       - ifname: GigabitEthernet4
-        ipv4: true
         node: r1
       - ifname: GigabitEthernet4
-        ipv4: true
         node: r2
       role: unnumbered
       type: lan
@@ -793,17 +779,17 @@ nodes:
     - bridge: input_6
       ifindex: 7
       ifname: GigabitEthernet7
-      ipv4: 172.17.0.3/25
+      ipv4: 172.17.0.42/25
       ipv6: 2001:db8:3::2a/64
       linkindex: 6
       name: Dual-stack link
       neighbors:
       - ifname: GigabitEthernet7
-        ipv4: 172.17.0.1/25
+        ipv4: 172.17.0.7/25
         ipv6: 2001:db8:3::7/64
         node: r1
       - ifname: GigabitEthernet7
-        ipv4: 172.17.0.2/25
+        ipv4: 172.17.0.21/25
         ipv6: 2001:db8:3::15/64
         node: r2
       role: dualstack
@@ -823,7 +809,7 @@ nodes:
     - bridge: input_9
       ifindex: 9
       ifname: GigabitEthernet9
-      ipv4: 172.17.1.3/25
+      ipv4: 172.17.1.42/25
       ipv6: 2001:db8:3:2::2a/64
       linkindex: 9
       name: Link with unnumbered nodes
@@ -833,7 +819,7 @@ nodes:
         ipv6: true
         node: r1
       - ifname: GigabitEthernet10
-        ipv4: 172.17.1.2/25
+        ipv4: 172.17.1.21/25
         ipv6: true
         node: r2
       role: dualstack
@@ -860,37 +846,37 @@ nodes:
       - ifname: GigabitEthernet12
         node: r1
       - ifname: GigabitEthernet12
-        ipv4: 10.42.42.17
+        ipv4: 10.42.42.17/32
         node: r2
       type: lan
     - bridge: input_12
       ifindex: 12
       ifname: GigabitEthernet12
-      ipv4: 172.42.42.3/24
+      ipv4: 172.42.42.42/24
       linkindex: 12
       name: Link with static prefix
       neighbors:
       - ifname: GigabitEthernet13
-        ipv4: 172.42.42.1/24
+        ipv4: 172.42.42.7/24
         node: r1
       - ifname: GigabitEthernet13
-        ipv4: 172.42.42.2/24
+        ipv4: 172.42.42.21/24
         node: r2
       type: lan
     - bridge: input_13
       ifindex: 13
       ifname: GigabitEthernet13
-      ipv4: 172.42.32.3/22
+      ipv4: 172.42.32.42/22
       ipv6: 2001:db8:42:42::2a/64
       linkindex: 13
       name: Link with static dual-stack prefix
       neighbors:
       - ifname: GigabitEthernet14
-        ipv4: 172.42.32.1/22
+        ipv4: 172.42.32.7/22
         ipv6: 2001:db8:42:42::7/64
         node: r1
       - ifname: GigabitEthernet14
-        ipv4: 172.42.32.2/22
+        ipv4: 172.42.32.21/22
         ipv6: 2001:db8:42:42::15/64
         node: r2
       type: lan

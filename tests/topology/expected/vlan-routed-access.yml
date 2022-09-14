@@ -27,12 +27,12 @@ links:
 - bridge: input_2
   interfaces:
   - ifindex: 2
-    ipv4: 172.16.0.1/24
+    ipv4: 172.16.0.2/24
     node: s1
     vlan:
       access: red
   - ifindex: 1
-    ipv4: 172.16.0.2/24
+    ipv4: 172.16.0.3/24
     node: r2
     vlan:
       access: red
@@ -69,7 +69,7 @@ nodes:
         ipv4: 172.16.0.2/24
         node: s1
       - ifname: Ethernet1
-        ipv4: 172.16.0.2/24
+        ipv4: 172.16.0.3/24
         node: r2
       ospf:
         area: 0.0.0.0
@@ -117,7 +117,7 @@ nodes:
       bridge_group: 1
       ifindex: 1
       ifname: Ethernet1
-      ipv4: 172.16.0.2/24
+      ipv4: 172.16.0.3/24
       linkindex: 2
       name: r2 -> [r1,s1]
       neighbors:
@@ -193,7 +193,7 @@ nodes:
         ipv4: 172.16.0.1/24
         node: r1
       - ifname: Ethernet1
-        ipv4: 172.16.0.2/24
+        ipv4: 172.16.0.3/24
         node: r2
       ospf:
         area: 0.0.0.0
@@ -248,7 +248,7 @@ vlans:
       ipv4: 172.16.0.2/24
       node: s1
     - ifname: Ethernet1
-      ipv4: 172.16.0.2/24
+      ipv4: 172.16.0.3/24
       node: r2
     ospf:
       cost: 10

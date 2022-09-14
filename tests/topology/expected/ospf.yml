@@ -195,7 +195,7 @@ links:
 - bridge: input_9
   interfaces:
   - ifindex: 5
-    ipv4: 172.19.2.1/24
+    ipv4: 172.19.2.3/24
     ipv6: 2001:db8:1:2::3/64
     node: a_eos
   linkindex: 9
@@ -319,7 +319,7 @@ nodes:
     - bridge: input_9
       ifindex: 5
       ifname: Ethernet5
-      ipv4: 172.19.2.1/24
+      ipv4: 172.19.2.3/24
       ipv6: 2001:db8:1:2::3/64
       linkindex: 9
       neighbors: []

@@ -47,10 +47,10 @@ links:
 - bridge: input_3
   interfaces:
   - ifindex: 2
-    ipv4: 192.168.22.1/24
+    ipv4: 192.168.22.2/24
     node: e2
   - ifindex: 3
-    ipv4: 192.168.22.2/24
+    ipv4: 192.168.22.3/24
     node: pe1
   linkindex: 3
   node_count: 2
@@ -158,12 +158,12 @@ nodes:
     - bridge: input_3
       ifindex: 2
       ifname: GigabitEthernet0/2
-      ipv4: 192.168.22.1/24
+      ipv4: 192.168.22.2/24
       linkindex: 3
       name: e2 -> [pe1]
       neighbors:
       - ifname: GigabitEthernet3
-        ipv4: 192.168.22.2/24
+        ipv4: 192.168.22.3/24
         node: pe1
       type: lan
     - dmz: 100000
@@ -209,12 +209,12 @@ nodes:
     - bridge: input_3
       ifindex: 3
       ifname: GigabitEthernet3
-      ipv4: 192.168.22.2/24
+      ipv4: 192.168.22.3/24
       linkindex: 3
       name: pe1 -> [e2]
       neighbors:
       - ifname: GigabitEthernet0/2
-        ipv4: 192.168.22.1/24
+        ipv4: 192.168.22.2/24
         node: e2
       type: lan
     loopback:

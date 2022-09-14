@@ -34,7 +34,7 @@ links:
       access: red
       mode: route
   - ifindex: 1
-    ipv4: 172.16.2.2/24
+    ipv4: 172.16.2.3/24
     node: h2
   linkindex: 2
   node_count: 2
@@ -87,7 +87,7 @@ nodes:
         ipv4: 172.16.2.1/24
       ifindex: 1
       ifname: eth1
-      ipv4: 172.16.2.2/24
+      ipv4: 172.16.2.3/24
       linkindex: 2
       name: h2 -> [r1]
       neighbors:
@@ -133,7 +133,7 @@ nodes:
       name: r1 -> [h2]
       neighbors:
       - ifname: eth1
-        ipv4: 172.16.2.2/24
+        ipv4: 172.16.2.3/24
         node: h2
       role: stub
       type: lan

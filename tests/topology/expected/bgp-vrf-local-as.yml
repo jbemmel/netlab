@@ -375,11 +375,11 @@ nodes:
     - bridge_group: 2
       ifindex: 7
       ifname: Ethernet2.1
-      ipv4: 172.16.5.1/24
+      ipv4: 172.16.5.2/24
       name: r2 -> [r3]
       neighbors:
       - ifname: Ethernet1.1
-        ipv4: 172.16.5.2/24
+        ipv4: 172.16.5.3/24
         node: r3
       parent_ifindex: 2
       parent_ifname: Ethernet2
@@ -394,11 +394,11 @@ nodes:
     - bridge_group: 3
       ifindex: 8
       ifname: Ethernet2.2
-      ipv4: 172.16.6.1/24
+      ipv4: 172.16.6.2/24
       name: r2 -> [r3]
       neighbors:
       - ifname: Ethernet1.2
-        ipv4: 172.16.6.2/24
+        ipv4: 172.16.6.3/24
         node: r3
       parent_ifindex: 2
       parent_ifname: Ethernet2
@@ -469,7 +469,7 @@ nodes:
             type: ebgp
           - as: 65101
             ifindex: 7
-            ipv4: 172.16.5.2
+            ipv4: 172.16.5.3
             name: r3
             type: ebgp
           router_id: 172.32.0.2
@@ -498,7 +498,7 @@ nodes:
             type: ebgp
           - as: 65101
             ifindex: 8
-            ipv4: 172.16.6.2
+            ipv4: 172.16.6.3
             name: r3
             type: ebgp
           router_id: 172.31.0.1
@@ -542,11 +542,11 @@ nodes:
     - bridge_group: 1
       ifindex: 2
       ifname: Ethernet1.1
-      ipv4: 172.16.5.2/24
+      ipv4: 172.16.5.3/24
       name: r3 -> [r2]
       neighbors:
       - ifname: Ethernet2.1
-        ipv4: 172.16.5.1/24
+        ipv4: 172.16.5.2/24
         node: r2
       parent_ifindex: 1
       parent_ifname: Ethernet1
@@ -561,11 +561,11 @@ nodes:
     - bridge_group: 2
       ifindex: 3
       ifname: Ethernet1.2
-      ipv4: 172.16.6.2/24
+      ipv4: 172.16.6.3/24
       name: r3 -> [r2]
       neighbors:
       - ifname: Ethernet2.2
-        ipv4: 172.16.6.1/24
+        ipv4: 172.16.6.2/24
         node: r2
       parent_ifindex: 1
       parent_ifname: Ethernet1
@@ -618,7 +618,7 @@ nodes:
           neighbors:
           - as: 65000
             ifindex: 2
-            ipv4: 172.16.5.1
+            ipv4: 172.16.5.2
             name: r2
             type: ebgp
         export:
@@ -635,7 +635,7 @@ nodes:
           neighbors:
           - as: 65000
             ifindex: 3
-            ipv4: 172.16.6.1
+            ipv4: 172.16.6.2
             name: r2
             type: ebgp
         export:
