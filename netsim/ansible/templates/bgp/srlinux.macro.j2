@@ -178,7 +178,6 @@
 {# BGP unnumbered for IPv6 LLA, only supported for EBGP peers #}
 {% set peer_group = "ebgp-unnumbered" + (('-' + n.local_as|string()) if n.local_as is defined else '') %}
 {{ bgp_peer_group(peer_group,'ebgp',n,None) }}
-   description: "BGP unnumbered to {{ n.name }}"
 {% if n.local_as is defined %}
    local-as:
    - as-number: {{ n.local_as }}
