@@ -151,7 +151,7 @@ links:
   interfaces:
   - ifindex: 10
     ipv4: true
-    ipv6: true
+    ipv6: 2001:db8:3:2::7/64
     node: r1
   - ifindex: 10
     ipv4: 172.17.1.21/25
@@ -398,7 +398,7 @@ nodes:
       ifindex: 10
       ifname: GigabitEthernet10
       ipv4: true
-      ipv6: true
+      ipv6: 2001:db8:3:2::7/64
       linkindex: 9
       name: Link with unnumbered nodes
       neighbors:
@@ -629,7 +629,7 @@ nodes:
       neighbors:
       - ifname: GigabitEthernet10
         ipv4: true
-        ipv6: true
+        ipv6: 2001:db8:3:2::7/64
         node: r1
       - ifname: GigabitEthernet9
         ipv4: 172.17.1.42/25
@@ -836,7 +836,7 @@ nodes:
       neighbors:
       - ifname: GigabitEthernet10
         ipv4: true
-        ipv6: true
+        ipv6: 2001:db8:3:2::7/64
         node: r1
       - ifname: GigabitEthernet10
         ipv4: 172.17.1.21/25

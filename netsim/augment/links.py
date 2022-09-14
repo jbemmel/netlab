@@ -332,7 +332,7 @@ def get_node_static_ip(node: Box, node_link_data: dict, prefix: dict) -> typing.
           if isinstance(prefix[af],bool):
             ret[af] = prefix[af]
           elif af=='ipv6':    # If no static IPv6 address is given on ipv6-enabled link
-            ret['ipv6'] = ret['ipv4'] if 'ipv4' in ret and isinstance(ret['ipv4'],int) else node.id   # use same index as ipv4 if available, else node id
+            ret['ipv6'] = ret['ipv4'] if 'ipv4' in ret and type(ret['ipv4']).__name__=="int" else node.id   # use same index as ipv4 if available, else node id
   
   except Exception as errormsg:
     common.error(str(errormsg),common.IncorrectValue,'links')
