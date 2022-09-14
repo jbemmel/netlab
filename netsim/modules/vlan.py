@@ -29,7 +29,7 @@ vlan_link_attr: typing.Final[dict] = {
   'trunk' : { 'type' : dict,'vlan': True }
 }
 
-phy_ifattr: typing.Final[list] = ['bridge','ifindex','parentindex','ifname','linkindex','type','vlan','mtu'] # Physical interface attributes
+phy_ifattr: typing.Final[list] = ['bridge','ifindex','parentindex','ifname','linkindex','type','vlan','mtu','link_ifindex'] # Physical interface attributes
 keep_subif_attr: typing.Final[list] = ['vlan','ifindex','ifname','type']    # Keep these attributes on VLAN subinterfaces
 
 """
@@ -470,10 +470,13 @@ def create_vlan_links(link: Box, v_attr: Box, topology: Box) -> None:
       if vname in topology.get('vlans',{}):                 # We need an IP prefix for the VLAN link
         prefix = topology.vlans[vname].prefix               # Hopefully we can get it from the global VLAN pool
 
+      print( f"JVB: create_vlan_links {vname} link.interfaces={(link.interfaces)}" )
+
       for intf in link.interfaces:
         if 'vlan' in intf and vname in intf.vlan.get('trunk',{}):
           intf_data = Box(intf.vlan.trunk[vname] or {},default_box=True,box_dots=True)
           intf_data.node = intf.node
+          intf_data.link_ifindex = link.interfaces.index( intf ) # To support self-loop case
           intf_data.vlan.access = vname
           intf_node = topology.nodes[intf.node]
 
@@ -489,6 +492,8 @@ def create_vlan_links(link: Box, v_attr: Box, topology: Box) -> None:
                 prefix = topology.node[intf.node].vlans[vname].prefix
 
           link_data.interfaces.append(intf_data)            # Append the interface to vlan link
+
+      print( f"JVB: create_vlan_links {vname} link_data.interfaces={link_data.interfaces}" )
 
       if routed_access_vlan(link_data,topology,vname):
         link_data.vlan.mode = 'route'
@@ -659,6 +664,7 @@ def create_svi_interfaces(node: Box, topology: Box) -> dict:
 
     for attr in list(ifdata.keys()):                                        # Clean up physical interface data
       if not attr in skip_ifattr:
+        print( f"JVB: pop {attr}" )
         ifdata.pop(attr,None)
 
     ifdata.vlan.access_id = vlan_data.id                                    # Add VLAN ID to interface data to simplify config templates
@@ -714,18 +720,24 @@ find_parent_interface: Find the parent interface of a VLAN member subinterface
 """
 def find_parent_interface(intf: Box, node: Box, topology: Box) -> typing.Optional[Box]:
   link_list = [ l for l in topology.links if l.linkindex == intf.parentindex ]
+  print( f"JVB: find_parent_interface (intf.parentindex={intf.parentindex}) -> link_list={len(link_list)} intf={intf}" )
   if not link_list:
     return None
 
   link = link_list[0]
-  intf_list = [ intf for intf in link.interfaces if intf.node == node.name]
-  if not intf_list:
-    return None
+  # intf_list = [ li for li in link.interfaces if li.node == node.name]
+  # print( f"JVB: find_parent_interface {intf.parentindex} -> intf_list={intf_list}" )
+  # if not intf_list:
+  #   return None
 
-  link_intf = intf_list[0]
+  # link_intf = intf_list[0] # XXX for a link to self, this never addresses the 2nd interface
 
-  node_iflist = [ intf for intf in node.interfaces if intf.ifindex == link_intf.ifindex]
+  link_intf = link.interfaces[ intf.link_ifindex ]
+
+  node_iflist = [ i for i in node.interfaces if i.ifindex == link_intf.ifindex]
+  print( f"JVB: find_parent_interface {intf.parentindex} -> node_iflist={len(node_iflist)}" )
   if not node_iflist:
+    print( "JVB: XXX find_parent_interface -> NONE" )
     return None
 
   return node_iflist[0]
@@ -783,6 +795,7 @@ def rename_vlan_subinterfaces(node: Box, topology: Box) -> None:
       return
 
     if 'subif_index' in parent_intf:
+      print( f"JVB: rename_vlan_subinterfaces on {parent_intf}" )
       parent_intf.subif_index = parent_intf.subif_index + 1
     else:
       parent_intf.subif_index = features.vlan.first_subif_id or 1
@@ -918,7 +931,9 @@ class VLAN(_Module):
     validate_vlan_attributes(node,topology)
 
   def link_pre_transform(self, link: Box, topology: Box) -> None:
+    print( f"JvB: link_pre_transform {link}" )
     if link.get('type','') == 'vlan_member':                                      # Skip VLAN member links, we've been there...
+      print( f"JvB: link_pre_transform -> vlan_member exit" )
       return
 
     v_attr = Box({},default_box=True,box_dots=True)
@@ -928,9 +943,11 @@ class VLAN(_Module):
       link_ok = link_ok and check_link_vlan_attributes(intf,link,v_attr,topology) # Check interface VLAN attributes
 
     if not link_ok:
+      print( f"JvB: link_pre_transform -> not link_ok" )
       return
 
     if not validate_link_vlan_attributes(link,v_attr,topology):
+      print( f"JvB: link_pre_transform -> not validate_link_vlan_attributes" )
       return
 
     # Merge link VLAN attributes into interface VLAN attributes to make subsequent steps easier
@@ -939,9 +956,11 @@ class VLAN(_Module):
         intf_node = topology.nodes[intf.node]
         if 'vlan' in intf_node.get('module',[]):                                  # ... is the node a VLAN-aware node?
           intf.vlan = link.vlan + intf.vlan                                       # ... merge link VLAN attributes with interface attributes
+          print( f"JvB intf.vlan: {intf.vlan}" )
 
     if 'trunk' in v_attr:
       create_vlan_links(link,v_attr,topology)
+      print( f"JvB after create_vlan_links: {topology.links}" )
 
     svi_skipattr = topology.defaults.vlan.vlan_no_propagate or []                 # VLAN attributes not copied into link data
     link_vlan = get_link_access_vlan(v_attr)
@@ -954,6 +973,7 @@ class VLAN(_Module):
                                 if k not in svi_skipattr })                       # Remove VLAN-specific data
         fix_vlan_mode_attribute(vlan_data)                                        # ... and turn mode into vlan.mode
         for (k,v) in vlan_data.items():                                           # Now add the rest to link data
+          print( f"JvB: {k},{v} k in link={k in link}" )
           if not k in link:                                                       # ... have to do the deep merge manually as
             link[k] = v                                                           # ... we cannot just replace link data structure
           elif isinstance(link[k],Box) and isinstance(vlan_data[k],Box):
@@ -976,9 +996,15 @@ class VLAN(_Module):
             intf.ipv4 = False                                                     # ... if so, disable addressing on this interface
             intf.ipv6 = False
 
+    print( "JvB: link_pre_transform -> " + '\n'.join( [ str(i) for i in link.interfaces] ) )
+    print( "JvB: link_pre_transform topo -> " + '\n *** \n'.join( [ str(i.interfaces) for i in topology.links] ) )
+
   def module_post_transform(self, topology: Box) -> None:
     for n in topology.nodes.values():
       if 'vlan' in n.get('module',[]):
+        for i in n.interfaces:
+           print( f"JvB: module_post_transform interface: {i}" )
+
         vlan_ifmap = create_svi_interfaces(n,topology)
         map_trunk_vlans(n,topology)
         rename_vlan_subinterfaces(n,topology)
