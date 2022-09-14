@@ -22,12 +22,12 @@ links:
 - bridge: input_2
   interfaces:
   - ifindex: 2
-    ipv4: 172.16.0.2/24
+    ipv4: 172.16.0.1/24
     node: s1
     vlan:
       access: red
   - ifindex: 1
-    ipv4: 172.16.0.3/24
+    ipv4: 172.16.0.2/24
     node: s2
     vlan:
       access: red
@@ -40,15 +40,15 @@ links:
     access: red
 - bridge: input_3
   gateway:
-    ipv4: 172.16.0.3/24
+    ipv4: 172.16.0.1/24
   interfaces:
   - ifindex: 2
-    ipv4: 172.16.0.3/24
+    ipv4: 172.16.0.1/24
     node: s2
     vlan:
       access: red
   - ifindex: 1
-    ipv4: 172.16.0.4/24
+    ipv4: 172.16.0.2/24
     node: h2
   linkindex: 3
   node_count: 2
@@ -66,7 +66,7 @@ links:
     vlan:
       access: blue
   - ifindex: 2
-    ipv4: 172.16.1.4/24
+    ipv4: 172.16.1.2/24
     node: h2
   linkindex: 4
   node_count: 2
@@ -118,10 +118,10 @@ nodes:
         ipv4: 172.16.0.2/24
         node: s1
       - ifname: BVI1
-        ipv4: 172.16.0.3/24
+        ipv4: 172.16.0.2/24
         node: s2
       - ifname: eth1
-        ipv4: 172.16.0.4/24
+        ipv4: 172.16.0.2/24
         node: h2
       type: lan
     mgmt:
@@ -139,10 +139,10 @@ nodes:
     interfaces:
     - bridge: input_3
       gateway:
-        ipv4: 172.16.0.3/24
+        ipv4: 172.16.0.1/24
       ifindex: 1
       ifname: eth1
-      ipv4: 172.16.0.4/24
+      ipv4: 172.16.0.2/24
       linkindex: 3
       name: h2 -> [h1,s1,s2]
       neighbors:
@@ -153,13 +153,13 @@ nodes:
         ipv4: 172.16.0.2/24
         node: s1
       - ifname: BVI1
-        ipv4: 172.16.0.3/24
+        ipv4: 172.16.0.2/24
         node: s2
       type: lan
     - bridge: input_4
       ifindex: 2
       ifname: eth2
-      ipv4: 172.16.1.4/24
+      ipv4: 172.16.1.2/24
       linkindex: 4
       name: h2 -> [s2]
       neighbors:
@@ -215,10 +215,10 @@ nodes:
         ipv4: 172.16.0.1/24
         node: h1
       - ifname: BVI1
-        ipv4: 172.16.0.3/24
+        ipv4: 172.16.0.2/24
         node: s2
       - ifname: eth1
-        ipv4: 172.16.0.4/24
+        ipv4: 172.16.0.2/24
         node: h2
       type: svi
       virtual_interface: true
@@ -288,7 +288,7 @@ nodes:
     - bridge_group: 1
       ifindex: 5
       ifname: BVI1
-      ipv4: 172.16.0.3/24
+      ipv4: 172.16.0.2/24
       name: VLAN red (1001) -> [h1,s1,h2]
       neighbors:
       - ifname: eth1
@@ -298,7 +298,7 @@ nodes:
         ipv4: 172.16.0.2/24
         node: s1
       - ifname: eth1
-        ipv4: 172.16.0.4/24
+        ipv4: 172.16.0.2/24
         node: h2
       type: svi
       virtual_interface: true
@@ -310,7 +310,7 @@ nodes:
       name: VLAN blue (1000) -> [h2]
       neighbors:
       - ifname: eth2
-        ipv4: 172.16.1.4/24
+        ipv4: 172.16.1.2/24
         node: h2
       role: stub
       type: svi
@@ -337,7 +337,7 @@ nodes:
         mode: bridge
         neighbors:
         - ifname: eth2
-          ipv4: 172.16.1.4/24
+          ipv4: 172.16.1.2/24
           node: h2
         - ifname: BVI2
           node: s2
@@ -356,10 +356,10 @@ nodes:
           ipv4: 172.16.0.2/24
           node: s1
         - ifname: BVI1
-          ipv4: 172.16.0.3/24
+          ipv4: 172.16.0.2/24
           node: s2
         - ifname: eth1
-          ipv4: 172.16.0.4/24
+          ipv4: 172.16.0.2/24
           node: h2
         prefix:
           ipv4: 172.16.0.0/24
@@ -380,10 +380,10 @@ vlans:
       ipv4: 172.16.0.2/24
       node: s1
     - ifname: BVI1
-      ipv4: 172.16.0.3/24
+      ipv4: 172.16.0.2/24
       node: s2
     - ifname: eth1
-      ipv4: 172.16.0.4/24
+      ipv4: 172.16.0.2/24
       node: h2
     prefix:
       ipv4: 172.16.0.0/24

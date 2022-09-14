@@ -172,13 +172,13 @@ links:
     ipv4: 172.16.3.1/24
     node: r1
   - ifindex: 8
-    ipv4: 172.16.3.2/24
+    ipv4: 172.16.3.4/24
     node: r2
   - ifindex: 9
-    ipv4: 172.16.3.2/24
+    ipv4: 172.16.3.4/24
     node: r2
   - ifindex: 4
-    ipv4: 172.16.3.3/24
+    ipv4: 172.16.3.6/24
     node: r3
   linkindex: 9
   name: Looped LAN link to a set of nodes
@@ -348,13 +348,13 @@ nodes:
         ipv4: 172.16.3.1/24
         node: r1
       - ifname: GigabitEthernet0/8
-        ipv4: 172.16.3.2/24
+        ipv4: 172.16.3.4/24
         node: r2
       - ifname: GigabitEthernet0/9
-        ipv4: 172.16.3.2/24
+        ipv4: 172.16.3.4/24
         node: r2
       - ifname: GigabitEthernet0/4
-        ipv4: 172.16.3.3/24
+        ipv4: 172.16.3.6/24
         node: r3
       ospf:
         area: 0.0.0.0
@@ -374,13 +374,13 @@ nodes:
         ipv4: 172.16.3.1/24
         node: r1
       - ifname: GigabitEthernet0/8
-        ipv4: 172.16.3.2/24
+        ipv4: 172.16.3.4/24
         node: r2
       - ifname: GigabitEthernet0/9
-        ipv4: 172.16.3.2/24
+        ipv4: 172.16.3.4/24
         node: r2
       - ifname: GigabitEthernet0/4
-        ipv4: 172.16.3.3/24
+        ipv4: 172.16.3.6/24
         node: r3
       ospf:
         area: 0.0.0.0
@@ -400,13 +400,13 @@ nodes:
         ipv4: 172.16.3.1/24
         node: r1
       - ifname: GigabitEthernet0/8
-        ipv4: 172.16.3.2/24
+        ipv4: 172.16.3.4/24
         node: r2
       - ifname: GigabitEthernet0/9
-        ipv4: 172.16.3.2/24
+        ipv4: 172.16.3.4/24
         node: r2
       - ifname: GigabitEthernet0/4
-        ipv4: 172.16.3.3/24
+        ipv4: 172.16.3.6/24
         node: r3
       ospf:
         area: 0.0.0.0
@@ -543,7 +543,7 @@ nodes:
     - bridge: input_9
       ifindex: 8
       ifname: GigabitEthernet0/8
-      ipv4: 172.16.3.2/24
+      ipv4: 172.16.3.4/24
       linkindex: 9
       name: Looped LAN link to a set of nodes
       neighbors:
@@ -557,10 +557,10 @@ nodes:
         ipv4: 172.16.3.1/24
         node: r1
       - ifname: GigabitEthernet0/9
-        ipv4: 172.16.3.2/24
+        ipv4: 172.16.3.4/24
         node: r2
       - ifname: GigabitEthernet0/4
-        ipv4: 172.16.3.3/24
+        ipv4: 172.16.3.6/24
         node: r3
       ospf:
         area: 0.0.0.0
@@ -569,7 +569,7 @@ nodes:
     - bridge: input_9
       ifindex: 9
       ifname: GigabitEthernet0/9
-      ipv4: 172.16.3.2/24
+      ipv4: 172.16.3.4/24
       linkindex: 9
       name: Looped LAN link to a set of nodes
       neighbors:
@@ -583,10 +583,10 @@ nodes:
         ipv4: 172.16.3.1/24
         node: r1
       - ifname: GigabitEthernet0/8
-        ipv4: 172.16.3.2/24
+        ipv4: 172.16.3.4/24
         node: r2
       - ifname: GigabitEthernet0/4
-        ipv4: 172.16.3.3/24
+        ipv4: 172.16.3.6/24
         node: r3
       ospf:
         area: 0.0.0.0
@@ -667,7 +667,7 @@ nodes:
     - bridge: input_9
       ifindex: 4
       ifname: GigabitEthernet0/4
-      ipv4: 172.16.3.3/24
+      ipv4: 172.16.3.6/24
       linkindex: 9
       name: Looped LAN link to a set of nodes
       neighbors:
@@ -681,10 +681,10 @@ nodes:
         ipv4: 172.16.3.1/24
         node: r1
       - ifname: GigabitEthernet0/8
-        ipv4: 172.16.3.2/24
+        ipv4: 172.16.3.4/24
         node: r2
       - ifname: GigabitEthernet0/9
-        ipv4: 172.16.3.2/24
+        ipv4: 172.16.3.4/24
         node: r2
       ospf:
         area: 0.0.0.0

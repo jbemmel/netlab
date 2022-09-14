@@ -45,7 +45,7 @@ links:
 - bridge: input_3
   interfaces:
   - ifindex: 3
-    ipv4: 172.16.2.2/24
+    ipv4: 172.16.2.1/24
     node: c_csr
   linkindex: 3
   node_count: 1
@@ -55,7 +55,7 @@ links:
 - bridge: input_4
   interfaces:
   - ifindex: 2
-    ipv4: 172.16.3.3/24
+    ipv4: 172.16.3.1/24
     node: a_eos
   linkindex: 4
   node_count: 1
@@ -65,7 +65,7 @@ links:
 - bridge: input_5
   interfaces:
   - ifindex: 1
-    ipv4: 172.16.4.4/24
+    ipv4: 172.16.4.1/24
     node: j_vsrx
   linkindex: 5
   node_count: 1
@@ -291,7 +291,7 @@ nodes:
     - bridge: input_4
       ifindex: 2
       ifname: Ethernet2
-      ipv4: 172.16.3.3/24
+      ipv4: 172.16.3.1/24
       isis:
         passive: true
       linkindex: 4
@@ -433,7 +433,7 @@ nodes:
     - bridge: input_3
       ifindex: 3
       ifname: GigabitEthernet3
-      ipv4: 172.16.2.2/24
+      ipv4: 172.16.2.1/24
       isis:
         passive: true
       linkindex: 3
@@ -711,7 +711,7 @@ nodes:
     - bridge: input_5
       ifindex: 1
       ifname: ge-0/0/1
-      ipv4: 172.16.4.4/24
+      ipv4: 172.16.4.1/24
       isis:
         passive: true
       linkindex: 5
