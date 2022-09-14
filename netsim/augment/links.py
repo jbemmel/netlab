@@ -269,74 +269,78 @@ def get_node_link_address(node: Box, ifdata: Box, node_link_data: dict, prefix: 
 # Determines if the given node has statically assigned IP(s)
 # Returns relative indices within the given prefixes, bool values or address strings
 #
-def get_node_static_ip(node: Box, node_link_data: dict, prefix: dict) -> dict:
+def get_node_static_ip(node: Box, node_link_data: dict, prefix: dict) -> typing.Dict[str,typing.Union[bool,int,str]]:
   if common.debug_active('links'):     # pragma: no cover (debugging)
     print(f"get_node_static_ip for {node.name}:\n"+
           f".. node_link_data: {node_link_data}\n"+
           f".. prefix: {prefix}")
 
-  # Handle special case of unnumbered prefixes, convert to ipv4/ipv6 prefix based on node loopback addresses
-  if 'unnumbered' in prefix:
-    prefix = {}
-    for af in ('ipv4','ipv6'):
-      if af in node_link_data:
-        common.error(f'Static {af} configuration {node_link_data[af]} for node {node.name} ignored on fully-unnumbered link',
-                     common.IncorrectValue,'links')
-        return {}
-      elif af in node.loopback and node.loopback[af]:
-        prefix[af] = True
+  try:
+    # Handle special case of unnumbered prefixes, convert to ipv4/ipv6 prefix based on node loopback addresses
+    ret : typing.Dict[str,typing.Union[bool,int,str]] = {}
+    if 'unnumbered' in prefix:
+      for af in ('ipv4','ipv6'):
+        if af in node_link_data:
+          raise Exception(f'Static {af} configuration {node_link_data[af]} for node {node.name} ignored on fully-unnumbered link')
+        elif af in node.loopback and node.loopback[af]:
+          ret[af] = True
+  
+    else:
 
-  def check_index(ip_index: int, prefix: netaddr.IPNetwork) -> typing.Optional[int]:
-    min_valid = 1 if prefix.version==4 and prefix.prefixlen < 31 else 0
-    max_valid = prefix.size - min_valid
-    if ip_index < min_valid or ip_index > max_valid:
-      common.error(f'Node {node.name} is using static IP index {ip_index} ' +
-                    'that is out of range for {prefix}[{min_valid},{max_valid}]',
-                    common.IncorrectValue,'links')
-      return None
-    return ip_index
+      def check_index(ip_index: int, prefix: netaddr.IPNetwork) -> int:
+        min_valid = 1 if prefix.version==4 and prefix.prefixlen < 31 else 0
+        max_valid = prefix.size - min_valid
+        if ip_index < min_valid or ip_index > max_valid:
+          raise Exception(f'Node {node.name} is using static IP index {ip_index} ' +
+                           'that is out of range for {prefix}[{min_valid},{max_valid}]')
+        return ip_index
 
-  ret = {}
-  for af in ('ipv4','ipv6'):
-    if af in node_link_data:
-      if af in prefix and isinstance(prefix[af],bool):
-        if isinstance(node_link_data[af],bool):
-          ret[af] = node_link_data[af]
-          continue
-      elif isinstance(node_link_data[af],bool): # unnumbered node or ipv[x]=False
-        ret[af] = node_link_data[af]  # Honor user request to not assign an IP
-        continue
-      if af in prefix and isinstance(node_link_data[af],int):  # host portion of IP address specified as an integer
-        ret[af] = check_index(node_link_data[af],prefix[af])
-      else:                                   # static IP address
-        try:
-          node_addr = netaddr.IPNetwork(node_link_data[af])
-          if '/' not in node_link_data[af] and af in prefix:
-            node_addr.prefixlen = prefix[af].prefixlen
-          if af in prefix: 
-            if isinstance(prefix[af],bool):
-              if af=='ipv4':
-                if node_addr.prefixlen==32:
-                  ret[af] = str(node_addr)  # Corner case: static ipv4/32 on an unnumbered link
-                else:
-                  common.error(f'Node {node.name} is using a non-/32 static IP {node_addr} ' +
-                                'on an unnumbered link', common.IncorrectValue,'links')
+      for af in ('ipv4','ipv6'):
+        if af in node_link_data:
+          if af in prefix and isinstance(prefix[af],bool):
+            if isinstance(node_link_data[af],bool):
+              ret[af] = node_link_data[af]
+              continue
+          elif isinstance(node_link_data[af],bool): # unnumbered node or ipv[x]=False
+            ret[af] = node_link_data[af]  # Honor user request to not assign an IP
+            continue
+
+          if af in prefix and isinstance(node_link_data[af],int):  # host portion of IP address specified as an integer
+            ret[af] = check_index(node_link_data[af],prefix[af])
+          else:                                                    # static IP address
+            try:
+              node_addr = netaddr.IPNetwork(node_link_data[af])
+              if '/' not in node_link_data[af] and af in prefix:
+                node_addr.prefixlen = prefix[af].prefixlen
+              if af in prefix: 
+                if isinstance(prefix[af],bool):
+                  if af=='ipv4':
+                    if node_addr.prefixlen==32:
+                      ret[af] = str(node_addr)  # Corner case: static ipv4/32 on an unnumbered link
+                    else:
+                      raise Exception(f'Node {node.name} is using a non-/32 static IP {node_addr} on an unnumbered link')
+                  else:
+                      raise Exception(f'Node {node.name} is using a static IPv6 {node_addr} on an unnumbered link')                
+                else: 
+                  ret[af] = check_index( int(node_addr.ip) - int(prefix[af].ip), prefix[af] )
               else:
-                  common.error(f'Node {node.name} is using a static IPv6 {node_addr} ' +
-                                'on an unnumbered link', common.IncorrectValue,'links')                
-            else: 
-              ret[af] = check_index( int(node_addr.ip) - int(prefix[af].ip), prefix[af] )
-          else:
-            ret[af] = str(node_addr) # IP address on link without prefix
-        except Exception as e:
-          common.error(f'Invalid {af} link address {node_link_data[af]} for node {node.name}: {e}',common.IncorrectValue,'links')
-          return {}
-    elif af=='ipv6' and af in prefix and not isinstance(prefix['ipv6'],bool):    # If no static IPv6 address is given on ipv6-enabled link
-      ret['ipv6'] = ret['ipv4'] if 'ipv4' in ret and isinstance(ret['ipv4'],int) else node.id   # use same index as ipv4 if available, else node id
+                ret[af] = str(node_addr) # IP address on link without prefix
+            except Exception as e:
+              raise Exception(f'Invalid {af} link address {node_link_data[af]} for node {node.name}: {e}')
 
-  if common.debug_active('links'):     # pragma: no cover (debugging)
-    print(f'get_node_static_ip -> {ret}\n')
-  return ret
+        elif af in prefix:
+          if isinstance(prefix[af],bool):
+            ret[af] = prefix[af]
+          elif af=='ipv6':    # If no static IPv6 address is given on ipv6-enabled link
+            ret['ipv6'] = ret['ipv4'] if 'ipv4' in ret and isinstance(ret['ipv4'],int) else node.id   # use same index as ipv4 if available, else node id
+  
+  except Exception as errormsg:
+    common.error(str(errormsg),common.IncorrectValue,'links')
+
+  finally:
+    if common.debug_active('links'):     # pragma: no cover (debugging)
+      print(f'get_node_static_ip -> {ret}\n')
+    return ret
 
 def augment_link_prefix(link: Box,pools: typing.List[str],addr_pools: Box) -> dict:
   if 'role' in link:
@@ -374,8 +378,8 @@ def augment_lan_link(link: Box, addr_pools: Box, ndict: dict, defaults: Box) -> 
   # Easier to handle unnumbered links differently from the start
   v4_numbered = ('ipv4' in pfx_list and not isinstance(pfx_list['ipv4'],bool))
 
-  # 1. Build a map of statically assigned IP indexes (relative within ipv4 or ipv6 prefix)
-  node_2_ip_index : typing.Dict[str,typing.Dict[int,int]] = { 'ipv4': {}, 'ipv6': {} }  # Index node ID -> relative ip offset per af
+  # 1. Build a map of statically assigned IP addresses or indexes (relative within ipv4 or ipv6 prefix), per AF
+  node_2_ip_index : typing.Dict[str,typing.Dict[int,typing.Union[bool,int,str]]] = { 'ipv4': {}, 'ipv6': {} }
 
   for value in link[IFATTR]:
     node = ndict[value.node]
@@ -399,20 +403,21 @@ def augment_lan_link(link: Box, addr_pools: Box, ndict: dict, defaults: Box) -> 
         # Determine next free IP, using node ID as index if possible/available
         def get_next_ip_index() -> typing.Optional[int]:
           allocated_ips = node_2_ip_index[af].values()
-          if node_id < (prefix.size-start_index) and node_id not in allocated_ips:
+          ip_range = range(start_index,prefix.size-start_index)
+          if node_id in ip_range and node_id not in allocated_ips:
             return node_id
-          for i in range(start_index,prefix.size-start_index):
+          for i in ip_range:
             if i not in allocated_ips:
               return i
           common.error(f"Out of IP addresses for LAN subnet {prefix}; node_2_ip={node_2_ip_index}",
                        common.IncorrectValue,'links')
           return None
     
-        ip_index = get_next_ip_index()
-        if ip_index is not None:
-          node_2_ip_index[af][node_id] = ip_index
+        auto_ip_index = get_next_ip_index()
+        if auto_ip_index is not None:
+          node_2_ip_index[af][node_id] = auto_ip_index
           if common.debug_active('links'):   # pragma: no cover (debugging)
-              print( f"Auto-assigned assigned node {node_id} = {prefix[ip_index]}({ip_index})" )
+              print( f"Auto-assigned IP node {node_id} = {prefix[auto_ip_index]}({auto_ip_index})" )
 
   if common.debug_active('links'):   # pragma: no cover (debugging)
     print( f"Resulting IP map for {link.get('name','unnamed link')}: {node_2_ip_index}" )
@@ -423,11 +428,14 @@ def augment_lan_link(link: Box, addr_pools: Box, ndict: dict, defaults: Box) -> 
     node = ndict[value.node]
     ifaddr = Box({},default_box=True)
     for af in ('ipv4','ipv6'):
-      ip_index = node_2_ip_index[af][node.id] if node.id in node_2_ip_index[af] else None  # not found -> no IP assigned
-      if ip_index is not None:
-        ifaddr[af] = value[af] = ip_index if isinstance(ip_index,bool) or isinstance(ip_index,str) else \
-                                 str( netaddr.IPNetwork( f"{pfx_list[af][ip_index]}/{pfx_list[af].prefixlen}" ) )
-      # print( f"Node {node.name} {af} -> {ip_index} {ifaddr[af]} pfx_list={pfx_list}" )
+      if node.id in node_2_ip_index[af]:       # not found -> no IP assigned
+        node_ip = node_2_ip_index[af][node.id]
+        if isinstance(node_ip,bool) or isinstance(node_ip,str):          
+          ifaddr[af] = value[af] = node_ip     # True or user provided string
+        else:
+          ifaddr[af] = value[af] = str( netaddr.IPNetwork( f"{pfx_list[af][node_ip]}/{pfx_list[af].prefixlen}" ) )
+
+      # print( f"Node {node.name} {af} -> {node_ip} {ifaddr[af]} pfx_list={pfx_list}" )
 
     ifaddr_add_module(ifaddr,link,node.get('module'))
     ifaddr = ifaddr + value
