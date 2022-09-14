@@ -78,7 +78,7 @@ links:
     ipv4: 172.16.0.1/24
     node: r1
   - ifindex: 2
-    ipv4: 172.16.0.0/24
+    ipv4: false
     ipv6: false
     node: s1
     vlan:
@@ -94,7 +94,7 @@ links:
     ipv4: 172.16.1.1/24
     node: r2
   - ifindex: 3
-    ipv4: 172.16.1.0/24
+    ipv4: false
     ipv6: false
     node: s1
     vlan:

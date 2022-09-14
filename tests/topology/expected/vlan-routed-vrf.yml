@@ -48,10 +48,10 @@ links:
   vrf: blue
 - bridge: input_3
   gateway:
-    ipv4: 172.16.2.0/24
+    ipv4: false
   interfaces:
   - ifindex: 2
-    ipv4: 172.16.2.0/24
+    ipv4: false
     ipv6: false
     node: s2
     vlan:
@@ -247,7 +247,7 @@ nodes:
     interfaces:
     - bridge: input_3
       gateway:
-        ipv4: 172.16.2.0/24
+        ipv4: 172.16.2.1/24
       ifindex: 1
       ifname: eth1
       ipv4: 172.16.2.1/24

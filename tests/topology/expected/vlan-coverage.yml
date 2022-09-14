@@ -57,10 +57,10 @@ links:
   type: lan
 - bridge: input_4
   gateway:
-    ipv4: 172.16.1.0/24
+    ipv4: false
   interfaces:
   - ifindex: 3
-    ipv4: 172.16.1.0/24
+    ipv4: false
     ipv6: false
     node: s2
     vlan:
@@ -157,8 +157,6 @@ nodes:
         node: s2
       type: lan
     - bridge: input_4
-      gateway:
-        ipv4: 172.16.1.0/24
       ifindex: 2
       ifname: eth2
       ipv4: 172.16.1.1/24
@@ -166,7 +164,6 @@ nodes:
       name: h2 -> [s2]
       neighbors:
       - ifname: GigabitEthernet0/3
-        ipv4: 172.16.1.0/24
         node: s2
       type: lan
     mgmt:
