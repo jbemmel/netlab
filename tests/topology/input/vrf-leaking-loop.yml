@@ -1,0 +1,45 @@
+provider: clab
+
+module: [ vrf, vlan ]
+
+vrfs:
+  global: # Global VRF
+    evpn.transit_vni: 11111 # Use symmetric IRB with RT5 EVPN prefixes
+
+  customer1:
+    evpn.transit_vni: 5111
+
+  customer2:
+    evpn.transit_vni: 5222
+
+vlans:       # All have mode:irb 
+  # Route leaking vlans
+  route-leak-to-global-customer1:
+    id: 4001
+    pool: bgp-unnumbered
+
+  route-leak-to-global-customer2:
+    id: 4002
+    pool: bgp-unnumbered
+
+nodes:
+  leaf1:
+    device: srlinux
+
+links:
+- interfaces:
+  - node: leaf1
+    name: Global side
+    vlan.trunk: [route-leak-to-global-customer1,route-leak-to-global-customer2]
+    vlan.trunk:
+      route-leak-to-global-customer1:
+        vrf: global
+      route-leak-to-global-customer2:
+        vrf: global
+  - node: leaf1
+    vlan.trunk: [route-leak-to-global-customer1,route-leak-to-global-customer2]
+    vlan.trunk:
+      route-leak-to-global-customer1:
+        vrf: customer1
+      route-leak-to-global-customer2:
+        vrf: customer2
