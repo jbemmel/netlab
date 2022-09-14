@@ -476,7 +476,8 @@ def create_vlan_links(link: Box, v_attr: Box, topology: Box) -> None:
         if 'vlan' in intf and vname in intf.vlan.get('trunk',{}):
           intf_data = Box(intf.vlan.trunk[vname] or {},default_box=True,box_dots=True)
           intf_data.node = intf.node
-          intf_data.link_ifindex = link.interfaces.index( intf ) # To support self-loop case
+          if len([ i.node for i in link.interfaces if i.node == intf.node ]) > 1:
+            intf_data.link_ifindex = link.interfaces.index(intf) # For self loops, add index of this subinterface in link.interfaces
           intf_data.vlan.access = vname
           intf_node = topology.nodes[intf.node]
 
@@ -725,12 +726,25 @@ def find_parent_interface(intf: Box, node: Box, topology: Box) -> typing.Optiona
     return None
 
   link = link_list[0]
+<<<<<<< HEAD
   # intf_list = [ li for li in link.interfaces if li.node == node.name]
   # print( f"JVB: find_parent_interface {intf.parentindex} -> intf_list={intf_list}" )
   # if not intf_list:
   #   return None
 
   # link_intf = intf_list[0] # XXX for a link to self, this never addresses the 2nd interface
+=======
+
+  # There is a problem with self-looped links - there will be 2 matching interfaces below
+  if 'link_ifindex' in intf:    # To solve, use the link_ifindex populated upon creating of the subif
+    link_intf = link.interfaces[ intf.link_ifindex ]    
+  else:
+    intf_list = [ intf for intf in link.interfaces if intf.node == node.name]
+    if not intf_list:
+      return None
+
+    link_intf = intf_list[0]  # Only takes the first one, in case there are two
+>>>>>>> fix-self-loops
 
   link_intf = link.interfaces[ intf.link_ifindex ]
 
