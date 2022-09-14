@@ -388,7 +388,7 @@ def augment_lan_link(link: Box, addr_pools: Box, ndict: dict, defaults: Box) -> 
       if isinstance(ip_index,bool) or ip_index not in node_2_ip_index[af].values():
         node_2_ip_index[af][node.id] = ip_index
         if common.debug_active('links'):     # pragma: no cover (debugging)
-          print( f"User assigned {node.name}[id={node.id}] = {ip_index}" )
+          print( f"Static IP {af} {node.name}[id={node.id}] = {ip_index}" )
       else:
         mapping = { n: str(pfx_list[af][i]) for n,i in node_2_ip_index[af].items() }
         common.error(f"Error: node {node.name}({node.id}) uses a duplicate static IP for {af}({static_ips}) others={mapping}",
@@ -404,10 +404,14 @@ def augment_lan_link(link: Box, addr_pools: Box, ndict: dict, defaults: Box) -> 
         def get_next_ip_index() -> typing.Optional[int]:
           allocated_ips = node_2_ip_index[af].values()
           ip_range = range(start_index,prefix.size-start_index)
-          if node_id in ip_range and node_id not in allocated_ips:
+          if prefix.size>2 and node_id in ip_range and node_id not in allocated_ips:  # Not for /31
+            if common.debug_active('links'):   # pragma: no cover (debugging)
+              print( f"get_next_ip_index -> use node ID {node_id} as IP index" )
             return node_id
           for i in ip_range:
             if i not in allocated_ips:
+              if common.debug_active('links'):   # pragma: no cover (debugging)
+                print( f"get_next_ip_index -> use lowest id {i}, allocated={allocated_ips}" )
               return i
           common.error(f"Out of IP addresses for LAN subnet {prefix}; node_2_ip={node_2_ip_index}",
                        common.IncorrectValue,'links')
