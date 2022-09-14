@@ -274,21 +274,16 @@ def get_node_static_ip(node: Box, node_link_data: dict, prefix: dict) -> dict:
           f".. node_link_data: {node_link_data}\n"+
           f".. prefix: {prefix}")
 
-  # Handle special case of unnumbered prefixes with static values
-  ret = {}
+  # Handle special case of unnumbered prefixes, convert to 'normal' prefix
   if 'unnumbered' in prefix:
-    if 'unnumbered' in node_link_data and node_link_data['unnumbered']==False:
-      return { 'ipv4': False, 'ipv6': False }
+    prefix = {}
     for af in ('ipv4','ipv6'):
       if af in node_link_data:
-        if isinstance(node_link_data[af],bool):
-          ret[af] = node_link_data[af]
-        else:
-          common.error(f'Node {node.name} defines a static IP {node_link_data[af]} ' +
-                        'on an unnumbered link',common.IncorrectValue,'links')
+        common.error(f'Static {af} configuration {node_link_data[af]} for node {node.name} ignored on fully-unnumbered link',
+                     common.IncorrectValue,'links')
+        return None
       elif af in node.loopback and node.loopback[af]:
-        ret[af] = True
-    return ret
+        prefix[af] = True
 
   def check_index(ip_index: int, prefix: netaddr.IPNetwork) -> typing.Optional[int]:
     min_valid = 1 if prefix.version==4 and prefix.prefixlen < 31 else 0
@@ -300,6 +295,7 @@ def get_node_static_ip(node: Box, node_link_data: dict, prefix: dict) -> dict:
       return None
     return ip_index
 
+  ret = {}
   for af in ('ipv4','ipv6'):
     if af in prefix:
       if af in node_link_data:
@@ -308,8 +304,7 @@ def get_node_static_ip(node: Box, node_link_data: dict, prefix: dict) -> dict:
             ret[af] = node_link_data[af]
             continue
         elif isinstance(node_link_data[af],bool): # unnumbered node or ipv[x]=False
-          if node_link_data[af]==False:
-            ret[af] = False  # Honor user request to not assign an IP
+          ret[af] = node_link_data[af]  # Honor user request to not assign an IP
           continue
         if isinstance(node_link_data[af],int):  # host portion of IP address specified as an integer
           ret[af] = check_index(node_link_data[af],prefix[af])
@@ -334,7 +329,7 @@ def get_node_static_ip(node: Box, node_link_data: dict, prefix: dict) -> dict:
             common.error(f'Invalid {af} link address {node_link_data[af]} for node {node.name}: {e}',common.IncorrectValue,'links')
             return {}
       elif af=='ipv6' and not isinstance(prefix['ipv6'],bool):    # If no static IPv6 address is given, 
-        ret['ipv6'] = ret['ipv4'] if 'ipv4' in ret else node.id   # use same index as ipv4 if available, else node id
+        ret['ipv6'] = ret['ipv4'] if 'ipv4' in ret and isinstance(ret['ipv4'],int) else node.id   # use same index as ipv4 if available, else node id
 
   if common.debug_active('links'):     # pragma: no cover (debugging)
     print(f'get_node_static_ip -> {ret}\n')
@@ -381,12 +376,12 @@ def augment_lan_link(link: Box, addr_pools: Box, ndict: dict, defaults: Box) -> 
 
   for value in link[IFATTR]:
     node = ndict[value.node]
-    static_ips = get_node_static_ip(node,value,pfx_list)  # ipv4/ipv6
+    static_ips = get_node_static_ip(node,value,pfx_list)  # ipv4/ipv6, can include strings
     for af,ip_index in static_ips.items():
       if isinstance(ip_index,bool) or ip_index not in node_2_ip_index[af].values():
         node_2_ip_index[af][node.id] = ip_index
         if common.debug_active('links'):     # pragma: no cover (debugging)
-          print( f"Statically assigned {node.name}[id={node.id}] = \
+          print( f"User assigned {node.name}[id={node.id}] = \
                    {ip_index if isinstance(ip_index,bool) else pfx_list[af][ip_index]}" )
       else:
         mapping = { n: str(pfx_list[af][i]) for n,i in node_2_ip_index[af].items() }
@@ -411,9 +406,10 @@ def augment_lan_link(link: Box, addr_pools: Box, ndict: dict, defaults: Box) -> 
         if ip_index is not None:
           node_2_ip_index[af][node_id] = ip_index
           if common.debug_active('links'):   # pragma: no cover (debugging)
-              print( f"Auto-assigned assigned {ndict[node_id].name}({node_id}) = {prefix[ip_index]}({ip_index})" )
+              print( f"Auto-assigned assigned node {node_id} = {prefix[ip_index]}({ip_index})" )
 
-  # print( f"Resulting IP map: {node_2_ip_index}" )
+  if common.debug_active('links'):   # pragma: no cover (debugging)
+    print( f"Resulting IP map for {link.get('name','unnamed link')}: {node_2_ip_index}" )
 
   # 3. Iterate over links
   link_cnt = 0
@@ -422,10 +418,10 @@ def augment_lan_link(link: Box, addr_pools: Box, ndict: dict, defaults: Box) -> 
     ifaddr = Box({},default_box=True)
     for af in ('ipv4','ipv6'):
       if af in pfx_list:
-        ip_index = node_2_ip_index[af][node.id] if node.id in node_2_ip_index[af] else -1
-        ifaddr[af] = value[af] = pfx_list[af] if isinstance(pfx_list[af],bool) else \
+        ip_index = node_2_ip_index[af][node.id] if node.id in node_2_ip_index[af] else False  # not found -> no IP assigned
+        ifaddr[af] = value[af] = ip_index if isinstance(ip_index,bool) or isinstance(ip_index,str) else \
                                  str( netaddr.IPNetwork( f"{pfx_list[af][ip_index]}/{pfx_list[af].prefixlen}" ) )
-        # print( f"Node {node.name} {af} -> {ip_index} {ifaddr[af]} {pfx_list}" )
+        # print( f"Node {node.name} {af} -> {ip_index} {ifaddr[af]} pfx_list={pfx_list}" )
       elif 'unnumbered' in pfx_list and af in node.loopback:
         ifaddr[af] = value[af] = True
 
@@ -618,7 +614,7 @@ def interface_feature_check(nodes: Box, defaults: Box) -> None:
             not features.initial.ipv4.unnumbered:
           common.error(
             f'Device {ndata.device} does not support unnumbered IPv4 interfaces used on\n'+
-            f'.. node {node} interface {ifdata.ifname} (link {ifdata.name})',
+            f'.. node {node} interface {ifdata.ifname} (link {ifdata.get("name")})',
             common.IncorrectValue,
             'interfaces')
       if 'ipv6' in ifdata:
@@ -626,7 +622,7 @@ def interface_feature_check(nodes: Box, defaults: Box) -> None:
             not features.initial.ipv6.lla:
           common.error(
             f'Device {ndata.device} does not support LLA-only IPv6 interfaces used on\n'+
-            f'.. node {node} interface {ifdata.ifname} (link {ifdata.name})',
+            f'.. node {node} interface {ifdata.ifname} (link {ifdata.get("name")})',
             common.IncorrectValue,
             'interfaces')
 
