@@ -175,8 +175,8 @@ def build_ebgp_sessions(node: Box, sessions: Box, topology: Box) -> None:
         if common.WARNING:
           print( f"bgp: Not adding ebgp neighbor within vrf: bgp = False in global vrf {l.vrf}" )
         continue
-      elif vrf_bgp and 'as' in vrf_bgp:
-        node_as = vrf_bgp["as"]  # Use per-vrf AS
+      # elif vrf_bgp and 'as' in vrf_bgp:
+      #   node_as = vrf_bgp["as"]  # Use per-vrf AS
 
     node_local_as = data.get_from_box(l,'bgp.local_as') or data.get_from_box(node,'bgp.local_as') or node_as
 
