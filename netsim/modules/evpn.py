@@ -131,6 +131,7 @@ def vrf_irb_setup(node: Box, topology: Box) -> None:
         if not vrf_data.evpn.get(rt):                           # Generate L3 RTs if not provided, TODO validate
           vrf_data.evpn[rt] = g_vrf.evpn.get(rt,[]) or [ f"{node.bgp['as']}:{g_vrf.id}" ] # List needed? Single value typical
 
+      print( f"JVB: Result L3 RT on {node.name} in {vrf_name}: {vrf_data}" )
     else:
       if not features.evpn.asymmetrical_irb:                    # ... does this device asymmetrical IRB -- is it supported?
         common.error(
@@ -156,8 +157,8 @@ class EVPN(_Module):
     enable_evpn_af(node,topology)
 
     vlan_list = data.get_from_box(node,'vxlan.vlans') or []       # Get the list of VXLAN-enabled VLANs
-    if not vlan_list:
-      return                                                      # This could be a route reflector running EVPN
+    # if not vlan_list:
+    #  return                                                     # This could be a route reflector running EVPN, or L3 VRF only
 
     _routing.router_id(node,'bgp',topology.pools)                 # Make sure we have a usable router ID
 
