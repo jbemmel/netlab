@@ -2,12 +2,22 @@
 {% set name = vrf + "_" + ('import' if is_import else 'export') %}
 
 {% if communities %}
+{% if is_import %}
+{# Must build a community set for each imported RT #}
+{% for c in communities %}
+- path: routing-policy/community-set[name=C{{ c|replace(':','_') }}]
+  val:
+   member:
+   - "{{c}}" # Single member, else matching is AND
+{% endfor -%}
+{% else %}
 - path: routing-policy/community-set[name={{name}}]
   val:
    member:
 {% for c in communities %}
-   - "{{c}}"
-{% endfor -%}
+   - "{{ c }}"
+{% endfor %}
+{% endif %}
 {% endif %}
 
 {% macro accept() %}
@@ -30,22 +40,22 @@
    default-action: 
     reject: { }
    statement:
-{%   if not is_import %}
+{%   if is_import %}
+{%     for c in communities|default([]) %}
+   - sequence-id: {{ 10 + loop.index }}
+     match:
+      bgp:
+       community-set: "C{{ c|replace(':','_') }}"
+{%     endfor %}
+{%   else %}
    - sequence-id: 5
      match:
       protocol: bgp
       _annotate_protocol: "Accept and propagate prefixes received via BGP"
      action:
 {{    accept() }}
-{% endif %}
+
    - sequence-id: 10
-{%   if is_import %}
-{%    if communities %}   
-     match:
-      bgp:
-       community-set: "{{ name }}"
-{%    endif %}
-{%   else %}
      match:
       prefix-set: "{{ vrf }}_export"
 {%   endif %}
