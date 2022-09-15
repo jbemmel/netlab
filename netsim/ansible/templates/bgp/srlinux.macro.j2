@@ -2,33 +2,33 @@
 {% set name = vrf + "_" + ('import' if is_import else 'export') %}
 
 {% if communities %}
-{% if is_import %}
+{%  if is_import %}
 {# Must build a community set for each imported RT #}
-{% for c in communities %}
+{%   for c in communities %}
 - path: routing-policy/community-set[name=C{{ c|replace(':','_') }}]
   val:
    member:
    - "{{c}}" # Single member, else matching is AND
-{% endfor -%}
-{% else %}
+{%   endfor -%}
+{%  else %}
 - path: routing-policy/community-set[name={{name}}]
   val:
    member:
-{% for c in communities %}
+{%   for c in communities %}
    - "{{ c }}"
-{% endfor %}
-{% endif %}
+{%   endfor %}
+{%  endif %}
 {% endif %}
 
 {% macro accept() %}
-{%    if is_import or not communities %}
+{% if is_import or not communities %}
       accept: { }
-{%    else %}
+{% else %}
       accept:
        bgp:
         communities:
          add: "{{ name }}"
-{%    endif %}
+{% endif %}
 {% endmacro %}
 
 - path: routing-policy/prefix-set[name={{vrf}}_export]
@@ -40,14 +40,16 @@
    default-action: 
     reject: { }
    statement:
-{%   if is_import %}
-{%     for c in communities|default([]) %}
+{% if is_import %}
+{%  for c in communities|default([]) %}
    - sequence-id: {{ 10 + loop.index }}
      match:
       bgp:
        community-set: "C{{ c|replace(':','_') }}"
-{%     endfor %}
-{%   else %}
+     action:
+{{    accept() }}       
+{%  endfor %}
+{% else %}
    - sequence-id: 5
      match:
       protocol: bgp
@@ -58,9 +60,9 @@
    - sequence-id: 10
      match:
       prefix-set: "{{ vrf }}_export"
-{%   endif %}
      action:
 {{    accept() }}
+{% endif %}
 {% endmacro %}
 
 {% macro bgp_export_prefix(vrf,prefix) %}
