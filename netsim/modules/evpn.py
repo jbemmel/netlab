@@ -130,6 +130,7 @@ def vrf_irb_setup(node: Box, topology: Box) -> None:
       for rt in ('import','export'):                            # Default RT values
         if not vrf_data.evpn.get(rt):                           # Generate L3 RTs if not provided, TODO validate
           vrf_data.evpn[rt] = g_vrf.evpn.get(rt,[]) or [ f"{node.bgp['as']}:{g_vrf.id}" ] # List needed? Single value typical
+
     else:
       if not features.evpn.asymmetrical_irb:                    # ... does this device asymmetrical IRB -- is it supported?
         common.error(

@@ -20,8 +20,8 @@
         rd: "{{ rd }}"
        route-target:
         _annotate: "For compatibility with other vendors, override auto-derived RT based on EVI {{evi}} with VNI {{vni}}"
-        import-rt: "target:{{ rts.evpn.import[0] if 'evpn' in rts else rts.import[0] }}"
-        export-rt: "target:{{ rts.evpn.export[0] if 'evpn' in rts else rts.export[0] }}"
+        import-rt: "target:{{ rts.import[0] }}"
+        export-rt: "target:{{ rts.export[0] }}"
     bgp-evpn:
      bgp-instance:
      - id: 1
@@ -41,6 +41,6 @@ updates:
 {# Symmetric IRB interfaces, note using VRF ID as transit EVI value #}
 {% if vrfs is defined %}
 {% for vname,vdata in vrfs.items() if 'evpn' in vdata and 'transit_vni' in vdata.evpn %}
-{{ vxlan_interface(vname,vdata.vrfidx,'routed',vdata.evpn.transit_vni,vdata.vrfidx,vdata.rd,vdata) }}
+{{ vxlan_interface(vname,vdata.vrfidx,'routed',vdata.evpn.transit_vni,vdata.vrfidx,vdata.rd,vdata.evpn) }}
 {% endfor %}
 {% endif %}
