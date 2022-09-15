@@ -131,6 +131,7 @@ evpn: # Enables the EVPN address family towards BGP peers
     global: [ session, start_transit_vni, vlan_bundle_service ]
     node: [ session, vlan_bundle_service ]
     vlans: [ evpn.evi ]
+    # vrfs: [ evpn.import, evpn.export ]
 
 vrf: # Basic VRF support
   supported_on: [ eos, iosv, csr, routeros, dellos10, vyos, cumulus_nvue, nxos, srlinux, frr ]

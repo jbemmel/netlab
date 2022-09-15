@@ -19,9 +19,9 @@
        route-distinguisher:
         rd: "{{ rd }}"
        route-target:
-        _annotate: "For compatibility with frr, override auto-derived RT based on EVI {{evi}} with VNI {{vni}}"
-        import-rt: "target:{{ rts.import[0] }}"
-        export-rt: "target:{{ rts.export[0] }}"
+        _annotate: "For compatibility with other vendors, override auto-derived RT based on EVI {{evi}} with VNI {{vni}}"
+        import-rt: "target:{{ rts.evpn.import[0] if 'evpn' in rts else rts.import[0] }}"
+        export-rt: "target:{{ rts.evpn.export[0] if 'evpn' in rts else rts.export[0] }}"
     bgp-evpn:
      bgp-instance:
      - id: 1

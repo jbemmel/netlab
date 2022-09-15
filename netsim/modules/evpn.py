@@ -126,6 +126,10 @@ def vrf_irb_setup(node: Box, topology: Box) -> None:
         continue
       vrf_data.evpn.transit_vni = g_vrf.evpn.transit_vni        # Make transit VNI is copied into the local VRF
       vrf_data.pop('ospf',None)                                 # ... and remove OSPF from EVPN IRB VRF
+
+      if not 'rt' in g_vrf.evpn:                                # Generate L3 RTs if not provided, TODO validate
+        for rt in ('import','export'):                          # Default RT values
+          g_vrf.evpn[rt] = [ f"{node.bgp['as']}:{g_vrf.id}" ]   # List needed? Single value typical
     else:
       if not features.evpn.asymmetrical_irb:                    # ... does this device asymmetrical IRB -- is it supported?
         common.error(
