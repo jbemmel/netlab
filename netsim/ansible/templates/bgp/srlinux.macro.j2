@@ -50,13 +50,14 @@
 {{    accept() }}       
 {%  endfor %}
 {% else %}
-   - sequence-id: 5
+{% for protocol in ['bgp','bgp-evpn'] %}
+   - sequence-id: {{ 5 + loop.index0 }}
      match:
-      protocol: bgp
-      _annotate_protocol: "Accept and propagate prefixes received via BGP"
+      protocol: {{ protocol }}
+      _annotate_protocol: "Accept and propagate prefixes received via {{ protocol }}"
      action:
 {{    accept() }}
-
+{% endfor %}
    - sequence-id: 10
      match:
       prefix-set: "{{ vrf }}_export"
