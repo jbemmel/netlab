@@ -18,6 +18,26 @@ updates:
    expression: "{{ vdata.as }}"
 {% endif %}
 
+{# Creata a community set with a single member for each imported community #}
+{% if vdata.import|default([]) %}
+{%  for c in vdata.import %}
+- path: routing-policy/community-set[name=C{{ c|replace(':','_') }}]
+  val:
+   member:
+   - "{{c}}" # Single member, else matching is AND
+{% endfor -%}
+{% endif %}
+
+{# Create a single community set for all exported communities, to be added upon import #}
+{% if vdata.export|default([]) %}
+- path: routing-policy/community-set[name={{vname}}_export]
+  val:
+   member:
+{%  for c in vdata.export %}
+   - "{{ c }}"
+{%  endfor %}
+{% endif %}
+
 {% if 'bgp' in vdata %}
 {{ bgp_config(vname,bgp.as,bgp.router_id,vdata.bgp,vdata) }}
 {% endif %}
