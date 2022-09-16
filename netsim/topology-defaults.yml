@@ -812,7 +812,7 @@ devices:
         ipv6_lla: True
         rfc8950: True
       vrf:
-        loopback_interface_name: "lo0.{vrfidx}"
+        loopback_interface_name: "loopback.{vrfidx}"
     clab:
       image: vrnetlab/vr-sros
       node:

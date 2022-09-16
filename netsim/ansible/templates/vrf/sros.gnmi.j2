@@ -6,6 +6,6 @@ updates:
    service-id: {{ vdata.vrfidx }}
    customer: "1"
    autonomous-system: {{ bgp.as }}
-   router-id: {{ bgp.router_id }}
+   router-id: {{ vdata.bgp.router_id|default(bgp.router_id) }}
 
 {% endfor %}
