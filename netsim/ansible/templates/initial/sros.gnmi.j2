@@ -82,7 +82,11 @@ updates:
     mtu: {{ l.mtu + 14 }} # max 9800
 {% endif %}
 {% if v4 or v6 %}
+{% if l.type not in ['loopback','stub'] %}
 {{ interface('i'+l.ifname,desc,v4,v6,portname) }}
+{% else %}
+{{ interface(l.ifname if l.type=='loopback' else "stub-"+l.ifname,desc,v4,v6,None) }}
+{% endif %}
 {% else %}
 - path: configure/port[port-id={{ portname }}]
   val:

@@ -134,7 +134,7 @@ evpn: # Enables the EVPN address family towards BGP peers
     vlans: [ evpn.evi ]
 
 vrf: # Basic VRF support
-  supported_on: [ eos, iosv, csr, routeros, dellos10, vyos, cumulus_nvue, nxos, srlinux, frr, cumulus ]
+  supported_on: [ eos, iosv, csr, routeros, dellos10, vyos, cumulus_nvue, nxos, srlinux, frr, cumulus, sros ]
   config_after: [ vlan, ospf, isis, bgp, mpls ]
   transform_after: [ vlan, bgp ]
   as: 65000
@@ -804,6 +804,15 @@ devices:
           ipv4: True
           ipv6: True
           network: False # SROS treats the interfaces as point-to-point and forms at most 1 adjacency
+      bgp:
+        local_as: True
+        vrf_local_as: True
+        local_as_ibgp: True
+        activate_af: True
+        ipv6_lla: True
+        rfc8950: True
+      vrf:
+        loopback_interface_name: "lo0.{vrfidx}"
     clab:
       image: vrnetlab/vr-sros
       node:
