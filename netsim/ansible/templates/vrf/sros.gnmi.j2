@@ -1,0 +1,11 @@
+updates:
+{% for vname,vdata in vrfs.items() %}
+
+- path: configure/service/vprn[service-name={{ vname }}]
+  val:
+   service-id: {{ vdata.vrfidx }}
+   customer: "1"
+   autonomous-system: {{ bgp.as }}
+   router-id: {{ bgp.router_id }}
+
+{% endfor %}

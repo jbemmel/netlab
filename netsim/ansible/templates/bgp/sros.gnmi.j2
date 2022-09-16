@@ -53,19 +53,22 @@ updates:
 {%    endif %}
 
 {%  endfor %}
-    neighbor:
-{%  for n in bgp.neighbors %}
-{%  for af in ['ipv4','ipv6'] if n[af] is defined %}
-    - ip-address: "{{ n[af] }}"
-      description: "{{ n.name }}"
-      peer-as: {{ n.as }}
-      group: "{{ 'ebgp' if n.type=='ebgp' else (n.type+'-'+af) }}"
-{%    if n.local_as is defined %}
-      local-as:
-       as-number: {{ n.local_as }}
-{%    endif %}
+
+
+{% for n in bgp.neighbors %}
+{%  set activate = n.activate|default( {'ipv4': True,'ipv6': True } ) %}
+{%  for af in ['ipv4','ipv6'] if n[af] is defined and activate[af]|default(False) %}
+- path: configure/router[router-name=Base]/bgp/neighbor[ip-address={{ n[af] }}]
+  val:
+   description: "{{ n.name }}"
+   peer-as: {{ n.as }}
+   group: "{{ 'ebgp' if n.type=='ebgp' else (n.type+'-'+af) }}"
+{%   if n.local_as is defined %}
+   local-as:
+    as-number: {{ n.local_as }}
+{%   endif %}
 {%  endfor %}
-{%  endfor %}
+{% endfor %}
 
 - path: configure/policy-options/policy-statement[name=accept_all]
   val:
