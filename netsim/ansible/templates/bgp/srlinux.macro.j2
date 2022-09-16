@@ -5,10 +5,10 @@
 {% if is_import or not communities %}
       accept: { }
 {% else %}
-      accept:
-       bgp:
-        communities:
-         add: "{{ name }}"
+      accept: { }
+      # bgp:
+      #  communities:
+      #   add: "{{ name }}"
 {% endif %}
 {% endmacro %}
 
