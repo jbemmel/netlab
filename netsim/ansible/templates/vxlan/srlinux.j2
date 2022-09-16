@@ -28,6 +28,7 @@
        evi: {{ evi }}
        ecmp: 8
        vxlan-interface: vxlan0.{{ index }}
+       default-admin-tag: {{ rd.split(':')[1] }}  # Set this such that policies can refer to it
 {% endmacro %}
 
 updates:
