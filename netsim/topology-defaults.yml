@@ -810,7 +810,7 @@ devices:
         local_as_ibgp: True
         activate_af: True
         ipv6_lla: True
-        rfc8950: True
+        rfc8950: False   # Not implemented yet, may be possible
       vrf:
         loopback_interface_name: "loopback.{vrfidx}"
     clab:
