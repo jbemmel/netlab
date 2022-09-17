@@ -22,6 +22,7 @@
   val:
    service-id: {{ vrfs[l.vrf].vrfidx }}
    customer: "1"
+   admin-state: enable
 {% endif %}
 
 - path: configure/{{ base_path }}/interface[interface-name={{name}}]
