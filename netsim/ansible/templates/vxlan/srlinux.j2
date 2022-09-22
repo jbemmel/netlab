@@ -16,8 +16,9 @@
     bgp-vpn:
      bgp-instance:
      - id: 1
-       route-distinguisher:
-        rd: "{{ rd }}"
+       # route-distinguisher:
+       # rd: "{{ rd }}"
+       _annotate: "RD left as <auto> for EVPN services and ECMP to work as expected, not '{{ rd }}'"
        route-target:
         _annotate: "For compatibility with frr, override auto-derived RT based on EVI {{evi}} with VNI {{vni}}"
         import-rt: "target:{{ rts.import[0] }}"
