@@ -146,6 +146,8 @@ def validate_vlan_attributes(obj: Box, topology: Box) -> None:
   else:
     default_fwd_mode = get_global_parameter(topology,'vlan.mode') # Else get it from the topology level
 
+  print( f"vlan.validate_vlan_attributes {obj_name}" )
+
   if not 'vlans' in obj:
     return
 
@@ -174,7 +176,7 @@ def validate_vlan_attributes(obj: Box, topology: Box) -> None:
       common.error(f'VLAN ID {vdata.id} for VLAN {vname} in {obj_name} must be between 2 and 4094',common.IncorrectValue,'vlan')
       continue
 
-    if not 'vni' in vdata:                                          # When VNI is not defined
+    if not 'vni' in vdata or vdata.vni==True:                       # When VNI is not defined, or Boolean True
       vni_default = topology.defaults.vlan.start_vni + vdata.id     # ... try to build VNI from VLAN ID
       if not vni_default in vlan_ids.vni:                           # Is the VNI free?
         vdata.vni = vni_default                                     # ... great, take it
@@ -182,9 +184,12 @@ def validate_vlan_attributes(obj: Box, topology: Box) -> None:
       else:                                                         # Too bad, we had such a great idea but it failed
         vdata.vni = get_next_vlan_id('vni')                         # ... so take the next available VNI
     if not isinstance(vdata.vni,int):                               # Not done yet, we still have to validate the VNI type and range
-      common.error(f'VNI {vdata.vni} for VLAN {vname} in {obj_name} must be an integer',common.IncorrectValue,'vlan')
+      common.error(f'VNI {vdata.vni} for VLAN {vname} in {obj_name} must be an integer or Boolean',common.IncorrectValue,'vlan')
       continue
-    if vdata.vni < 2 or vdata.vni > 16777215:
+    elif vdata.vni==False:                                          # User requests that no VNI be assigned
+      print( "Removing .vni flag..." )
+      vdata.pop( 'vni' )
+    elif vdata.vni < 2 or vdata.vni > 16777215:
       common.error(f'VNI {vdata.vni} for VLAN {vname} in {obj_name} must be between 2 and 16777215',common.IncorrectValue,'vlan')
       continue
 
@@ -639,6 +644,7 @@ def create_svi_interfaces(node: Box, topology: Box) -> dict:
         'vlan')
       return vlan_ifmap
 
+    print( f"Checking if {access_vlan} in {vlan_ifmap}" )
     if not access_vlan in vlan_ifmap:                                       # Do we need to create a SVI interface?
       skip_attr = list(skip_ifattr)                                         # Create a local copy of the attribute skip list
       vlan_mode = ifdata.vlan.get('mode','') or vlan_data.get('mode','')    # Get VLAN forwarding mode

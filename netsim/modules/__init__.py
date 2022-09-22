@@ -29,8 +29,10 @@ class _Module(Callback):
     module_name = __name__+"."+module
     obj = self.find_class(module_name)
     if obj:
+      print( f"Module {module_name} loaded!" )
       return obj(data)
     else:
+      print( f"Module {module_name} NOT loaded!" )
       return _Module(data)
 
 """
@@ -420,6 +422,7 @@ def check_module_dependencies(topology:  Box) -> None:
               f"Module {m} on device {n.device} (node {n.name}) requires {rqm} module",
               common.IncorrectValue,
               'modules')
+        print( f"Module requirements checked for {n.name}: {node_requires}" )
 
 """
 reorder_node_modules:
@@ -432,10 +435,12 @@ def reorder_node_modules(topology: Box, secondary_sort: str = "config_after") ->
   if 'module' in topology:
     topology.module = sort_module_list(topology.module,topology.defaults, secondary_sort)
     topology.defaults.module = topology.module
+    print( f"reorder_node_modules: {topology.module}" )
 
   for name,n in topology.nodes.items():
     if 'module' in n:
       n.module = sort_module_list(n.module,topology.defaults, secondary_sort)
+      print( f"reorder_node_modules node {name}: {n.module}" )
 
 def sort_module_list(mods: list, mod_params: Box, secondary_sort: str = "config_after") -> list:
   if (len(mods) < 2):
@@ -528,6 +533,8 @@ def module_transform(method: str, topology: Box) -> None:
     if common.debug_active('modules'):
       if hasattr(mod_load[m],f"module_{method}"):
         print(f'Calling module {m} module_{method}')
+      else:
+        print(f'NOT calling module {m} module_{method}: {mod_load[m]}')
     mod_load[m].call("module_"+method,topology)
 
 def node_transform(method: str , topology: Box) -> None:

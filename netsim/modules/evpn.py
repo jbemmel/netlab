@@ -6,6 +6,9 @@ from .. import common
 from .. import data
 from ..augment import devices
 
+# import list of used L2 VNIs, to check for overlap with transit VNIs
+from vlan import vlan_ids
+
 def enable_evpn_af(node: Box, topology: Box) -> None:
   bgp_session = data.get_from_box(node,'evpn.session') or []
 
@@ -75,6 +78,10 @@ def get_next_vni(start_vni: int, used_vni_list: typing.List[int]) -> int:
       return start_vni
 
 def vrf_transit_vni(topology: Box) -> None:
+  global vlan_ids
+
+  print( f"vrf_transit_vni vlan_ids={vlan_ids}" )
+
   if not 'vrfs' in topology:
     return
 
@@ -91,6 +98,12 @@ def vrf_transit_vni(topology: Box) -> None:
         common.IncorrectValue,
         'evpn')
       continue
+    elif vni in vlan_ids.vni:
+      common.error(
+        f'VRF {vrf_name} is using the same EVPN transit VNI as an existing L2 VNI: {vni}',
+        common.IncorrectValue,
+        'evpn')
+      continue      
     vni_list.append( vni )                                      # Insert it to detect duplicates elsewhere
 
   vni_start = topology.defaults.evpn.start_transit_vni
@@ -117,7 +130,7 @@ def vrf_irb_setup(node: Box, topology: Box) -> None:
       continue
 
     g_vrf = topology.vrfs[vrf_name]                             # Pointer to global VRF data, will come useful in a second
-    if 'transit_vni' in g_vrf.get('evpn',{}):                   # Transit VNI in global VRF => symmetrical IRB
+    if data.get_from_box(g_vrf,'evpn.transit_vni'):             # Transit VNI in global VRF => symmetrical IRB
       if not features.evpn.irb:                                 # ... does this device support IRB?
         common.error(
           f'VRF {vrf_name} on {node.name} uses symmetrical EVPN IRB which is not supported by {node.device} device',
@@ -137,9 +150,11 @@ def vrf_irb_setup(node: Box, topology: Box) -> None:
 class EVPN(_Module):
 
   def module_init(self, topology: Box) -> None:
+    print( "evpn.module_init" )
     topology.defaults.vxlan.flooding = 'evpn'
 
   def module_pre_transform(self, topology: Box) -> None:
+    print( "evpn.module_pre_transform" )
     vrf_transit_vni(topology)
 
   """
@@ -148,6 +163,7 @@ class EVPN(_Module):
   Add 'evi' (EVPN Instance),'rd' and 'rt' attributes to VLANs that have a 'vni' attribute
   """
   def node_post_transform(self, node: Box, topology: Box) -> None:
+    print( "evpn.node_post_transform" )
     enable_evpn_af(node,topology)
 
     vlan_list = data.get_from_box(node,'vxlan.vlans') or []       # Get the list of VXLAN-enabled VLANs

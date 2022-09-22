@@ -344,6 +344,7 @@ class VRF(_Module):
   def node_pre_transform(self, node: Box, topology: Box) -> None:
     # Check if any global vrfs need to be pulled in due to being referenced by a vlan
     vlan_vrfs = [ vdata.vrf for vname,vdata in node.get('vlans',{}).items() if 'vrf' in vdata ]
+    print( f"Pulling in global vrf(s) through vlan on {node.name}: {vlan_vrfs}" )
     if not 'vrfs' in node:
       if not vlan_vrfs:  # No local vrfs and no vlan references -> exit
         return
