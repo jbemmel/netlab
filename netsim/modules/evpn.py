@@ -142,6 +142,9 @@ def vrf_irb_setup(node: Box, topology: Box) -> None:
           'evpn')
         continue
 
+      # TODO create virtual loopback interfaces for vlans with vnis that have no physical interface
+      # to trigger creation of SVI interface -> in node pre-transform
+
 class EVPN(_Module):
 
   def module_init(self, topology: Box) -> None:

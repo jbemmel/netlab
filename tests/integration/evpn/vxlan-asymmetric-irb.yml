@@ -1,3 +1,9 @@
+message: |
+  The devices under test are layer-3 switches running VXLAN/EVPN with
+  asymmetric IRB. Hosts are in three VLANs, all in one VRF.
+
+  All hosts should be able to ping each other.
+
 groups:
   hosts:
     members: [ h1, h2, h3, h4 ]
@@ -11,6 +17,7 @@ bgp.as: 65000
 
 vrfs:
   tenant:
+    evpn: # Enable asymmetric IRB without transit_vni
 
 vlans:
   red:
@@ -26,7 +33,7 @@ nodes:
   h3:
   h4:
   s1:
-    vlans:
+    vlans: # For asymmetric all vlans with vnis must be present on all VTEPs
       red:
       blue:
       green:
@@ -48,6 +55,6 @@ links:
     vlan.access: blue
 - h4:
   s2:
-    vlan.access: green  # Note: not referenced on s1 from any interface
+    vlan.access: green  # Note: not referenced on s1 from any interface, but required for asymmetric IRB
 - s1:
   s2:
