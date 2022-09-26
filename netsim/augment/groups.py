@@ -186,7 +186,7 @@ Utility function: merge group value into node value. Deals with scalars and dict
 def merge_node_data(ndata: Box, k: str, v: typing.Any, node_name: str, group_name: str) -> None:
   if not k in ndata:
     ndata[k] = v
-  if isinstance(ndata[k],dict):
+  elif isinstance(ndata[k],dict):
     if isinstance(v,dict):
       ndata[k] = ndata[k] + v
     else:
@@ -194,6 +194,7 @@ def merge_node_data(ndata: Box, k: str, v: typing.Any, node_name: str, group_nam
         f'Cannot merge non-dictionary node_data {k} from group {group_name} into node {node_name}',
         common.IncorrectValue,
         'groups')
+
 
 '''
 Copy node data from group into group members
