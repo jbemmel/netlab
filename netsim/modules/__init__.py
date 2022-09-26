@@ -48,26 +48,26 @@ def pre_transform(topology: Box) -> None:
   common.exit_on_error()
 
   module_transform("pre_transform",topology)
-  node_transform("pre_transform",topology)
-  link_transform("pre_transform",topology)
+  #node_transform("pre_transform",topology)
+  #link_transform("pre_transform",topology)
 
 """
 pre_node_transform: executed just before the node data model transformation is started
 
 """
 def pre_node_transform(topology: Box) -> None:
-  module_transform("pre_node_transform",topology)
-  node_transform("pre_node_transform",topology)
-  link_transform("pre_node_transform",topology)
+  #module_transform("pre_node_transform",topology)
+  node_transform("pre_transform",topology)
+  #link_transform("pre_node_transform",topology)
 
 """
 pre_link_transform: executed just before the link data model transformation is started
 
 """
 def pre_link_transform(topology: Box) -> None:
-  module_transform("pre_link_transform",topology)
-  node_transform("pre_link_transform",topology)
-  link_transform("pre_link_transform",topology)
+  #module_transform("pre_link_transform",topology)
+  #node_transform("pre_link_transform",topology)
+  link_transform("pre_transform",topology)
 
 """
 post_transform:

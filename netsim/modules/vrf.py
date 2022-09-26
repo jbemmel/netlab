@@ -338,7 +338,7 @@ class VRF(_Module):
       return
 
     if 'groups' in topology:
-      groups.export_group_node_data(topology,topology,'vrfs','vrf',copy_keys=['rd']) # don't copy import/export lists to global
+      groups.export_group_node_data(topology,'vrfs','vrf',copy_keys=['rd']) # don't copy import/export lists to global
 
     normalize_vrf_ids(topology)
     populate_vrf_static_ids(topology)
@@ -348,10 +348,6 @@ class VRF(_Module):
   def node_pre_transform(self, node: Box, topology: Box) -> None:
     # Check if any global vrfs need to be pulled in due to being referenced by a vlan
     vlan_vrfs = [ vdata.vrf for vname,vdata in node.get('vlans',{}).items() if 'vrf' in vdata ]
-
-    if 'groups' in topology:
-      groups.export_group_node_data(topology,node,'vrfs','vrf',copy_keys=['rd','export','import'],
-                                    unique_keys=['rd']) # also copy import/export lists
 
     if not 'vrfs' in node:
       if not vlan_vrfs:  # No local vrfs and no vlan references -> exit
