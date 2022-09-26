@@ -199,6 +199,7 @@ def merge_node_data(ndata: Box, k: str, v: typing.Any, node_name: str, group_nam
 Copy node data from group into group members
 '''
 def copy_group_node_data(topology: Box) -> None:
+
   for grp in reverse_topsort(topology):
     gdata = topology.groups[grp]
     if 'node_data' in gdata:
@@ -218,10 +219,11 @@ def copy_group_node_data(topology: Box) -> None:
       for name,ndata in topology.nodes.items():
         if name in g_members:
           for k,v in gdata.node_data.items():   # Have to go one level deeper, changing ndata value wouldn't work
-            merge_node_data(ndata,k,v,ndata.name,grp)
+            if k not in ['vrfs']:               # Exclude vrfs - they have been processed elsewhere. Could be avoided if copy_group_node_data were called earlier
+              merge_node_data(ndata,k,v,ndata.name,grp)
 
 '''
-Export node_data from groups to topology
+Export node_data from groups to topology or a specific node
 
 Used to create module-specific data structures in pre_transform hook before the
 node data is populated from groups.node_data
@@ -234,6 +236,7 @@ Inputs:
 '''
 def export_group_node_data(
       topology: Box,
+      target: Box,
       key: str,
       module: str,
       copy_keys: typing.List[str] = [],
@@ -246,18 +249,18 @@ def export_group_node_data(
     # Find groups with node_data dictionaries
     if data.must_be_dict(gdata,f'node_data.{key}',f'groups.{gname}',module=module,create_empty=False):
       for obj_name in gdata.node_data[key].keys():
-        if not obj_name in topology[key] or topology[key][obj_name] is None:
-          topology[key][obj_name] = {}
+        if not obj_name in target[key] or target[key][obj_name] is None:
+          target[key][obj_name] = {}
         for attr in unique_keys:
-          if attr in topology[key][obj_name] and attr in gdata.node_data[key][obj_name] and \
-             topology[key][obj_name][attr] != gdata.node_data[key][obj_name][attr]:     # Unique key present on both ends and not equal
+          if attr in target[key][obj_name] and attr in gdata.node_data[key][obj_name] and \
+             target[key][obj_name][attr] != gdata.node_data[key][obj_name][attr]:     # Unique key present on both ends and not equal
             common.error(
               f'Cannot redefine {key} attribute {attr} for {key}.{obj_name} from node_data in group {gname}',
               common.IncorrectValue,
               module)
         for attr in copy_keys:
-          if attr in gdata.node_data[key][obj_name] and attr not in topology[key][obj_name]:
-            topology[key][obj_name][attr] = gdata.node_data[key][obj_name][attr]
+          if attr in gdata.node_data[key][obj_name] and attr not in target[key][obj_name]:
+            target[key][obj_name][attr] = gdata.node_data[key][obj_name][attr]
 
 #
 # init_groups:

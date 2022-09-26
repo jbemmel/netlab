@@ -333,11 +333,12 @@ class VRF(_Module):
         topology.defaults.attributes[attr_set].append('vrfs')
 
   def module_pre_transform(self, topology: Box) -> None:
-    if 'groups' in topology:
-      groups.export_group_node_data(topology,'vrfs','vrf',copy_keys=['rd','export','import'])
 
     if not 'vrfs' in topology:
       return
+
+    if 'groups' in topology:
+      groups.export_group_node_data(topology,topology,'vrfs','vrf',copy_keys=['rd']) # don't copy import/export lists to global
 
     normalize_vrf_ids(topology)
     populate_vrf_static_ids(topology)
@@ -347,6 +348,11 @@ class VRF(_Module):
   def node_pre_transform(self, node: Box, topology: Box) -> None:
     # Check if any global vrfs need to be pulled in due to being referenced by a vlan
     vlan_vrfs = [ vdata.vrf for vname,vdata in node.get('vlans',{}).items() if 'vrf' in vdata ]
+
+    if 'groups' in topology:
+      groups.export_group_node_data(topology,node,'vrfs','vrf',copy_keys=['rd','export','import'],
+                                    unique_keys=['rd']) # also copy import/export lists
+
     if not 'vrfs' in node:
       if not vlan_vrfs:  # No local vrfs and no vlan references -> exit
         return
@@ -368,10 +374,12 @@ class VRF(_Module):
   def node_post_transform(self, node: Box, topology: Box) -> None:
     vrf_count = 0
 
-    if 'vrfs' in node:                                                  # Pull in global VRF data for VRFs mentioned in groups.node_data
-      for vname in node.vrfs.keys():
-        if vname in topology.get('vrfs',{}):                            # Is this a global VRF?
-          node.vrfs[vname] = topology.vrfs[vname] + node.vrfs[vname]    # ... yes, merge the data
+    # Pull in global VRF data for VRFs mentioned in groups.node_data -> now moved to pre_transform
+    # if 'vrfs' in node:                                                  # Pull in global VRF data for VRFs mentioned in groups.node_data
+    #   for vname in node.vrfs.keys():
+    #     if vname in topology.get('vrfs',{}):                            # Is this a global VRF?
+    #       node.vrfs[vname] = topology.vrfs[vname] + node.vrfs[vname]    # ... yes, merge the data
+    #       print( f"JvB: global vrf merged into {node.name}: {node.vrfs[vname]}" )
 
     for ifdata in node.interfaces:
       if 'vrf' in ifdata:

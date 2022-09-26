@@ -922,7 +922,7 @@ class VLAN(_Module):
   def module_pre_transform(self, topology: Box) -> None:
     init_global_vars()
     if 'groups' in topology:
-      groups.export_group_node_data(topology,'vlans','vlan',copy_keys=['id','vni'])
+      groups.export_group_node_data(topology,topology,'vlans','vlan',copy_keys=['id','vni'])
     if get_from_box(topology,'vlan.mode'):
       if topology.vlan.mode not in vlan_mode_kwd:     # pragma: no cover
         common.error(
