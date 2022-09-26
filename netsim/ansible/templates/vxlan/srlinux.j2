@@ -53,15 +53,17 @@ updates:
    {{ ip }}:
      {{ arpnd }}:
        learn-unsolicited: True
+       timeout: {{ 300-30 }}
+       _annotate_timeout: "30 seconds less than the default mac-age (300s), instead of default 4 hours"
        evpn:
         advertise: # Type of ARP/ND entries to be advertised
-        - route-type: dynamic
+        - route-type: dynamic # TODO only for distributed irb interfaces
         # - route-type: static
        host-route: # Creation of host routes in ip-vrf route table
         populate:
-        - route-type: dynamic
+        - route-type: dynamic # TODO only for distributed irb interfaces
         # - route-type: static
-        # - route-type: evpn # not for entries learned through EVPN
+        - route-type: evpn # to synchronize ARP caches between leaves with irb interfaces on the same subnet
 {%  endif %}
 {% endfor %}
 {% endfor %}
