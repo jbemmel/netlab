@@ -207,6 +207,26 @@ def get_node_link_address(node: Box, ifdata: Box, node_link_data: dict, prefix: 
         node_link_data[af] = True
     return None
 
+  # node 'anycast_gateway' feature checked afterwards - could check upfront
+  if node.get('role','') != 'host':
+    for source in (node_link_data,prefix):
+      if 'anycast_gateway_ipv4' in source:
+        ip = source[ 'anycast_gateway_ipv4' ]
+        if isinstance(ip,bool): # Use 'False' to ignore value
+          if ip is False:
+            break               # Skip assigning anycast gw
+          elif source==node_link_data and 'anycast_gateway_ipv4' in prefix:
+            continue            # Use gateway from prefix
+          else:
+            ip = 1              # For True without backup, default to first IP
+        if isinstance(ip,int):
+          ifdata['anycast_gateway_ipv4'] = str( prefix['ipv4'][ip] )
+          if source==node_link_data:
+            node_link_data['anycast_gateway_ipv4'] = str( prefix['ipv4'][ip] )
+        else:
+          ifdata['anycast_gateway_ipv4'] = str( ip )
+        break
+
   for af in ('ipv4','ipv6'):
     node_addr = None
     if af in node_link_data:                  # static IP address or host index
@@ -286,9 +306,10 @@ def augment_link_prefix(link: Box,pools: typing.List[str],addr_pools: Box,link_p
       pools = [ link.get('role') ] + pools
 
   pfx_list = addressing.get(addr_pools,pools)
+  print( f"JvB augment_link_prefix {pfx_list}" )
   link.prefix = {
       af: pfx_list[af] if isinstance(pfx_list[af],bool) else str(pfx_list[af])
-            for af in ('ipv4','ipv6') if af in pfx_list
+            for af in ('ipv4','ipv6','anycast_gateway_ipv4') if af in pfx_list
     }
   if not link.prefix:
     link.pop('prefix',None)
@@ -348,7 +369,7 @@ def augment_lan_link(link: Box, addr_pools: Box, ndict: dict, defaults: Box) -> 
         for af in ('ipv4','ipv6'):
           if af in remote_if['data']:
             ngh_data[af] = remote_if['data'][af]
-        
+
         # List enabled modules that have interface level attributes; copy those attributes too
         mods_with_ifattr = Box({ m : True for m in ndict[remote_if['node']].get('module',[]) if defaults[m].attributes.get('interface',None) })
         ifaddr_add_module(ngh_data,remote_if['data'],mods_with_ifattr)
@@ -520,6 +541,13 @@ def interface_feature_check(nodes: Box, defaults: Box) -> None:
             not features.initial.ipv6.lla:
           common.error(
             f'Device {ndata.device} does not support LLA-only IPv6 interfaces used on\n'+
+            f'.. node {node} interface {ifdata.ifname} (link {ifdata.name})',
+            common.IncorrectValue,
+            'interfaces')
+      if 'anycast_gateway_ipv4' in ifdata:
+        if not features.initial.anycast_gateway:
+          common.error(
+            f'Device {ndata.device} does not support anycast_gateway IP used on\n'+
             f'.. node {node} interface {ifdata.ifname} (link {ifdata.name})',
             common.IncorrectValue,
             'interfaces')
