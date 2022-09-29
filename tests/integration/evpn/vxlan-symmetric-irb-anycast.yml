@@ -1,0 +1,62 @@
+message: |
+  The devices under test are layer-3 switches running VXLAN/EVPN with
+  symmetric IRB. Hosts are in three VLANs, all in one VRF - each with anycast gateway
+
+  All hosts should be able to ping each other.
+
+addressing:
+  anycast-pool:
+    ipv4: 10.0.0.0/20
+    prefix: 24
+    anycast_gateway: 1  # .1 of every ipv4/ipv6 subnet
+
+groups:
+  hosts:
+    members: [ h1, h2, h3, h4 ]
+    device: linux
+  switches:
+    members: [ s1,s2 ]
+    module: [ vlan,vxlan,ospf,bgp,evpn,vrf ]
+
+bgp.as: 65000
+
+vrfs:
+  tenant:
+    evpn.transit_vni: True
+
+vlans:
+  red:
+    vrf: tenant
+    pool: anycast-pool
+  blue:
+    vrf: tenant
+    prefix:
+      ipv4: 192.168.0.0/24
+      anycast_gateway_ipv4: 192.168.0.1  # ipv4 only, specified as address
+  green:
+    vrf: tenant # Anycast gateway defined on interface
+
+nodes:
+  h1:
+  h2:
+  h3:
+  h4:
+  s1:
+  s2:
+
+links:
+- h1:
+  s1:
+    vlan.access: red
+- h2:
+  s2:
+    vlan.access: red
+- h3:
+  s1:
+    vlan.access: blue
+- h4:
+  s2:
+    vlan.access: green
+    anycast_gateway_ipv4: 1 # False to ignore value from pool or vlan
+- s1:
+  s2:
