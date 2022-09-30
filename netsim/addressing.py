@@ -77,7 +77,6 @@ def normalize_prefix(pfx: typing.Union[str,Box]) -> Box:
   return pfx
 
 def rebuild_prefix(pfx: typing.Union[dict,Box]) -> dict:
-  print( f"JvB rebuild_prefix: {pfx}" )
   out_pfx = {}
   for af in ('ipv4','ipv6'):
     if af in pfx:
@@ -85,7 +84,6 @@ def rebuild_prefix(pfx: typing.Union[dict,Box]) -> dict:
     gw = 'anycast_gateway_' + af
     if gw in pfx:
       out_pfx[gw] = str(pfx[gw])
-  print( f"JvB result: {out_pfx}" )
   return out_pfx
 
 def setup_pools(addr_pools: typing.Optional[Box] = None, defaults: typing.Optional[Box] = None) -> Box:
@@ -208,14 +206,13 @@ def create_pool_generators(addrs: typing.Optional[Box] = None) -> typing.Dict:
         gen[pool][af] = _data.subnet(plen)
         if (af == 'ipv4' and plen == 32) or (pool == 'loopback'):
           next(gen[pool][af])
-      elif isinstance(_data,bool):
-        gen[pool][key] = _data
       elif key=='anycast_gateway':
-        print( f"JvB -> {pfx}" )
         if data.is_true_int(_data):
           gen[pool]['anycast_gateway'] = _data
-        elif _data is True: # TODO handle /31 case
-          gen[pool]['anycast_gateway'] = 1 # default .1
+        elif _data is True: # handle /31 case, default to last available address
+          gen[pool]['anycast_gateway'] = 0 if 'prefix' in pfx and pfx['prefix']>=31 else -2
+      elif isinstance(_data,bool):
+        gen[pool][key] = _data
   return gen
 
 def get_pool(pools: Box, pool_list: typing.List[str]) -> typing.Optional[str]:
@@ -238,7 +235,6 @@ def get_pool_prefix(pools: typing.Dict, p: str, n: typing.Optional[int] = None) 
   prefixes: typing.Dict = {}
   if pools[p].get('unnumbered'):
     return { 'unnumbered': True }
-  print( f"JvB get_pool_prefix {p}={pools[p]}" )
   anycast_gw = None
   for af in list(pools[p]):
     if af == 'anycast_gateway':
@@ -271,7 +267,6 @@ def get_pool_prefix(pools: typing.Dict, p: str, n: typing.Optional[int] = None) 
     for af in ['ipv4','ipv6']:
       if af in prefixes:
         prefixes[ 'anycast_gateway_' + af ] = prefixes[af][ anycast_gw ]
-  print( f"JvB: get_pool_prefix {pools[p]} {anycast_gw} -> {prefixes}" )
   return prefixes
 
 def get(pools: Box, pool_list: typing.Optional[typing.List[str]] = None, n: typing.Optional[int] = None) -> typing.Dict:
@@ -279,7 +274,6 @@ def get(pools: Box, pool_list: typing.Optional[typing.List[str]] = None, n: typi
     pool_list = ['lan']                   # pragma: no cover
   p = get_pool(pools,pool_list)
   if p:
-    print( f"addressing.get p={p}={pools[p]}" )
     return get_pool_prefix(pools,p,n)
   else:
     return {}                             # pragma: no cover -- can't figure out how to get here
