@@ -538,6 +538,7 @@ def update_vlan_neighbor_list(vlan: str, phy_if: Box, svi_if: Box, node: Box,top
     for af in ('ipv4','ipv6'):
       if af in svi_if:                                                  # ... copy SVI interface addresses to neighbor data
         n_data[af] = svi_if[af]
+    print( f"JvB: VLAN add neighbor {n_data}" )
     vlan_data.neighbors.append(n_data)                                  # Add current node as a neighbor to VLAN neighbor list
 
 """

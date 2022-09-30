@@ -150,6 +150,7 @@ def add_node_interface(node: Box, ifdata: Box, defaults: Box) -> Box:
       if not sys_mtu:                           # .. does the device support system MTU?
         ifdata.mtu = node.mtu                   # .... no, copy node MTU to interface MTU
 
+  print( f"JvB: add_node_interface {ifdata}" )
   node.interfaces.append(ifdata)
 
   # Box modifies the dict in place, return a reference to be updated
@@ -353,17 +354,22 @@ def augment_lan_link(link: Box, addr_pools: Box, ndict: dict, defaults: Box) -> 
 
   for node_if in interfaces:
     node_if['data'].neighbors = []
+    is_host = ndict[node_if['node']].get('role','') == 'host'
     for remote_if in interfaces:
       if remote_if['node'] != node_if['node'] or remote_if['data'].ifindex != node_if['data'].ifindex:
         ngh_data = Box({ 'ifname': remote_if['data'].ifname, 'node': remote_if['node'] })
         for af in ('ipv4','ipv6'):
           if af in remote_if['data']:
-            ngh_data[af] = remote_if['data'][af]
+            gw = f"anycast_gateway_{af}"  # For hosts pick anycast gateway if set
+            ip = gw if is_host and gw in remote_if['data'] else af
+            print( f"JvB: augment_lan_link pick ngh_data {ip} = {remote_if['data'][ip]}" )
+            ngh_data[af] = remote_if['data'][ip]
 
         # List enabled modules that have interface level attributes; copy those attributes too
         mods_with_ifattr = Box({ m : True for m in ndict[remote_if['node']].get('module',[]) if defaults[m].attributes.get('interface',None) })
         ifaddr_add_module(ngh_data,remote_if['data'],mods_with_ifattr)
 
+        print( f"JvB: lan neighbor={ngh_data}" )
         node_if['data'].neighbors.append(ngh_data)
 
   if common.debug_active('links'):     # pragma: no cover (debugging)
@@ -435,9 +441,9 @@ def augment_p2p_link(link: Box, addr_pools: Box, ndict: dict, defaults: Box) -> 
     remote = link_nodes[1-i].name
     interfaces[i]['neighbors'] = [{
         'node': remote,
-        'ifname': interfaces[1-i]['ifname']
+        'ifname': interfaces[1-i]['ifname'],
       }]
-    for af in ('ipv4','ipv6'):
+    for af in ('ipv4','ipv6'):  # No anycast-gateway support on p2p links
       if af in interfaces[1-i]:
         interfaces[i]['neighbors'][0][af] = interfaces[1-i][af]
       if af in interfaces[i]:
@@ -447,6 +453,7 @@ def augment_p2p_link(link: Box, addr_pools: Box, ndict: dict, defaults: Box) -> 
     mods_with_ifattr = Box({ m : True for m in ndict[remote].get('module',[]) if defaults[m].attributes.get('interface',None) })
     ifaddr_add_module(interfaces[i]['neighbors'][0],interfaces[1-i],mods_with_ifattr)
 
+  print( f"JvB: p2p link {link}" )
   return link
 
 def check_link_attributes(data: Box, nodes: dict, valid: set) -> bool:
@@ -534,7 +541,7 @@ def interface_feature_check(nodes: Box, defaults: Box) -> None:
             f'.. node {node} interface {ifdata.ifname} (link {ifdata.name})',
             common.IncorrectValue,
             'interfaces')
-      if 'anycast_gateway_ipv4' in ifdata:
+      if 'anycast_gateway_ipv4' in ifdata or 'anycast_gateway_ipv6' in ifdata:
         if not features.initial.anycast_gateway:
           common.error(
             f'Device {ndata.device} does not support anycast_gateway IP used on\n'+
@@ -549,12 +556,18 @@ def set_default_gateway(link: Box, nodes: Box) -> None:
   link.pop('host_count',None)
   if common.debug_active('links'):
     print(f'Set DGW for {link}')
+  print( f"JvB: set_default_gateway {link}" )
   if not 'gateway' in link:
-    gateway = None
-    for ifdata in link[IFATTR]:
-      if nodes[ifdata.node].get('role','') != 'host' and ifdata.get('ipv4',False):
-        link.gateway.ipv4 = ifdata.ipv4
-        break
+
+    # If anycast gateway is available, pick that (assuming some node has it...)
+    if 'prefix' in link and 'anycast_gateway_ipv4' in link.prefix:
+      link.gateway.ipv4 = link.prefix.anycast_gateway_ipv4
+    else:
+      for ifdata in link[IFATTR]:
+        if nodes[ifdata.node].get('role','') != 'host' and ifdata.get('ipv4',False):
+          link.gateway.ipv4 = ifdata.get('anycast_gateway_ipv4') or ifdata.ipv4
+          print( f"JvB: picked {link.gateway.ipv4}" )
+          break
   else:
     if not isinstance(ifdata.gateway,dict) or not 'ipv4' in ifdata.gateway:  # pragma: no cover
       common.error(
@@ -625,7 +638,9 @@ def transform(link_list: typing.Optional[Box], defaults: Box, nodes: Box, pools:
             f'Bridge name {link["bridge"]} has more than 15 characters',
             common.IncorrectValue,
             'interfaces')
+      print( f"JvB: before augment_lan_link {link}" )
       augment_lan_link(link,pools,nodes,defaults=defaults)
+      print( f"JvB: after augment_lan_link {link}" )
 
     set_default_gateway(link,nodes)
 
