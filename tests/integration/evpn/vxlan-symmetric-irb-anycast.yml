@@ -6,9 +6,14 @@ message: |
 
 addressing:
   anycast-pool:
-    ipv4: 10.0.0.0/20
+    ipv4: 10.1.0.0/20
     prefix: 24
     anycast_gateway: 1  # .1 of every ipv4/ipv6 subnet
+
+  anycast-pool2:
+    ipv4: 10.2.0.0/20
+    prefix: 24
+    anycast_gateway: True  # Default: last of every ipv4/ipv6 subnet
 
 groups:
   hosts:
@@ -34,7 +39,8 @@ vlans:
       ipv4: 192.168.0.0/24
       anycast_gateway_ipv4: 192.168.0.1  # ipv4 only, specified as address
   green:
-    vrf: tenant # Anycast gateway defined on interface
+    vrf: tenant        # Anycast gateway disabled on interface
+    pool: anycast-pool2
 
 nodes:
   h1:
@@ -57,6 +63,6 @@ links:
 - h4:
   s2:
     vlan.access: green
-    anycast_gateway_ipv4: 1 # False to ignore value from pool or vlan
+    anycast_gateway: True # Can only pick True/False to accept/ignore value from pool or vlan
 - s1:
   s2:

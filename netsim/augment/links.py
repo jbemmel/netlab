@@ -209,23 +209,14 @@ def get_node_link_address(node: Box, ifdata: Box, node_link_data: dict, prefix: 
 
   # node 'anycast_gateway' feature checked afterwards - could check upfront
   if node.get('role','') != 'host':
-    for source in (node_link_data,prefix):
-      if 'anycast_gateway_ipv4' in source:
-        ip = source[ 'anycast_gateway_ipv4' ]
-        if isinstance(ip,bool): # Use 'False' to ignore value
-          if ip is False:
-            break               # Skip assigning anycast gw
-          elif source==node_link_data and 'anycast_gateway_ipv4' in prefix:
-            continue            # Use gateway from prefix
-          else:
-            ip = 1              # For True without backup, default to first IP
-        if isinstance(ip,int):
-          ifdata['anycast_gateway_ipv4'] = str( prefix['ipv4'][ip] )
-          if source==node_link_data:
-            node_link_data['anycast_gateway_ipv4'] = str( prefix['ipv4'][ip] )
-        else:
-          ifdata['anycast_gateway_ipv4'] = str( ip )
-        break
+    disable = node_link_data.pop('anycast_gateway',True) is False
+    for af in ('ipv4','ipv6'):
+      attr = f'anycast_gateway_{af}'
+      if attr in prefix and not disable:
+        if af not in prefix:
+          return (f'Node {node.name} is using anycast_gateway for {af} which is not enabled on link')
+        ip = prefix[attr]
+        ifdata[attr] = str( prefix[af][ip] if isinstance(ip,int) else ip  )
 
   for af in ('ipv4','ipv6'):
     node_addr = None
@@ -306,7 +297,6 @@ def augment_link_prefix(link: Box,pools: typing.List[str],addr_pools: Box,link_p
       pools = [ link.get('role') ] + pools
 
   pfx_list = addressing.get(addr_pools,pools)
-  print( f"JvB augment_link_prefix {pfx_list}" )
   link.prefix = {
       af: pfx_list[af] if isinstance(pfx_list[af],bool) else str(pfx_list[af])
             for af in ('ipv4','ipv6','anycast_gateway_ipv4') if af in pfx_list
