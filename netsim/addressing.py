@@ -81,9 +81,6 @@ def rebuild_prefix(pfx: typing.Union[dict,Box]) -> dict:
   for af in ('ipv4','ipv6'):
     if af in pfx:
       out_pfx[af] = str(pfx[af]) if not isinstance(pfx[af],bool) else pfx[af]
-    gw = 'anycast_gateway_' + af
-    if gw in pfx:
-      out_pfx[gw] = str(pfx[gw])
   return out_pfx
 
 def setup_pools(addr_pools: typing.Optional[Box] = None, defaults: typing.Optional[Box] = None) -> Box:
@@ -199,20 +196,15 @@ def create_pool_generators(addrs: typing.Optional[Box] = None) -> typing.Dict:
   gen: typing.Dict = {}
   for pool,pfx in addrs.items():
     gen[pool] = {}
-    for key,_data in pfx.items():
+    for key,data in pfx.items():
       if "_pfx" in key:
         af   = key.replace('_pfx','')
         plen = pfx['prefix'] if af == 'ipv4' else 64
-        gen[pool][af] = _data.subnet(plen)
+        gen[pool][af] = data.subnet(plen)
         if (af == 'ipv4' and plen == 32) or (pool == 'loopback'):
           next(gen[pool][af])
-      elif key=='anycast_gateway':
-        if data.is_true_int(_data):
-          gen[pool]['anycast_gateway'] = _data
-        elif _data is True: # handle /31 case, default to last available address
-          gen[pool]['anycast_gateway'] = 0 if 'prefix' in pfx and pfx['prefix']>=31 else -2
-      elif isinstance(_data,bool):
-        gen[pool][key] = _data
+      elif isinstance(data,bool):
+        gen[pool][key] = data
   return gen
 
 def get_pool(pools: Box, pool_list: typing.List[str]) -> typing.Optional[str]:
@@ -235,11 +227,7 @@ def get_pool_prefix(pools: typing.Dict, p: str, n: typing.Optional[int] = None) 
   prefixes: typing.Dict = {}
   if pools[p].get('unnumbered'):
     return { 'unnumbered': True }
-  anycast_gw = None
   for af in list(pools[p]):
-    if af == 'anycast_gateway':
-      anycast_gw = pools[p]['anycast_gateway']
-      continue
     if not 'cache' in af:
       if isinstance(pools[p][af],bool):
         prefixes[af] = pools[p][af]
@@ -263,10 +251,7 @@ def get_pool_prefix(pools: typing.Dict, p: str, n: typing.Optional[int] = None) 
             (' (use --debug addr CLI argument to get more details)' if not common.debug_active('addr') else ''),
             common.MissingValue,
             'addressing')
-  if anycast_gw:
-    for af in ['ipv4','ipv6']:
-      if af in prefixes:
-        prefixes[ 'anycast_gateway_' + af ] = get_addr_mask(prefixes[af],anycast_gw)
+
   return prefixes
 
 def get(pools: Box, pool_list: typing.Optional[typing.List[str]] = None, n: typing.Optional[int] = None) -> typing.Dict:
@@ -300,7 +285,7 @@ def parse_prefix(prefix: typing.Union[str,dict]) -> typing.Dict:
     print(f"parse prefix: {prefix} type={type(prefix)}")
   if not prefix:
     return {}
-  supported_af = ['ip','ipv4','ipv6','anycast_gateway_ipv4','anycast_gateway_ipv6']
+  supported_af = ['ip','ipv4','ipv6']
   prefix_list: typing.Dict = {}
   if isinstance(prefix,dict):
     for af,pfx in prefix.items():
@@ -317,7 +302,7 @@ def parse_prefix(prefix: typing.Union[str,dict]) -> typing.Dict:
           except Exception as ex:
             common.error(f'Cannot parse {af} prefix: {prefix}\n... {ex}',common.IncorrectValue,'addressing')
             return {}
-          if af[0:2]=="ip" and str(prefix_list[af]) != str(prefix_list[af].cidr):
+          if str(prefix_list[af]) != str(prefix_list[af].cidr):
             common.error(f'{af} prefix contains host bits: {prefix}',common.IncorrectValue,'addressing')
     return prefix_list
   else:
