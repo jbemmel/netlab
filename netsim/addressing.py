@@ -266,7 +266,7 @@ def get_pool_prefix(pools: typing.Dict, p: str, n: typing.Optional[int] = None) 
   if anycast_gw:
     for af in ['ipv4','ipv6']:
       if af in prefixes:
-        prefixes[ 'anycast_gateway_' + af ] = prefixes[af][ anycast_gw ]
+        prefixes[ 'anycast_gateway_' + af ] = get_addr_mask(prefixes[af],anycast_gw)
   return prefixes
 
 def get(pools: Box, pool_list: typing.Optional[typing.List[str]] = None, n: typing.Optional[int] = None) -> typing.Dict:
@@ -300,7 +300,7 @@ def parse_prefix(prefix: typing.Union[str,dict]) -> typing.Dict:
     print(f"parse prefix: {prefix} type={type(prefix)}")
   if not prefix:
     return {}
-  supported_af = ['ip','ipv4','ipv6','anycast_gateway_ipv4']
+  supported_af = ['ip','ipv4','ipv6','anycast_gateway_ipv4','anycast_gateway_ipv6']
   prefix_list: typing.Dict = {}
   if isinstance(prefix,dict):
     for af,pfx in prefix.items():
@@ -311,15 +311,13 @@ def parse_prefix(prefix: typing.Union[str,dict]) -> typing.Dict:
       else:
         if isinstance(pfx,bool):
           prefix_list[af] = pfx
-        elif af=='anycast_gateway_ipv4':
-          prefix_list[af] = netaddr.IPAddress(pfx)
         else:
           try:
             prefix_list[af] = netaddr.IPNetwork(pfx)
           except Exception as ex:
             common.error(f'Cannot parse {af} prefix: {prefix}\n... {ex}',common.IncorrectValue,'addressing')
             return {}
-          if str(prefix_list[af]) != str(prefix_list[af].cidr):
+          if af[0:2]=="ip" and str(prefix_list[af]) != str(prefix_list[af].cidr):
             common.error(f'{af} prefix contains host bits: {prefix}',common.IncorrectValue,'addressing')
     return prefix_list
   else:

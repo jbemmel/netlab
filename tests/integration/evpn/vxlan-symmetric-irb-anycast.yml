@@ -8,7 +8,7 @@ addressing:
   anycast-pool:
     ipv4: 10.1.0.0/20
     prefix: 24
-    anycast_gateway: 1  # .1 of every ipv4/ipv6 subnet
+    anycast_gateway: 10  # .10 of every ipv4/ipv6 subnet
 
   anycast-pool2:
     ipv4: 10.2.0.0/20
@@ -37,7 +37,8 @@ vlans:
     vrf: tenant
     prefix:
       ipv4: 192.168.0.0/24
-      anycast_gateway_ipv4: 192.168.0.1  # ipv4 only, specified as address
+      ipv6: 2001:1::/64
+      anycast_gateway_ipv4: 192.168.0.100/24  # ipv4 only, specified as address
   green:
     vrf: tenant        # Anycast gateway disabled on interface
     pool: anycast-pool2
