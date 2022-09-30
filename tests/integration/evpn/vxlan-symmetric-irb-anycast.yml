@@ -6,12 +6,12 @@ message: |
 
 addressing:
   anycast-pool:
-    ipv4: 10.1.0.0/20
+    ipv4: 10.10.0.0/20
     prefix: 24
     anycast_gateway: 10  # .10 of every ipv4/ipv6 subnet
 
   anycast-pool2:
-    ipv4: 10.2.0.0/20
+    ipv4: 10.20.0.0/20
     prefix: 24
     anycast_gateway: True  # Default: last of every ipv4/ipv6 subnet
 
@@ -64,6 +64,6 @@ links:
 - h4:
   s2:
     vlan.access: green
-    anycast_gateway: True # Can only pick True/False to accept/ignore value from pool or vlan
+    anycast_gateway: False # Can only pick True/False to accept/ignore value from pool or vlan
 - s1:
   s2:
