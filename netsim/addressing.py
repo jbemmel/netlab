@@ -132,9 +132,6 @@ def validate_pools(addrs: typing.Optional[Box] = None) -> None:
         if not isinstance(pfx[k],bool):
           try:
             network = netaddr.IPNetwork(pfx[k])
-            if str(network.cidr) != pfx[k]:
-              common.error( f"pool '{pool}' is using an invalid prefix {pfx[k]} with host bits set ({str(network.cidr)})",
-                            category=common.IncorrectValue, module='addressing')
             addrs[pool][k+'_pfx'] = network
           except:
             common.error(
