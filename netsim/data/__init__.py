@@ -6,6 +6,8 @@ import typing,typing_extensions
 from box import Box
 from .. import common
 
+from .validation import validate # JvB export this method
+
 #
 # Change all NULL values in a nested dictionary structure to empty strings
 # to make them nicer in YAML printouts
@@ -329,7 +331,7 @@ def must_be_bool(
 
 
 """
-bool_to_defaults: 
+bool_to_defaults:
 
 * remove a parameter set to False just to prevent default propagation
 * replace a True value with a default dictionary

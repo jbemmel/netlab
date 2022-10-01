@@ -13,6 +13,8 @@ from . import common_parse_args, topology_parse_args, load_topology
 from .. import read_topology,augment,common
 from ..outputs import _TopologyOutput
 
+from ..data import validate # JvB added for global test
+
 #
 # CLI parser for create-topology script
 #
@@ -73,7 +75,9 @@ def run(cli_args: typing.List[str],
     common.error('--output and --devices flags are mutually exclusive',common.IncorrectValue,'create')
 
   topology = load_topology(args)
-  augment.main.transform(topology)
+  validated_topology = validate(topology)
+  if validated_topology:
+    augment.main.transform(validated_topology)
   common.exit_on_error()
 
   for output_format in args.output:

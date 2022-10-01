@@ -20,7 +20,7 @@ that's not realistic.
 
 def init(topology: Box) -> None:
   global _topology,_globals
-
+  print( "JvB: global_vars init()" )
   _topology = topology
   _globals  = topology.defaults._globals
 
