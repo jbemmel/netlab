@@ -23,9 +23,9 @@ def build_id_set(obj: Box, dsname: str, attr: str, objname: str) -> set:
       common.fatal(f'Found a {dsname} setting that is not a dictionary in {objname}','dataplane')
       return set()
 
-    return { 
+    return {
       v[attr]
-        for v in obj[dsname].values() 
+        for v in obj[dsname].values()
           if isinstance(v,dict) and attr in v and v[attr] is not None and not isinstance(v[attr],bool) }
 
   return set()
@@ -34,7 +34,7 @@ def get_id_set(name: str) -> set:
 	idvar = global_vars.get(f'{name}_id')
 	if not 'value' in idvar:
 		idvar.value = set()
-	
+
 	return idvar.value
 
 def create_id_set(name: str) -> set:
