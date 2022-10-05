@@ -408,12 +408,13 @@ def assign_interface_addresses(link: Box, addr_pools: Box, ndict: Box, defaults:
 
   if 'anycast_gateway_ipv4' in pfx_list or 'anycast_gateway_ipv6' in pfx_list:
     for i in link.interfaces:
-      disable = i.pop('anycast_gateway',True) is False
-      if not disable:
-        for af in ('ipv4','ipv6'):
-          attr = f'anycast_gateway_{af}'
-          if attr in pfx_list and af in i:
-            i[attr] = pfx_list[attr]
+      if ndict[i.node].get('role','') != 'host':
+        disable = i.pop('anycast_gateway',True) is False
+        if not disable:
+          for af in ('ipv4','ipv6'):
+            attr = f'anycast_gateway_{af}'
+            if attr in pfx_list and af in i:
+              i[attr] = pfx_list[attr]
 
 """
 cleanup 'af: False' entries from interfaces
