@@ -40,7 +40,7 @@ updates:
        end-dt6: { }
 {%     endif %}
 {%     endif %}
-   source-address: "{{ loopback.ipv6 | ipaddr('address') }}"
+   source-address: "{{ loopback.ipv6 | ipaddr('address') if 'ipv6' in loopback else '0' }}"
 {% if not srv6.transit_only|default(False) %}
    origination-fpe: [1]
 {% endif %}

@@ -11,6 +11,8 @@ class SRV6(_Module):
 
   def node_post_transform(self, node: Box, topology: Box) -> None:
 
+      print( f"JvB: srv6 node_post_transform {node.loopback}" )
+
       # Could model this as another addressing pool too
       locator = ipaddr.IPv6Network( f'{topology.defaults.srv6.locator}:{node.id:x}::/64' )
 
