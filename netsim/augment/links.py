@@ -648,7 +648,7 @@ def set_default_gateway(link: Box, nodes: Box) -> None:
     for ifdata in link.interfaces:
       if nodes[ifdata.node].get('role','') != 'host' and ifdata.get('ipv4',False):
         # If anycast gateway is available, pick that
-        link.gateway.ipv4 = ifdata.get('anycast_gateway_ipv4') or ifdata.ipv4
+        link.gateway.ipv4 = ifdata.get('anycast_gateway_ipv4',None) or ifdata.ipv4
         break
   else:
     if not isinstance(ifdata.gateway,dict) or not 'ipv4' in ifdata.gateway:  # pragma: no cover
