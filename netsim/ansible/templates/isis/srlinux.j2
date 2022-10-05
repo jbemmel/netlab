@@ -16,9 +16,9 @@ updates:
      - interface-name: system0.0
        passive: True
        ipv4-unicast:
-        admin-state: {{ 'enable' if loopback.ipv4|default('')|ipv4 and 'ipv4' in isis.af else 'disable' }}
+        admin-state: {{ 'enable' if loopback.ipv4|default(0)|ipv4 and 'ipv4' in isis.af else 'disable' }}
        ipv6-unicast:
-        admin-state: {{ 'enable' if loopback.ipv6|default('')|ipv6 and 'ipv6' in isis.af else 'disable' }}
+        admin-state: {{ 'enable' if loopback.ipv6|default(0)|ipv6 and 'ipv6' in isis.af else 'disable' }}
 
 {%   for l in interfaces if (l.vlan is not defined or l.vlan.mode|default('irb')!='bridge') and l.subif_index is not defined %}
 {%    set ifname = l.ifname if '.' in l.ifname else l.ifname|replace('vlan','irb0.') if l.type=='svi' else (l.ifname+'.0') %}
