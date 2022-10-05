@@ -5,7 +5,7 @@ from box import Box
 
 from . import _Module
 from .. import addressing, common
-import ipaddr # type: ignore
+import netaddr
 
 class SRV6(_Module):
 
@@ -14,13 +14,13 @@ class SRV6(_Module):
       print( f"JvB: srv6 node_post_transform {node.loopback}" )
 
       # Could model this as another addressing pool too
-      locator = ipaddr.IPv6Network( f'{topology.defaults.srv6.locator}:{node.id:x}::/64' )
+      locator = netaddr.IPNetwork( f'{topology.defaults.srv6.locator}:{node.id:x}::/64' )
 
       if 'ipv6' not in node.loopback:
-          common.error( "SRv6 requires an ipv6 loopback address",
+          common.error( f"SRv6 requires an ipv6 loopback address on node {node.name}",
                         common.MissingValue, 'srv6' )
-      elif locator.overlaps( ipaddr.IPNetwork(node.loopback.ipv6) ):
-          common.error( f"Node ipv6 loopback address {node.loopback.ipv6} overlaps with locator {locator}",
+      elif locator.overlaps( netaddr.IPNetwork(node.loopback.ipv6) ):
+          common.error( f"Node {node.name} ipv6 loopback address {node.loopback.ipv6} overlaps with locator {locator}",
                         common.IncorrectValue, 'srv6' )
 
       node.srv6.locator = str( locator )
