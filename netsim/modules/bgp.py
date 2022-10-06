@@ -65,7 +65,7 @@ def validate_bgp_sessions(node: Box, sessions: Box, attribute: str) -> bool:
           true_value=BGP_VALID_SESSION_TYPE,
           valid_values=BGP_VALID_SESSION_TYPE,
           module='bgp') is None:
-        OK = False        
+        OK = False
 
   return OK
 
@@ -75,8 +75,8 @@ find_bgp_rr: find route reflectors in the specified autonomous system
 Given an autonomous system and lab topology, return a list of node names that are route reflectors in that AS
 """
 def find_bgp_rr(bgp_as: int, topology: Box) -> typing.List[Box]:
-  return [ n 
-    for n in topology.nodes.values() 
+  return [ n
+    for n in topology.nodes.values()
       if 'bgp' in n and n.bgp["as"] == bgp_as and n.bgp.get("rr",None) ]
 
 """
@@ -445,6 +445,7 @@ class BGP(_Module):
             common.IncorrectValue)
           continue
         node_data[n].rr = True
+        node_data[n].next_hop_self = False # When operating as RR, don't set next hop to self
 
     for name,node in topology.nodes.items():
       if name in node_data:
@@ -455,7 +456,7 @@ class BGP(_Module):
             common.IncorrectValue)
           continue
 
-        node.bgp = node_data[name] + node.bgp
+        node.bgp = node.bgp + node_data[name] # Override .bgp defaults if any
 
   '''
   bgp_build_group: create automatic groups based on BGP AS numbers

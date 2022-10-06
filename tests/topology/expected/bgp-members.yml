@@ -458,7 +458,7 @@ nodes:
         ipv4: 10.0.0.4
         name: pe2
         type: ibgp
-      next_hop_self: true
+      next_hop_self: false
       router_id: 10.0.0.1
       rr: true
       rr_cluster_id: 10.0.0.1
@@ -528,7 +528,7 @@ nodes:
         ipv4: 10.0.0.4
         name: pe2
         type: ibgp
-      next_hop_self: true
+      next_hop_self: false
       router_id: 10.0.0.2
       rr: true
       rr_cluster_id: 10.0.0.1
