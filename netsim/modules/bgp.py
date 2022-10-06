@@ -135,6 +135,8 @@ def build_ibgp_sessions(node: Box, sessions: Box, topology: Box) -> None:
         if n.bgp.get("as") == node.bgp.get("as") and n.name != node.name:
           neighbor_data = bgp_neighbor(n,n.loopback,'ibgp',sessions,get_neighbor_rr(n))
           if not neighbor_data is None:
+            neighbor_data.next_hop_self = topology.defaults.bgp.next_hop_self \
+                                          and not node.bgp.get("rr",None)
             node.bgp.neighbors.append(neighbor_data)
 
   #
@@ -145,6 +147,7 @@ def build_ibgp_sessions(node: Box, sessions: Box, topology: Box) -> None:
       if n.name != node.name:
         neighbor_data = bgp_neighbor(n,n.loopback,'ibgp',sessions,get_neighbor_rr(n))
         if not neighbor_data is None:
+          neighbor_data.next_hop_self = topology.defaults.bgp.next_hop_self
           node.bgp.neighbors.append(neighbor_data)
 
 """
@@ -445,7 +448,6 @@ class BGP(_Module):
             common.IncorrectValue)
           continue
         node_data[n].rr = True
-        node_data[n].next_hop_self = False # When operating as RR, don't set next hop to self
 
     for name,node in topology.nodes.items():
       if name in node_data:
@@ -456,7 +458,7 @@ class BGP(_Module):
             common.IncorrectValue)
           continue
 
-        node.bgp = node.bgp + node_data[name] # Override .bgp defaults if any
+        node.bgp = node_data[name] + node.bgp
 
   '''
   bgp_build_group: create automatic groups based on BGP AS numbers
@@ -490,8 +492,7 @@ class BGP(_Module):
 
   """
   Node pre-transform: set bgp.rr node attribute to _true_ if the node name is in the
-  global bgp.rr attribute. Also, delete the global bgp.rr attribute so it's not propagated
-  down to nodes
+  global bgp.rr attribute.
   """
   def node_pre_transform(self, node: Box, topology: Box) -> None:
     if "rr_list" in topology.get("bgp",{}):

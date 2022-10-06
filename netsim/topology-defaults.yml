@@ -47,7 +47,7 @@ bgp:
   transform_after: [ vlan ]
   next_hop_self: true
   attributes:
-    global: [ 
+    global: [
       af, as, next_hop_self, rr_cluster_id, rr_list, ebgp_role, as_list, sessions, activate,
       advertise_loopback, advertise_roles, community, replace_global_as ]
     node: [
@@ -473,7 +473,8 @@ devices:
         env:
           INTFTYPE: et
       mgmt_if: Management0
-      image: ceos:4.26.4M
+      # image: ceos:4.26.4M
+      image: ceos:latest
       group_vars:
         ansible_user: admin
         ansible_ssh_pass: admin
@@ -948,7 +949,7 @@ devices:
     external:
       image: none
     graphite.icon: router
-  
+
   routeros7:
     interface_name: ether%d
     mgmt_if: ether1

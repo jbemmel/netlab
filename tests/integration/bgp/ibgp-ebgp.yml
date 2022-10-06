@@ -12,6 +12,25 @@ message: |
   *> 10.0.0.4/32      10.1.0.2                 0             0 65001 i
   *>i10.0.0.5/32      10.0.0.2                 0    100      0 65002 i
   *>i10.0.0.6/32      10.0.0.3                 0    100      0 65003 i
+
+  r1>show bgp ipv4 unicast
+  BGP routing table information for VRF default
+  Router identifier 10.0.0.1, local AS number 65000
+  Route status codes: s - suppressed, * - valid, > - active, E - ECMP head, e - ECMP
+                     S - Stale, c - Contributing to ECMP, b - backup, L - labeled-unicast
+                     % - Pending BGP convergence
+  Origin codes: i - IGP, e - EGP, ? - incomplete
+  RPKI Origin Validation codes: V - valid, I - invalid, U - unknown
+  AS Path Attributes: Or-ID - Originator ID, C-LST - Cluster List, LL Nexthop - Link Local Nexthop
+
+          Network                Next Hop              Metric  AIGP       LocPref Weight  Path
+  * >      10.0.0.1/32            -                     -       -          -       0       i
+  * >      10.0.0.2/32            10.0.0.2              0       -          100     0       i Or-ID: 10.0.0.2 C-LST: 10.0.0.3
+  * >      10.0.0.3/32            10.0.0.3              0       -          100     0       i
+  * >      10.0.0.4/32            10.1.0.2              0       -          100     0       65001 i
+  * >      10.0.0.5/32            10.0.0.2              0       -          100     0       65002 i Or-ID: 10.0.0.2 C-LST: 10.0.0.3
+  * >      10.0.0.6/32            10.0.0.3              0       -          100     0       65003 i
+
 module: [ bgp, ospf ]
 bgp.as: 65000
 

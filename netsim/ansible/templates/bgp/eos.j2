@@ -1,17 +1,5 @@
 {% import "eos.macro.j2" as bgpcfg %}
 !
-route-map next-hop-self-ipv4 permit 10
-   match route-type external
-   set ip next-hop peer-address
-!
-route-map next-hop-self-ipv4 permit 20
-!
-route-map next-hop-self-ipv6 permit 10
-   match route-type external
-   set ipv6 next-hop peer-address
-!
-route-map next-hop-self-ipv6 permit 20
-!
 router bgp {{ bgp.as }}
   bgp advertise-inactive
   bgp log-neighbor-changes
@@ -20,8 +8,11 @@ router bgp {{ bgp.as }}
 {% if bgp.router_id|ipv4 %}
   router-id {{ bgp.router_id }}
 {% endif %}
-{% if bgp.rr|default(False) and bgp.rr_cluster_id|default(False) %}
+{% if bgp.rr|default(False) %}
+  bgp route-reflector preserve-attributes
+{%  if bgp.rr_cluster_id|default(False) %}
   bgp cluster-id {{ bgp.rr_cluster_id }}
+{%  endif %}
 {% endif %}
 {% for n in bgp.neighbors %}
 {%   for af in ['ipv4','ipv6'] if n[af] is defined %}
@@ -49,9 +40,6 @@ router bgp {{ bgp.as }}
 !
 {%     for n in bgp.neighbors if n[af] is defined and n.activate[af] is defined and n.activate[af] %}
   neighbor {{ n[af] }} activate
-{%       if n.type == 'ibgp' and bgp.next_hop_self|default(False) %}
-  neighbor {{ n[af] }} route-map next-hop-self-{{ af }} out
-{%       endif %}
 {%     endfor %}
 {%   endif %}
 {% endfor %}

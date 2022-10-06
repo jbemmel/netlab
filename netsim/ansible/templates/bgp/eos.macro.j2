@@ -10,6 +10,9 @@
 {%     endif %}
 {%     if n.type == 'ibgp' %}
   neighbor {{ ip }} update-source Loopback0
+{%       if n.next_hop_self is defined and n.next_hop_self %}
+  neighbor {{ ip }} next-hop-self
+{%       endif %}
 {%     endif %}
 {%     if n.type == 'localas_ibgp' %}
   neighbor {{ ip }} next-hop-peer
