@@ -14,26 +14,28 @@ updates:
 {% set vlan_mode = l.vlan.mode|default('irb') %}
 
 {% if (l.type in ['vlan_member','lan','svi'] and vlan_mode!='route') %}
-- path: configure/service/vpls[service-name=vlan{{ vlan }}]
+{%  set vpls_name = "vlan" + vlan|string %}
+{%  set service_id = vlan+10000 %}
+- path: configure/service/vpls[service-name={{ vpls_name }}]
   val:
-   service-id: {{ vlan+10000 }}
+   service-id: {{ service_id }}
    customer: "1"
 {%  if l.name is defined %}
    description: "{{ l.name }}"
 {%  endif %}
-{% if l.type in ['vlan_member','lan'] %}
+{%  if l.type in ['vlan_member','lan'] %}
    sap:
    - sap-id: {{ l.ifname if ':' in l.ifname else (l.ifname+"/1"+(":0" if native else "")) }}
-{%  if native %}
+{%   if native %}
      description: "Native untagged vlan"
+{%   endif %}
 {%  endif %}
-{% endif %}
    admin-state: enable
 {% endif -%}
 
 {#- Connect VPLS to VPRN service or Base routing context if needed, created in initial -#}
 {%- if (l.ipv4 is defined or l.ipv6 is defined) and l.vlan is defined and vlan_mode=='irb' %}
-- path: configure/service/vpls[service-name=vlan{{ vlan }}]
+- path: configure/service/vpls[service-name={{ vpls_name }}]
   val:
    routed-vpls: { }
 

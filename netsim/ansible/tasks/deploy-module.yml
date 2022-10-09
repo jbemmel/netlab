@@ -17,6 +17,7 @@
 #
 
 - block:
+  - debug: msg="Apply {{ config_module }} configuration for {{ inventory_hostname }}" verbosity=1
   - debug:
       msg: |
         {{ config_module }} configuration for {{ inventory_hostname }}

@@ -2,7 +2,7 @@
 
 {# Symmetric IRB interfaces, note using evpn.EVI value from VRF #}
 {% if vrfs is defined %}
-{% for vname,vdata in vrfs.items() if 'evpn' in vdata and (not l3_id or l3_id in vdata.evpn) %}
+{% for vname,vdata in vrfs.items() if 'evpn' in vdata and 'af' in vdata and (not l3_id or l3_id in vdata.evpn) %}
 {{ transport("l3vni-"+vname,'l3',vdata.evpn[l3_id] if l3_id else None,vdata.evpn.evi,vdata.evpn.rd,vdata,is_routed=True) }}
 
 {# Add it to the VPRN, enable evpn-tunnel; configure vrf-target RT #}
@@ -23,6 +23,26 @@
      vrf-target:
       export-community: target:{{ vdata.export[0] }}
       import-community: target:{{ vdata.import[0] }}
+
+{% endfor %}
+{% endif %}
+{% endmacro %}
+
+{# Not currently used #}
+{% macro vlan_bundles() %}
+{# Create connection profiles for VLAN bundle services - problem is these map to a single VNI in case of VXLAN #}
+{% if vrfs is defined %}
+{% for vrf,vdata in vrfs.items() if 'evpn' in vdata and 'vlan_ids' in vdata.evpn %}
+- path: configure/connection-profile/vlan[connection-profile-id={{vdata.evpn.evi}}]
+  val:
+   description: "VLAN bundle VRF {{vrf}}"
+   qtag-range:
+{%   for id in vdata.evpn.vlan_ids[0:31] %}{# Up to 32 ranges, currently 1 VID per entry #}
+   - start: {{ id }}
+     end: {{ id }}
+{%   endfor %}
+
+# TODO Create VPLS EVPN service with SAP(s) using cp-<evi>
 
 {% endfor %}
 {% endif %}

@@ -20,7 +20,7 @@ def validate_evpn_lists(toponode: Box, obj_path: str, topology: Box, create: boo
   _dataplane.validate_object_reference_list(
     parent=toponode if not toponode is topology else None,
     parent_path=obj_path,
-    topology=topology, 
+    topology=topology,
     list_name='evpn.vlans',
     reference_dictionary='vlans',
     reference_name='VLAN',
@@ -32,7 +32,7 @@ def validate_evpn_lists(toponode: Box, obj_path: str, topology: Box, create: boo
   _dataplane.validate_object_reference_list(
     parent=toponode if not toponode is topology else None,
     parent_path=obj_path,
-    topology=topology, 
+    topology=topology,
     list_name='evpn.vrfs',
     reference_dictionary='vrfs',
     reference_name='VLAN',
@@ -82,7 +82,7 @@ def vlan_aware_bundle_service(vlan: Box, vname: str, topology: Box) -> None:
   vrf_name = vlan.vrf
   if not vrf_name in topology.vrfs:
     common.error(
-      f'VXLAN-enabled VLAN {vname} that is part of VLAN bundle must belong to a global VRF',
+      f'EVPN-enabled VLAN {vname} that is part of VLAN bundle must belong to a global VRF',
       common.IncorrectValue,
       'evpn')
     return
@@ -183,7 +183,7 @@ def vrf_transit_vni(topology: Box) -> None:
         f'VRF {vrf_name} is using an EVPN transit VNI that is also used as L2 VNI {vni}',
         common.IncorrectValue,
         'evpn')
-      continue  
+      continue
     vni_list.append( vni )                                      # Insert it to detect duplicates elsewhere
 
   if vni_error:                                                 # Found serious errors, makes no sense to continue
@@ -233,7 +233,7 @@ def vrf_irb_setup(topology: Box) -> None:
   for vrf_name,vrf_data in topology.get('vrfs',{}).items():
     if not 'evpn' in vrf_data:                                  # VRF without EVPN data is definitely not doing IRB
       continue
-    
+
     if not 'evi' in vrf_data.evpn:
       vrf_data.evpn.evi = vrf_data.id
 

@@ -43,11 +43,11 @@ updates:
 {% if vlans is defined and vxlan.vlans is defined %}
 {%  for vname in vxlan.vlans if vlans[vname].vni is defined %}
 {%   set vlan = vlans[vname] %}
-{%   if vlan.evpn is defined %}
+{%   if vlan.evpn is defined and 'bundle' not in vlan.evpn %}
 {%    set is_routed = vlan.mode|default('irb') != 'bridge' %}
-{{ vxlan_service('vlan'+vlan.id|string,'l2',vlan.vni,vlan.evpn.evi,vlan.evpn.rd,vlan.evpn,is_routed) }}
+{{ vxlan_service('vlan'+vlan.id|string,'l2',vlan.vni,vlan.evpn.evi,rd_source.rd,rt_source,is_routed) }}
 {%   else %}
-     # TODO non-EVPN VXLAN case
+     # TODO non-EVPN VXLAN case, VLAN bundles
 {%   endif %}
 {%  endfor %}
 {% endif %}
