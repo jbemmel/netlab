@@ -634,7 +634,7 @@ def map_trunk_vlans(node: Box, topology: Box) -> None:
     vlan_list = []
     for vlan in trunk.keys():
       if not vlan in node.vlans:
-        common.fatal(f'Internal error: VLAN {vlan} should be already defined on node {node.name}')
+        common.fatal(f'Internal error in map_trunk_vlans: VLAN {vlan} should be already defined on node {node.name}')
         break
       vlan_list.append(node.vlans[vlan].id)
 

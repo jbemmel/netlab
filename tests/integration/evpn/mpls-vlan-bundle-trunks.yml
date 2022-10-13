@@ -23,8 +23,8 @@ groups:
 bgp.as: 65000
 
 evpn:
-  vrfs: [ bundle ]
-  vlans: [ red, blue ]
+  vrfs: [ bundle_red_blue, bundle_green ]
+  vlans: [ red, blue, green ]
   vlan_bundle_service: True
   transport: mpls
 
