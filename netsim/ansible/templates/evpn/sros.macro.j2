@@ -27,23 +27,3 @@
 {% endfor %}
 {% endif %}
 {% endmacro %}
-
-{# Not currently used #}
-{% macro vlan_bundles() %}
-{# Create connection profiles for VLAN bundle services - problem is these map to a single VNI in case of VXLAN #}
-{% if vrfs is defined %}
-{% for vrf,vdata in vrfs.items() if 'evpn' in vdata and 'vlan_ids' in vdata.evpn %}
-- path: configure/connection-profile/vlan[connection-profile-id={{vdata.evpn.evi}}]
-  val:
-   description: "VLAN bundle VRF {{vrf}}"
-   qtag-range:
-{%   for id in vdata.evpn.vlan_ids[0:31] %}{# Up to 32 ranges, currently 1 VID per entry #}
-   - start: {{ id }}
-     end: {{ id }}
-{%   endfor %}
-
-# TODO Create VPLS EVPN service with SAP(s) using cp-<evi>
-
-{% endfor %}
-{% endif %}
-{% endmacro %}

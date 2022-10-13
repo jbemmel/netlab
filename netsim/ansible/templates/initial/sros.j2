@@ -17,7 +17,7 @@
 {% endif %}
 {% endmacro %}
 
-{% macro interface(name,desc,ip_v4,ip_v6,port,l,vlan=0,in_base=True) -%}
+{% macro interface(name,desc,ip_v4,ip_v6,port,l,in_base=True) -%}
 {% set service_name = l.vrf if l.vrf is defined else 'default' %}
 {% set base_path = "router[router-name=Base]" if in_base else "service/vprn[service-name="+service_name+"]" %}
 
@@ -34,10 +34,10 @@
 - path: configure/{{ base_path }}/interface[interface-name={{if_name(name)}}]
   val:
    admin-state: enable
-   description: "{{ desc }} vlan={{vlan}}"
+   description: "{{ desc }}"
 {% if port %}
 {%  if l.vrf is defined %}
-   sap: 
+   sap:
    - sap-id: "{{ port }}"
 {%  else %}
    port: "{{ port }}"
@@ -82,7 +82,7 @@
    connector:
     breakout: "c1-100g"
 {%    set portname = portname + '/1' %}
-- path: configure/port[port-id={{ portname }}]
+- path: configure/port[port-id={{portname}}]
   val:
 {%   endif %}
    ethernet:
@@ -105,7 +105,7 @@
 
 {% if v4 or v6 %}
 {%  if l.type not in ['loopback','stub','svi'] %}
-{{ interface(l.ifname,desc,v4,v6,portname,l,vlan=vlan,in_base=in_base) }}
+{{ interface(l.ifname,desc,v4,v6,portname,l,in_base=in_base) }}
 {%  else %}
 {{ interface("stub-"+l.ifname if l.type=='stub' else l.ifname,desc,v4,v6,None,l,in_base=in_base) }}
 {%  endif %}

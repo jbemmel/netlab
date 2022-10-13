@@ -2,11 +2,34 @@
 
 updates:
 {# include ports with l.subif_index to set MTU if needed #}
-{% for l in interfaces|default([]) if l.vlan is defined or l.subif_index is defined %}
+{% for l in interfaces|default([]) if (l.vlan is defined and (l.type!='svi' or l.vlan.mode!='bridge')) or l.subif_index is defined %}
 {% set ifindex = l.ifname.split('.')[1]|int if '.' in l.ifname else 0 %}
 {% set vlan = l.vlan.access_id|default(ifindex) %}
+{% set vpls_name = "vlan" + vlan|string %}
+{% set service_id = vlan+10000 %}
+{% set global_vlan = vlans[ l.vlan.access ] if l.vlan.access is defined else {} %}
 {% set tagged = l.type=='vlan_member' or l.vlan.trunk_id is defined or l.subif_index is defined %}
 {% set native = l.vlan.native is defined %}
+{% set sap_id = l.ifname if ':' in l.ifname else (l.ifname+"/1"+(":0" if native else "")) %}
+
+# If needed, create/update connection profile for vlan bundles that are part of trunk ports
+# See https://documentation.nokia.com/cgi-bin/dbaccessfilename.cgi/3HE14991AAAFTQZZA01_V1_7450%20ESS%207750%20SR%207950%20XRS%20Advanced%20Configuration%20Guide%20for%20Releases%20up%20to%2021.5.R2-Part%20II.pdf
+# section VLAN Range SAPs for VPLS and Epipe Services
+{% if l.type=='vlan_member' and global_vlan.evpn.bundle is defined %}
+{%  set profile_id = l.parent_ifindex + 100*vrfs[global_vlan.evpn.bundle].id %}{# supports complex topologies #}
+- path: configure/connection-profile/vlan[connection-profile-id={{profile_id}}]
+  val:
+   description: "VLAN bundle {{global_vlan.evpn.bundle}} on port {{l.parent_ifname}}"
+   qtag-range:
+{# Up to 32 ranges, currently 1 VID per entry #}
+   - start: {{ vlan }}
+     end: {{ vlan }}
+{%  set sap_id = l.parent_ifname + "/1:cp-" + profile_id|string %}
+{%  set vlan = "cp-" + profile_id|string %}
+{%  set vpls_name = "vlan-bundle-" + global_vlan.evpn.bundle %}
+{%  set service_id = vrfs[global_vlan.evpn.bundle].id + 20000 %}
+{% endif %}
+
 {{ port(l,vlan=vlan,tagged=tagged,native=native) }}
 
 {#- Create a VPLS service for each L2 VLAN -#}
@@ -14,18 +37,16 @@ updates:
 {% set vlan_mode = l.vlan.mode|default('irb') %}
 
 {% if (l.type in ['vlan_member','lan','svi'] and vlan_mode!='route') %}
-{%  set vpls_name = "vlan" + vlan|string %}
-{%  set service_id = vlan+10000 %}
 - path: configure/service/vpls[service-name={{ vpls_name }}]
   val:
    service-id: {{ service_id }}
    customer: "1"
 {%  if l.name is defined %}
-   description: "{{ l.name }}"
+   description: "{{ l.name }}" # {{ l.type }}
 {%  endif %}
 {%  if l.type in ['vlan_member','lan'] %}
    sap:
-   - sap-id: {{ l.ifname if ':' in l.ifname else (l.ifname+"/1"+(":0" if native else "")) }}
+   - sap-id: {{ sap_id }}
 {%   if native %}
      description: "Native untagged vlan"
 {%   endif %}
