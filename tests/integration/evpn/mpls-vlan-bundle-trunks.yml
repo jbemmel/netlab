@@ -49,7 +49,11 @@ nodes:
   h1:
   h2:
   h3:
+    device: linux
+    module: []
   h4:
+    device: linux
+    module: []
   s1:
   s2:
   c:
@@ -57,10 +61,10 @@ nodes:
 links:
 - h1:
   s1:
-    vlan.trunk: [ red, blue, green ]
+  vlan.trunk: [ red, blue, green ]
 - h2:
   s2:
-    vlan.trunk: [ red, green ]
+  vlan.trunk: [ red, green ]
 - h3:
   s1:
     vlan.access: blue
