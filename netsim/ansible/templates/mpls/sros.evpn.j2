@@ -43,15 +43,18 @@
 
 {% endmacro %}
 
-{% for vname,vdata in vlans.items() if vname in evpn.vlans|default([]) and vdata.evpn.transport|default('vxlan')=='mpls' %}
-{%  set is_routed = vlan.mode|default('irb') != 'bridge' %}
-{%  if 'bundle' in vdata.evpn %}
-{%   set bundle = vrfs[ vdata.evpn.bundle ] %}
-{{   mpls_evpn_service('bundle-'+vdata.evpn.bundle,'l2', None, bundle.evpn.evi, bundle.evpn.rd, bundle, is_routed) }}
-{%  else %}
-{{   mpls_evpn_service('vlan'+vdata.id|string,'l2', None, vdata.evpn.evi, vdata.evpn.rd, vdata.evpn, is_routed) }}
-{%  endif %}
-{% endfor %}
+{# TODO: Hybrid MPLS/VXLAN scenarios #}
+{% if evpn.transport|default('vxlan')=='mpls' %}
+{%  for vname,vdata in vlans.items() if vname in evpn.vlans|default([]) %}
+{%   set is_routed = vdata.mode|default('irb') != 'bridge' %}
+{%   if 'bundle' in vdata.evpn %}
+{%    set bundle = vrfs[ vdata.evpn.bundle ] %}
+{{    mpls_evpn_service('vlan-bundle-'+vdata.evpn.bundle,'l2', None, bundle.evpn.evi, bundle.evpn.rd, bundle, is_routed) }}
+{%   else %}
+{{    mpls_evpn_service('vlan'+vdata.id|string,'l2', None, vdata.evpn.evi, vdata.evpn.rd, vdata.evpn, is_routed) }}
+{%   endif %}
+{%  endfor %}
 
 {# Symmetric IRB interfaces, note using VRF ID as transit EVI value #}
 {{ mpls_l3vnis( mpls_evpn_service, l3_id=None ) }}
+{% endif %}

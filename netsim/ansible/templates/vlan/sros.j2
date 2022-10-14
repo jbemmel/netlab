@@ -12,19 +12,22 @@ updates:
 {% set native = l.vlan.native is defined %}
 {% set sap_id = l.ifname if ':' in l.ifname else (l.ifname+"/1"+(":0" if native else "")) %}
 
-# If needed, create/update connection profile for vlan bundles that are part of trunk ports
+# If needed, create/update connection profile for vlan bundles (leaves vlan tag on packets)
 # See https://documentation.nokia.com/cgi-bin/dbaccessfilename.cgi/3HE14991AAAFTQZZA01_V1_7450%20ESS%207750%20SR%207950%20XRS%20Advanced%20Configuration%20Guide%20for%20Releases%20up%20to%2021.5.R2-Part%20II.pdf
 # section VLAN Range SAPs for VPLS and Epipe Services
-{% if l.type=='vlan_member' and global_vlan.evpn.bundle is defined %}
-{%  set profile_id = l.parent_ifindex + 100*vrfs[global_vlan.evpn.bundle].id %}{# supports complex topologies #}
+{% if l.type in ['vlan_member','lan'] and global_vlan.evpn.bundle is defined %}
+{%  set ifindex = l.parent_ifindex|default(l.ifindex) %}
+{%  set ifname = l.parent_ifname|default(l.ifname) %}
+{%  set profile_id = ifindex + 100*vrfs[global_vlan.evpn.bundle].id %}{# supports complex topologies #}
 - path: configure/connection-profile/vlan[connection-profile-id={{profile_id}}]
   val:
-   description: "VLAN bundle {{global_vlan.evpn.bundle}} on port {{l.parent_ifname}}"
+   description: "VLAN bundle {{global_vlan.evpn.bundle}} on port {{ifname}}"
    qtag-range:
 {# Up to 32 ranges, currently 1 VID per entry #}
    - start: {{ vlan }}
      end: {{ vlan }}
-{%  set sap_id = l.parent_ifname + "/1:cp-" + profile_id|string %}
+{%  set tagged = True %}
+{%  set sap_id = ifname + "/1:cp-" + profile_id|string %}
 {%  set vlan = "cp-" + profile_id|string %}
 {%  set vpls_name = "vlan-bundle-" + global_vlan.evpn.bundle %}
 {%  set service_id = vrfs[global_vlan.evpn.bundle].id + 20000 %}
@@ -36,7 +39,7 @@ updates:
 {#- Use only vlan.id in name, such that svi interfaces (svi.nnnn) can be associated -#}
 {% set vlan_mode = l.vlan.mode|default('irb') %}
 
-{% if (l.type in ['vlan_member','lan','svi'] and vlan_mode!='route') %}
+{% if (l.type in ['vlan_member','lan','svi'] and vlan_mode!='route' and l.subif_index is not defined) %}
 - path: configure/service/vpls[service-name={{ vpls_name }}]
   val:
    service-id: {{ service_id }}

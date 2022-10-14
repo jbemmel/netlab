@@ -13,6 +13,9 @@ groups:
     members: [ h1, h2, h3, h4 ]
     device: frr
     module: [vlan]
+    node_data:
+      # role: "host"  # Doesn't work
+      vlan.mode: route
   switches:
     members: [ s1,s2 ]
     module: [ vlan,mpls,ospf,bgp,evpn,vrf ]
@@ -34,15 +37,13 @@ vrfs:
   bundle_green: # single vlan
     evpn:
 
+vlan.mode: bridge
 vlans:
   red:
-    mode: bridge
     vrf: bundle_red_blue
   blue:
-    mode: bridge
     vrf: bundle_red_blue
   green:
-    mode: bridge
     vrf: bundle_green
 
 nodes:
