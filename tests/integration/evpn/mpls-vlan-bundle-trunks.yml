@@ -1,0 +1,78 @@
+message: |
+  The devices under test are EVPN/MPLS PE-devices using multiple VLAN bundles per (trunk) port
+
+  * h1 and h2 should be able to ping each other on red and green vlans
+  * h1 should be able to reach h3 on blue, and h4 on green
+  * h3 and h4 should not be able to ping each other
+
+  Please note it might take a while for the lab to work due to
+  STP learning phase
+
+groups:
+  hosts:
+    members: [ h1, h2, h3, h4 ]
+    device: frr
+    module: [vlan]
+    node_data:
+      # role: "host"  # Doesn't work
+      vlan.mode: route
+  switches:
+    members: [ s1,s2 ]
+    module: [ vlan,mpls,ospf,bgp,evpn,vrf ]
+  core:
+    members: [ c ]
+    module: [ mpls, ospf ]
+
+bgp.as: 65000
+
+evpn:
+  vrfs: [ bundle_red_blue, bundle_green ]
+  vlans: [ red, blue, green ]
+  vlan_bundle_service: True
+  transport: mpls
+
+vrfs:
+  bundle_red_blue: # 2 vlans
+    evpn:
+  bundle_green: # single vlan
+    evpn:
+
+vlan.mode: bridge
+vlans:
+  red:
+    vrf: bundle_red_blue
+  blue:
+    vrf: bundle_red_blue
+  green:
+    vrf: bundle_green
+
+nodes:
+  h1:
+  h2:
+  h3:
+    device: linux
+    module: []
+  h4:
+    device: linux
+    module: []
+  s1:
+  s2:
+  c:
+
+links:
+- h1:
+  s1:
+  vlan.trunk: [ red, blue, green ]
+- h2:
+  s2:
+  vlan.trunk: [ red, green ]
+- h3:
+  s1:
+    vlan.access: blue
+- h4:
+  s2:
+    vlan.access: green
+- s1:
+  c:
+- s2:
+  c:
