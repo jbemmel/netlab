@@ -16,6 +16,10 @@ groups:
     node_data:
       # role: "host"  # Doesn't work
       vlan.mode: route
+  route-reflectors:
+    members: [ rr ]
+    device: srlinux
+    module: [bgp,evpn,ospf]
   switches:
     members: [ s1,s2 ]
     module: [ vlan,mpls,ospf,bgp,evpn,vrf ]
@@ -58,6 +62,8 @@ nodes:
   s1:
   s2:
   c:
+  rr:
+    bgp.rr: True
 
 links:
 - h1:
@@ -76,3 +82,4 @@ links:
   c:
 - s2:
   c:
+- rr-c

@@ -25,6 +25,8 @@
 {% endif %}
    bgp-evpn:
     evi: {{ evi }}
+    control-word: True
+    force-vc-forwarding: "vlan"
 {% if type=='l3' %}
     routes:
      ip-prefix:
