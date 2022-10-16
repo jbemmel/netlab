@@ -11,6 +11,7 @@
    customer: '1'
    admin-state: enable
    service-id: {{ evi }} # transit EVI for l3, should not overlap
+   # pbb-type: b-vpls # PLUS static-isid on a sap triggers evpn routes with tags
 {% if is_routed %}
    routed-vpls:
     evpn-mpls-ecmp: True
@@ -25,8 +26,6 @@
 {% endif %}
    bgp-evpn:
     evi: {{ evi }}
-    control-word: True
-    force-vc-forwarding: "vlan"
 {% if type=='l3' %}
     routes:
      ip-prefix:
@@ -38,6 +37,8 @@
     - bgp-instance: 1
       admin-state: enable
       ingress-replication-bum-label: True
+      control-word: True # For multi-vendor interop
+      force-vc-forwarding: "vlan" # Datapath setting to include VLAN + p-bits
       ecmp: 8
       auto-bind-tunnel:
        resolution: any
