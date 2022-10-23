@@ -65,7 +65,7 @@ def validate_bgp_sessions(node: Box, sessions: Box, attribute: str) -> bool:
           true_value=BGP_VALID_SESSION_TYPE,
           valid_values=BGP_VALID_SESSION_TYPE,
           module='bgp') is None:
-        OK = False        
+        OK = False
 
   return OK
 
@@ -75,8 +75,8 @@ find_bgp_rr: find route reflectors in the specified autonomous system
 Given an autonomous system and lab topology, return a list of node names that are route reflectors in that AS
 """
 def find_bgp_rr(bgp_as: int, topology: Box) -> typing.List[Box]:
-  return [ n 
-    for n in topology.nodes.values() 
+  return [ n
+    for n in topology.nodes.values()
       if 'bgp' in n and n.bgp["as"] == bgp_as and n.bgp.get("rr",None) ]
 
 """
@@ -156,6 +156,14 @@ build_ebgp_sessions: create EBGP session data structure
 def build_ebgp_sessions(node: Box, sessions: Box, topology: Box) -> None:
   features = devices.get_device_features(node,topology.defaults)
 
+  def bgp_disabled_in_vrf(vrf: str) -> bool:
+    if data.get_from_box(node.vrfs[vrf],'bgp') is False:
+      return True
+    else:
+      # Propagated from topology
+      vrf_bgp = data.get_from_box(node,"vrf.bgp")
+      return vrf_bgp is False
+
   #
   # Iterate over all links, find adjacent nodes
   # in different AS numbers, and create BGP neighbors
@@ -163,6 +171,9 @@ def build_ebgp_sessions(node: Box, sessions: Box, topology: Box) -> None:
     if 'bgp' in l and l.bgp is False:
       l.pop('bgp',None)                                               # Cleanup the flag
       continue                                                        # ... and skip interfaces with 'bgp: False'
+
+    if 'vrf' in l and bgp_disabled_in_vrf(l.vrf):
+      continue
 
     node_as =  node.bgp.get("as")                                     # Get our real AS number and the AS number of the peering session
     node_local_as = data.get_from_box(l,'bgp.local_as') or data.get_from_box(node,'bgp.local_as') or node_as
