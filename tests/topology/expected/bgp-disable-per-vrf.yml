@@ -187,7 +187,6 @@ nodes:
       blue:
         af:
           ipv4: true
-        bgp: false
         export:
         - '65000:2'
         id: 2
@@ -531,7 +530,6 @@ nodes:
       blue:
         af:
           ipv4: true
-        bgp: false
         export:
         - '65000:2'
         id: 2
