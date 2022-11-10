@@ -128,6 +128,9 @@ def validate_vlan_attributes(obj: Box, topology: Box) -> None:
       common.error(f'VLAN ID {vdata.id} for VLAN {vname} in {obj_name} must be between 2 and 4094',common.IncorrectValue,'vlan')
       continue
 
+    if 'port_local' in vdata:
+      continue                                                      # Dont allocate prefix to port_local vlans yet
+
     vlan_pool = [ vdata.pool ] if 'pool' in vdata else []
     vlan_pool.extend(['vlan','lan'])
     pfx_list = links.assign_link_prefix(vdata,vlan_pool,topology.pools,f'{obj_path}.{vname}')
@@ -580,10 +583,11 @@ def get_vlan_mode(node: Box, topology: Box) -> str:
 """
 update_vlan_neighbor_list: Build a VLAN-wide list of neighbors
 """
-def update_vlan_neighbor_list(vlan: str, phy_if: Box, svi_if: Box, node: Box,topology: Box) -> None:
-  vlan_data = get_vlan_data(vlan,node,topology)                         # Try to get global or node-level VLAN data
-  if vlan_data is None:                                                 # ... and get out if there's none
-    return
+def update_vlan_neighbor_list(vlan: str, phy_if: Box, svi_if: Box, node: Box,topology: Box, vlan_data:typing.Optional[Box]=None) -> None:
+  if vlan_data is None:                                                 # not already provided?
+    vlan_data = get_vlan_data(vlan,node,topology)                       # Try to get global or node-level VLAN data
+    if vlan_data is None:                                               # ... and get out if there's none
+      return
 
   if not 'neighbors' in vlan_data:
     vlan_data.neighbors = []
@@ -609,9 +613,14 @@ def update_vlan_neighbor_list(vlan: str, phy_if: Box, svi_if: Box, node: Box,top
 """
 create_node_vlan: Create a local (node) copy of a VLAN used on an interface
 """
-def create_node_vlan(node: Box, vlan: str, topology: Box) -> typing.Optional[Box]:
+def create_node_vlan(node: Box, vlan: str, topology: Box, ifdata: Box) -> typing.Optional[Box]:
+  global_vlan = topology.vlans[vlan]
+  if get_from_box(global_vlan,'port_local'):                        # Handle port_local vlans through renaming
+    vlan = f"p{ifdata.ifindex}_{vlan}"
+    ifdata.vlan_name = ifdata.vlan.access = vlan
+
   if not vlan in node.vlans:                                        # Do we have VLAN defined in the node?
-    node.vlans[vlan] = Box(topology.vlans[vlan])                    # ... no, create a copy of the global definition
+    node.vlans[vlan] = Box(global_vlan)                             # ... no, create a copy of the global definition
     if not node.vlans[vlan]:                                        # pragma: no cover -- we don't have a global definition?
       common.fatal(                                                 # ... this should have been detected way earlier
         f'Unknown VLAN {vlan} used on node {node.name}','vlan')
@@ -659,7 +668,7 @@ def create_svi_interfaces(node: Box, topology: Box) -> dict:
     routed_intf = interface_vlan_mode(ifdata,node,topology) == 'route'      # Identify routed VLAN interfaces
     vlan_subif  = routed_intf and ifdata.get('type','') == 'vlan_member'    # ... and VLAN-based subinterfaces
 
-    vlan_data = create_node_vlan(node,access_vlan,topology)
+    vlan_data = create_node_vlan(node,access_vlan,topology,ifdata)
     if vlan_data is None:                                                   # pragma: no-cover
       if vlan_subif:                                                        # We should never get here, but at least we can
         common.fatal(                                                       # scream before crashing
@@ -695,6 +704,15 @@ def create_svi_interfaces(node: Box, topology: Box) -> dict:
         'vlan')
       return vlan_ifmap
 
+    port_local = 'port_local' in vlan_data
+    if port_local:
+      if not features.vlan.port_local:
+        common.error(                                                         # SVI interfaces are not supported on this device
+          f'Device {node.device} used by {node.name} does not support port local VLANs (access vlan {access_vlan})',
+          common.IncorrectValue,
+          'vlan')
+        return {}
+      access_vlan = f"p{ifdata.ifindex}-{access_vlan}"                      # Generate unique name (str)
     if not access_vlan in vlan_ifmap:                                       # Do we need to create a SVI interface?
       skip_attr = list(skip_ifattr)                                         # Create a local copy of the attribute skip list
       vlan_mode = ifdata.vlan.get('mode','') or vlan_data.get('mode','')    # Get VLAN forwarding mode
@@ -711,11 +729,14 @@ def create_svi_interfaces(node: Box, topology: Box) -> dict:
       vlan_ifdata.ifname = svi_name.format(                                 # ... ifindex, ifname, description
                               vlan=vlan_data.id,
                               bvi=vlan_data.bridge_group,
-                              ifname=ifdata.ifname)
+                              ifname=ifdata.ifname,
+                              port=ifdata.ifindex if port_local else 0)
       vlan_ifdata.name = f'VLAN {access_vlan} ({vlan_data.id})'
       vlan_ifdata.virtual_interface = True                                  # Mark interface as virtual
       vlan_ifdata.type = "svi"
       vlan_ifdata.neighbors = []                                            # No neighbors so far
+      if port_local:
+        vlan_ifdata.port_ifindex = ifdata.ifindex
                                                                             # Overwrite interface settings with VLAN settings
       vlan_ifdata = vlan_ifdata + { k:v for k,v in vlan_data.items() if k not in svi_skipattr }
       fix_vlan_mode_attribute(vlan_ifdata)
@@ -724,7 +745,7 @@ def create_svi_interfaces(node: Box, topology: Box) -> dict:
     else:
       vlan_ifdata = vlan_ifmap[access_vlan]
 
-    update_vlan_neighbor_list(access_vlan,ifdata,vlan_ifdata,node,topology)
+    update_vlan_neighbor_list(access_vlan,ifdata,vlan_ifdata,node,topology,vlan_data)
 
     for attr in list(ifdata.keys()):                                        # Clean up physical interface data
       if not attr in skip_ifattr:
@@ -1136,5 +1157,5 @@ class VLAN(_Module):
 
     topology.links = [ link for link in topology.links if link.type != 'vlan_member' ]
 
-    cleanup_vlan_name(topology)
+    # cleanup_vlan_name(topology)
     fix_vlan_gateways(topology)

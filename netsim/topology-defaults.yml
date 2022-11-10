@@ -37,7 +37,7 @@ attributes:
   node: [
     name,interfaces,module,device,box,id,loopback,
     config,group,role,mtu,provider,cpu,memory,unmanaged ]
-  vlan: [ id, vni, mode,prefix ]
+  vlan: [ id, vni, mode, prefix, port_local ]
   vrf: [ rd, import, export, id, loopback ]
   pool: [ ipv4, ipv6, start, prefix, allocation, mac, unnumbered ]
   pool_no_copy: [ start, prefix, mac ]
@@ -173,10 +173,10 @@ vlan: # VLAN support
     global: [ mode ]
     node: [ mode ]
     link: [ access, native, mode, trunk ]
-    vlans: [ id, vni, vrf, prefix, pool ]
+    vlans: [ id, vni, vrf, prefix, pool, port_local ]
     #
     # Do not propagate these attributes into links or SVI interfaces
-    vlan_no_propagate: [ id, vni, mode, prefix, evpn ]
+    vlan_no_propagate: [ id, vni, mode, prefix, evpn, port_local ]
     #
     # Do not copy these VLAN attributes into SVI interfaces
     vlan_svi_no_propagate: [ gateway ]
@@ -525,14 +525,14 @@ devices:
       ansible_connection: network_cli
     libvirt:
       image: cisco/asav
-      create: 
+      create:
         virt-install --connect=qemu:///system --network network=vagrant-libvirt,model=virtio --name=vm_box
-          --cpu host --arch=x86_64 --machine=pc-1.0 --vcpus=1 --ram=2048 --os-type=linux --noacpi 
-          --virt-type=kvm --watchdog i6300esb,action=reset 
-          --disk path=vm.qcow2,format=qcow2,device=disk,bus=virtio,cache=writethrough 
+          --cpu host --arch=x86_64 --machine=pc-1.0 --vcpus=1 --ram=2048 --os-type=linux --noacpi
+          --virt-type=kvm --watchdog i6300esb,action=reset
+          --disk path=vm.qcow2,format=qcow2,device=disk,bus=virtio,cache=writethrough
           --disk path=bootstrap.iso,format=iso,device=cdrom --graphics none --import
       create_iso: asav
-  
+
   eos:
     interface_name: Ethernet%d
     description: Arista vEOS
@@ -870,9 +870,10 @@ devices:
           lla: True
       vlan:
         model: router
-        svi_interface_name: "irb0.{vlan}"
+        svi_interface_name: "irb{port}.{vlan}"
         subif_name: "{ifname}.{vlan.access_id}"
         mixed_trunk: True
+        port_local: True
       bgp:
         local_as: True
         vrf_local_as: True

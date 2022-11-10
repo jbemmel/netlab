@@ -46,8 +46,12 @@ updates:
 {# Create mac-vrf for L2 VLANs, add L2 side of IRB interface if any #}
 {# Use only vlan.id in name, such that svi interfaces (irb0.nnnn) can be associated #}
 {% set vlan_mode = l.vlan.mode|default('irb') %}
+{% set port_local = vlans[l.vlan.access].port_local|default(False) if l.vlan.access is defined else if_name!="irb0" %}
+{% set port_id = l.ifindex if l.vlan.access is defined else l.port_ifindex %}
+{% set port_prefix = ("port"+port_id|string+"-") if port_local else "" %}
+{% set macvrf_name = port_prefix + "vlan" + if_index|string %}
 {% if (l.type in ['vlan_member','lan'] and vlan_mode!='route') or (l.type=='svi' and vlan_mode=='irb') %}
-- path: network-instance[name=vlan{{ if_index }}]
+- path: network-instance[name={{ macvrf_name }}]
   val:
    type: mac-vrf
 {% if l.name is defined %}
