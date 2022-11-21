@@ -94,13 +94,19 @@
    connector:
     breakout: "c1-100g"
 {%   endif %}
+{%   if 'lag' in portname %}
+- path: configure/lag[lag-name={{ portname }}]
+  val:
+    admin-state: enable
+{%   else %}
 - path: configure/port[port-id={{ portname }}]
   val:
    admin-state: enable
    ethernet:
-{%   set eth_header = 14 + (4 if tagged else 0) %}
-{%   if l.mtu is defined and l.mtu <= (9800-eth_header) %}
+{%    set eth_header = 14 + (4 if tagged else 0) %}
+{%    if l.mtu is defined and l.mtu <= (9800-eth_header) %}
     mtu: {{ l.mtu + eth_header }} # max 9800
+{%    endif %}
 {%   endif %}
 {%   if l.vlan.trunk_id is defined or (l.parent_ifindex is defined and interfaces[l.parent_ifindex-1].vlan.trunk_id is defined) %}
     mode: hybrid # Support mixed trunks by using hybrid ports
