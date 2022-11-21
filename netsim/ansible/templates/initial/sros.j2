@@ -11,7 +11,7 @@
 {%  if not in_base %}
 - path: configure/{{ base_path }}
   val:
-   service-id: {{ vrfs[i.vrf].vrfidx if i.vrf is defined else 1 }}
+   service-id: {{ (vrfs[i.vrf].id + 20000) if i.vrf is defined else 1 }}
    customer: "1"
    admin-state: enable
    ecmp: {{ 1 if 'ixr' in clab.type else 64 }}
