@@ -26,7 +26,7 @@ links:
     ipv4: 10.1.0.1/30
     node: l1
   - ifindex: 1
-    ifname: 1/1/c1
+    ifname: 1/1/c1/1
     ipv4: 10.1.0.2/30
     node: l2
   linkindex: 1
@@ -80,7 +80,7 @@ nodes:
       linkindex: 1
       name: l1 -> l2
       neighbors:
-      - ifname: 1/1/c1
+      - ifname: 1/1/c1/1
         ipv4: 10.1.0.2/30
         node: l2
       type: p2p
@@ -133,7 +133,7 @@ nodes:
     - clab:
         name: eth1
       ifindex: 1
-      ifname: 1/1/c1
+      ifname: 1/1/c1/1
       ipv4: 10.1.0.2/30
       isis:
         network_type: point-to-point
