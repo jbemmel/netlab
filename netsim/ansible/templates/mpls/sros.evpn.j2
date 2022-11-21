@@ -50,7 +50,7 @@
 {% endmacro %}
 
 {# TODO: Hybrid MPLS/VXLAN scenarios #}
-{% if evpn.transport|default('vxlan')=='mpls' %}
+{% if vlans is defined and evpn.transport|default('vxlan')=='mpls' %}
 {%  for vname,vdata in vlans.items() if vname in evpn.vlans|default([]) %}
 {%   set is_routed = vdata.mode|default('irb') != 'bridge' %}
 {%   if 'bundle' in vdata.evpn %}

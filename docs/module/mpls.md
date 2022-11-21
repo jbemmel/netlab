@@ -33,7 +33,7 @@ The following table describes per-platform support of individual MPLS label dist
 
 **Notes:**
 * LDP is enabled on all non-VRF intra-AS interfaces with IPv4 addresses.
-* To disable LDP on an intra-AS interface, or to enabled it on a VRF interface, use **ldp** link/interface parameter.
+* To disable LDP on an intra-AS interface, or to enable it on a VRF interface, use **ldp** link/interface parameter.
 
 ### BGP Labeled Unicast (BGP-LU)
 
@@ -80,7 +80,7 @@ The following table describes per-platform support of individual MPLS label dist
 
 ## Configurable Global and Node Parameters
 
-* **mpls.ldp** -- enable LDP on intra-AS links (see [common routing protocol features](routing.md)) for more details. 
+* **mpls.ldp** -- enable LDP on intra-AS links (see [common routing protocol features](routing.md)) for more details.
 * **mpls.bgp** -- enable BGP Labeled Unicast address families. BGP-LU is disabled by default.
 * **mpls.vpn** -- enable VPNv4 and VPNv6 address families. BGP/MPLS L3VPN is disabled by default.
 * **mpls.6pe** -- enable 6PE on IBGP and/or EBGP sessions (default: IBGP only). 6PE is disabled by default.
@@ -161,4 +161,3 @@ nodes:
 ## Configurable 6PE Parameters
 
 **mpls.6pe** is a global or node parameter that could be a boolean (*True* to enable 6PE on IBGP sessions) or a list of session types (*ibgp* and/or *ebgp*).
-
