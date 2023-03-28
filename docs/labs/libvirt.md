@@ -59,6 +59,7 @@ The following Vagrant boxes are automatically downloaded from Vagrant Cloud when
 * [Cisco ASAv](asav.md)
 * [Cisco IOSv](iosv.md)
 * [Cisco CSR](csr.md)
+* [Cisco IOS XR](iosxr.md)
 * [Cisco Nexus OS](nxos.md)
 * [Dell OS10](dellos10.md) by [Stefano Sasso](http://stefano.dscnet.org)
 * [Fortinet FortiOS](https://blog.petecrocker.com/post/fortinet_vagrant_libvirt/) by [Pete Crocker](https://blog.petecrocker.com/about/)
@@ -69,6 +70,15 @@ The following Vagrant boxes are automatically downloaded from Vagrant Cloud when
 ```{note}
 For more Vagrant details, watch the *[Network Simulation Tools](https://my.ipspace.net/bin/list?id=NetTools#SIMULATE)* part of *[Network Automation Tools](https://www.ipspace.net/Network_Automation_Tools)* webinar.
 ```
+
+## Modifying VM Settings
+
+The following node parameters influence the VM configuration created by *vagrant-libvirt*:
+
+* **cpu** -- number of virtual CPUs allocated to the VM
+* **memory** -- VM memory (in MB)
+* **libvirt.nic_model_type** -- VM NIC model (example: e1000). Default _netlab_ settings usually work fine.
+* **libvirt.nic_adapter_count** -- maximum number of VM NICs (default: 8)
 
 ## Replacing Vagrant Boxes
 
@@ -135,6 +145,7 @@ The virtual machines are batched based on their order in **‌nodes** list/dicti
    asav.md
    csr.md
    iosv.md
+   iosxr.md
    nxos.md
    dellos10.md
    vsrx.md

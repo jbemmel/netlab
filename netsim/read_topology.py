@@ -78,17 +78,20 @@ def include_yaml(data: Box, source_file: str) -> None:
     inc_path = os.path.dirname(source_file)
 
   for inc_name in data._include:                                            # Iterate over included files
-    file_path = inc_path + ('/' if '/' in inc_path else '') + os.path.dirname(inc_name)
+    if "~/" in inc_name:
+      file_path = os.path.dirname(os.path.expanduser(inc_name))
+    else:
+      file_path = inc_path + ('/' if '/' in inc_path else '') + os.path.dirname(inc_name)
     traversable = get_traversable_path(file_path)                           # Get a traversable object
     inc_files = get_globbed_files(traversable,os.path.basename(inc_name))   # Get all files matching the pattern
     if not inc_files:
-      common.fatal('Cannot file {inc_name} to be included into {source_file}')
+      common.fatal(f'Cannot find file {inc_name} to be included into {source_file}')
       return
 
     for file_name in inc_files:
       yaml_data = read_yaml(filename=file_name)
       if yaml_data is None:
-        common.fatal('Cannot read {file_name} that should be included into {source_file}')
+        common.fatal(f'Cannot read {file_name} that should be included into {source_file}')
         return
       data[os.path.splitext(os.path.basename(file_name))[0]] = yaml_data
 
@@ -165,15 +168,11 @@ def load(fname: str , local_defaults: str, sys_defaults: str) -> Box:
     if local_defaults:
       include_defaults(topology,local_defaults)
     else:
-      local_defaults = os.path.dirname(os.path.abspath(fname))+"/topology-defaults.yml"
-      if os.path.isfile(local_defaults):
-        include_defaults(topology,local_defaults)
-
-      for defname in ('~/.netlab.yml','~/topology-defaults.yml'):
+      dir_defaults = os.path.dirname(os.path.abspath(fname))+"/topology-defaults.yml"
+      for defname in (dir_defaults,'~/.netlab.yml','~/topology-defaults.yml'):
         user_defaults  = os.path.expanduser(defname)
         if os.path.isfile(user_defaults):
           include_defaults(topology,user_defaults)
-          break
 
   if sys_defaults and 'global_defaults' in topology.includes:
     include_defaults(topology,sys_defaults)
