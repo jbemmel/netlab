@@ -21,8 +21,7 @@
 {%- endmacro %}
 
 {% macro declare_interface(i,name=None) %}
-{% set name = name or i.ifname %}
-{% set ifname = if_name(name) %}
+{% set ifname = if_name(name or i.ifname) %}
 {{ declare_router(i,sub_path="/interface[interface-name=" + ifname + "]") }}
 {% endmacro %}
 
