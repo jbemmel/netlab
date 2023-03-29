@@ -29,7 +29,7 @@ def adjust_interface_list(iflist: list, link: Box, nodes: Box) -> list:
           'links')
         continue
       n = Box({ 'node': n },default_box=True,box_dots=True)
-      
+
     if not isinstance(n,Box):          # Still facing non-dict data type?
       common.error(                     # ... report an error
         f'Interface data in {link._linkname}.interfaces[{intf_cnt}] must be a dictionary, found {type(n).__name__}',
@@ -173,7 +173,7 @@ def validate(topology: Box) -> None:
 
 """
 Get the link attributes that have to be propagated to interfaces: full set
-of attributes minus the 'no_propagate' attributes 
+of attributes minus the 'no_propagate' attributes
 """
 def get_link_propagate_attributes(defaults: Box) -> set:
   return set(defaults.attributes.link).union(set(defaults.attributes.link_internal)) - \
@@ -506,7 +506,7 @@ def IPAM_loopback(link: Box, af: str, pfx: netaddr.IPNetwork, ndict: Box) -> Non
     pfx.prefixlen = 128 if ':' in str(pfx) else 32
     intf[af] = str(pfx)
 
-IPAM_dispatch: typing.Final[dict] = { 
+IPAM_dispatch: typing.Final[dict] = {
     'unnumbered': IPAM_unnumbered,
     'p2p': IPAM_p2p,
     'sequential': IPAM_sequential,
@@ -929,7 +929,7 @@ def expand_groups(topology: Box) -> None:
       continue                                      # Report error and skip otherwise
 
     copy_group_data = data.get_box(link)            # We'll copy all group data into member links
-    for key in ['group','members','_linkname']:     # Apart from the link name and 
+    for key in ['group','members','_linkname']:     # Apart from the link name and
       copy_group_data.pop(key,None)
 
     for idx,member in enumerate(link.members):
