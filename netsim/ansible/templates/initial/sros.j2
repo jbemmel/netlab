@@ -45,7 +45,7 @@
 {{ declare_interface(l,name) }}
   val:
    admin-state: enable
-   description: "{{ desc }} vlan={{vlan}} macro_intf"
+   description: "{{ desc }} vlan={{vlan}}"
 {% if port %}
 {%  if l.vrf is defined %}
    sap:
@@ -100,23 +100,21 @@
 {%   endif %}
 - path: configure/port[port-id={{ portname }}]
   val:
-{%   if l.type!='loopback' %}
    ethernet:
 {%   set eth_header = 14 + (4 if tagged else 0) %}
-{%    if l.mtu is defined and l.mtu <= (9800-eth_header) %}
+{%   if l.mtu is defined and l.mtu <= (9800-eth_header) %}
     mtu: {{ l.mtu + eth_header }} # max 9800
-{%    endif %}
-{%    if l.vlan.trunk_id is defined or (l.parent_ifindex is defined and interfaces[l.parent_ifindex-1].vlan.trunk_id is defined) %}
+{%   endif %}
+{%   if l.vlan.trunk_id is defined or (l.parent_ifindex is defined and interfaces[l.parent_ifindex-1].vlan.trunk_id is defined) %}
     mode: hybrid # Support mixed trunks by using hybrid ports
-{%    elif not in_base %}
+{%   elif not in_base %}
     mode: access
-{%    else %}
+{%   else %}
     mode: network
-{%    endif %}
-{%    if tagged %}
-{%     set portname = portname + ':' + vlan|string %}
+{%   endif %}
+{%   if tagged %}
+{%    set portname = portname + ':' + vlan|string %}
     encap-type: dot1q
-{%    endif %}
 {%   endif %}
 {%  endif %}
 
