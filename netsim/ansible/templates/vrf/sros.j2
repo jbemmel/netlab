@@ -1,4 +1,5 @@
 {% from "templates/bgp/sros.gnmi.macro.j2" import bgp_config with context %}
+{% from "templates/ospf/sros.j2" import ospf_config with context %}
 
 updates:
 {% for vname,vdata in vrfs.items() %}
@@ -7,13 +8,25 @@ updates:
   val:
    service-id: {{ vdata.vrfidx }}
    customer: "1"
-   autonomous-system: {{ bgp.as }}
-   router-id: {{ vdata.bgp.router_id|default(bgp.router_id) }}
+   autonomous-system: {{ bgp.as|default(vrf.as) }}
+   router-id: {{ vdata.bgp.router_id|default(bgp.router_id if bgp is defined else loopback.ipv4|ipaddr('address')) }}
    ecmp: 64
    admin-state: enable
 
 {% if vdata.bgp is defined %}
+# Processing vrf {{vname}} BGP config...
 {{ bgp_config(vdata.bgp,vname) }}
+{% endif %}
+
+{% if vdata.ospf is defined %}
+# Processing vrf {{vname}} OSPF config...
+{% if vdata.af.ipv4|default(0) %}
+# OSPF ipv4
+{{ ospf_config('ipv4',vdata.ospf,vdata.ospf.interfaces) }}
+{% endif %}
+{% if vdata.af.ipv6|default(0) %}
+{{ ospf_config('ipv6',vdata.ospf,vdata.ospf.interfaces) }}
+{% endif %}
 {% endif %}
 
 {% endfor %}
