@@ -1,7 +1,7 @@
 provider: clab
 
 defaults:
-  device: srlinux
+  device: frr
 
 addressing:
   fabric:
@@ -17,7 +17,7 @@ module: [ vlan ]
 groups:
   fabric:
     members: [ leaf ]
-    device: srlinux
+    device: sros
 
 nodes:
   leaf:
