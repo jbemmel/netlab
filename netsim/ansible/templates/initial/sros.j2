@@ -58,12 +58,14 @@
 {% if ip_v4 is string and ip_v4|ipv4 %}
 {{  ip_addr('4',ip_v4,name) }}
 {% elif ip_v4 == True %}
-   ipv4:
+   ipv4: {% if not l.unnumbered|default(False) %} { }
+{% else %}
     unnumbered:
-{%  if l.vrf is defined and loopback.ipv4|default('')|ipv4 %}
+{%   if l.vrf is defined and loopback.ipv4|default('')|ipv4 %}
      ip-address: {{ loopback.ipv4|ipaddr('address') }}
-{%  else %}
+{%   else %}
      system: [null]
+{%   endif %}
 {%  endif %}
 {% endif %}
 {% if ip_v6 is string and ip_v6|ipv6 %}
