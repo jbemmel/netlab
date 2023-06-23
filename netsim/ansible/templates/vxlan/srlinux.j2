@@ -20,9 +20,15 @@
        # rd: "{{ rd }}"
        _annotate: "RD left as <auto> for EVPN services and ECMP to work as expected, not '{{ rd }}'"
        route-target:
+{%     if 'ebgp' in evpn.session %}
+        _annotate: "For compatibility with frr, override auto-derived RT based on EVI {{evi}} with VNI {{vni}}"
+        import-rt: "target:{{ bgp.as }}:{{ vni }}"
+        export-rt: "target:{{ bgp.as }}:{{ vni }}"
+{%     else %}
         _annotate: "For compatibility with frr, override auto-derived RT based on EVI {{evi}} with VNI {{vni}}"
         import-rt: "target:{{ rts.import[0] if rts.import|length else '0:0' }}"
         export-rt: "target:{{ rts.export[0] if rts.export|length else '0:0' }}"
+{%     endif %}
     bgp-evpn:
      bgp-instance:
      - id: 1
@@ -34,6 +40,40 @@
         bridge-table:
          vlan-aware-bundle-eth-tag: {{ index }}
 {%     endif %}
+
+{% if 'ebgp' in evpn.session %}
+- path: routing-policy/community-set[name=EBGP_VNI{{ vni }}]
+  val:
+   member:
+   - "target:(.*)&{{ vni }}"
+
+- path: routing-policy/community-set[name=EBGP_EVI{{ evi }}]
+  val:
+   member:
+   - "target:{{ bgp.as }}:{{ vni }}" # Compatible with frr auto-rt
+
+- path: routing-policy/policy[name=default_ebgp_import]
+  val:
+   default-action:
+    policy-result: accept
+   statement:
+   - name: "VNI{{ vni }}"
+     match:
+      family: [ "evpn" ]
+      bgp:
+       community-set: "EBGP_VNI{{ vni }}"
+     action:
+      policy-result: accept
+      bgp:
+       communities:
+        add: "EBGP_EVI{{ evi }}"
+
+- path: network-instance[name=default]/protocols/bgp
+  val:
+   import-policy: "default_ebgp_import"
+
+{% endif %}
+
 {% endmacro %}
 
 updates:

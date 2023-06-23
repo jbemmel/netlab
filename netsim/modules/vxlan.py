@@ -60,6 +60,8 @@ def assign_vni(toponode: Box, obj_path: str, topology: Box) -> None:
     if not vname in toponode.get('vlans',{}):                     # Skip VXLAN-enabled VLANs that are not present on a node
       continue
     vlan_data = toponode.vlans[vname]
+    if not vlan_data:
+      continue                                                    # Skip empty vlan objects
     vpath = f'{obj_path}.vlans.{vname}'
     if vname in topology.get('vlans',{}) and toponode != topology:
       if 'vni' in topology.vlans[vname] and 'vni' in vlan_data:

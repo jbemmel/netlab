@@ -8,11 +8,11 @@ updates:
 {% for type in evpn.session %}
 - path: network-instance[name=default]/protocols/bgp
   val:
+{% if type=='ebgp' %}
+   export-policy: "accept_all"
+{% endif %}
    group:
    - group-name: {{ 'ibgp-ipv4' if type=='ibgp' else 'ebgp' }} # Could create a dedicated group for EVPN only?
-{%  if type=='ebgp' %}
-     export-policy: "accept_all"
-{%  endif %}
      afi-safi:
      - afi-safi-name: evpn
        admin-state: enable
