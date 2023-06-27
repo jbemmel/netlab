@@ -58,3 +58,40 @@ updates:
 {%  endfor %}
 {% endfor %}
 {% endif %}
+
+{# Workaround for EBGP designs #}
+{% if 'ebgp' in evpn.session %}
+{% set EBGP_COMMUNITY = "target:" + bgp.as | string + ":0" %}
+- path: routing-policy/community-set[name=EBGP_ANY_AS_ANY_VNI]
+  val:
+   _annotate: "Matches any AS and VNI; this works because each mac-vrf only accepts routes with matching vni"
+   member:
+   - "target:(.*)&(.*)$"
+
+- path: routing-policy/community-set[name=EBGP_COMMUNITY]
+  val:
+   _annotate: "Internal extended community used to mark/import all EBGP EVPN routes"
+   member:
+   - "{{ EBGP_COMMUNITY }}"
+
+- path: routing-policy/policy[name=default_ebgp_import]
+  val:
+   default-action:
+    policy-result: accept
+   statement:
+   - name: "EBGP_MATCH_ANY_AS"
+     match:
+      family: [ "evpn" ]
+      bgp:
+       community-set: "EBGP_ANY_AS_ANY_VNI"
+     action:
+      policy-result: accept
+      bgp:
+       communities:
+        add: "EBGP_COMMUNITY"
+
+- path: network-instance[name=default]/protocols/bgp
+  val:
+   import-policy: "default_ebgp_import"
+
+{% endif %}

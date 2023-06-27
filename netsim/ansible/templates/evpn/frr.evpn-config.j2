@@ -27,6 +27,9 @@ router bgp {{ bgp.as }}
 {%  for af in ['ipv4','ipv6'] if af in n %}
 {%   set peer = n[af] if n[af] is string else n.local_if|default('?') %}
   neighbor {{ peer }} activate
+{%   if role|default('?') == 'ebgp-host' %}
+  neighbor {{ peer }} route-map no-export in
+{%   endif %}
 {%   if bgp.rr|default('') and not n.rr|default('') %}
   neighbor {{ peer }} route-reflector-client
 {%   endif %}
@@ -35,8 +38,15 @@ router bgp {{ bgp.as }}
 
  exit-address-family
 !
- 
+
 exit
+
+{% if role|default('?') == 'ebgp-host' %}
+! Stop received routes from being re-advertised
+route-map no-export permit 10
+ set community no-export
+exit
+{% endif %}
 
 ! L3 VRF EVPN handling
 {% if vrfs is defined %}

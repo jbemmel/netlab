@@ -28,6 +28,7 @@ groups:
     device: frr
     # clab.image: frr:alpine-0951530abc
     module: [ vlan,vxlan,bgp,evpn,vrf ]
+    role: ebgp-host
     node_data:
       bgp.as: 65004 # same AS on every host requires allowas_in
   leafs:
