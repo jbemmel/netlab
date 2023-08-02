@@ -1,8 +1,6 @@
-import typing, netaddr
 from box import Box
 from netsim import common
 from netsim import api
-from netsim import data
 
 """
 Adds a custom bgp.{allowas_in,as_override,default_originate} as link->node (interface) attribute
@@ -16,9 +14,9 @@ def init(topology: Box) -> None:
 
 def pre_link_transform(topology: Box) -> None:
     # Error if BGP module is not loaded
-    if not 'bgp' in topology.module:
+    if 'bgp' not in topology.module:
         common.error(
-            f'BGP Module is not loaded.',
+            'BGP Module is not loaded.',
             common.IncorrectValue,
             'ebgp_utils')
 

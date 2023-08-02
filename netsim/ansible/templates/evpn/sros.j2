@@ -33,7 +33,7 @@ updates:
 
    bgp-evpn:
     evi: {{ vdata.evpn.evi }}
-    # TODO if evpn.transport == 'mpls'
+{%    if 'mpls' in module and vname in evpn.vlans %}
     mpls:
     - bgp-instance: 1
       admin-state: enable
@@ -42,5 +42,6 @@ updates:
       auto-bind-tunnel:
        resolution: any
        ecmp: {{ 2 if 'ixr' in clab.type else 32 }}
+{%    endif %}
 {%   endfor %}
 {% endif %}
