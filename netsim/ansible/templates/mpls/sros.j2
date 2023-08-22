@@ -7,6 +7,9 @@
 {% if 'vpn' in mpls %}
 {%   include 'sros.mplsvpn.j2' +%}
 {% endif %}
+{% if 'l2vpn' in mpls %}
+{%   include 'sros.mplsl2vpn.j2' +%}
+{% endif %}
 {% if '6pe' in mpls %}
 {%   include 'sros.6pe.j2' +%}
 {% endif %}

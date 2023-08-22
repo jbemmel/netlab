@@ -96,8 +96,10 @@ The following table describes per-platform support of individual MPLS label dist
 * **mpls.bgp** -- enable BGP Labeled Unicast address families. BGP-LU is disabled by default.
 * **mpls.vpn** -- enable VPNv4 and VPNv6 address families. BGP/MPLS L3VPN is disabled by default.
 * **mpls.6pe** -- enable 6PE on IBGP and/or EBGP sessions (default: IBGP only). 6PE is disabled by default.
+* **mpls.l2vpn** -- enable L2VPN using either LDP (RFC4906 Martini) or BGP (RFC4761 Kompella). L2VPN is disabled by default.
 
-LDP is enabled by default on all nodes using **mpls** configuration module, and can be disabled by setting **mpls.ldp** node parameter to *False*.
+LDP is enabled by default on all nodes using **mpls** configuration module, and can be disabled by setting **mpls.ldp** node parameter to *False*
+or by setting **mpls.l2vpn.bgp** to True.
 
 ## Configurable Link and Interface Parameters
 

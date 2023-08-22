@@ -1,0 +1,10 @@
+updates:
+{% for n in bgp.neighbors if n['l2vpn'] is defined %}
+- path: configure/router[router-name=Base]
+  val:
+   bgp:
+    neighbor:
+    - ip-address: "{{ n['l2vpn'] }}"
+      family:
+       l2-vpn: True # Could also enable this only for the ibgp group
+{% endfor %}

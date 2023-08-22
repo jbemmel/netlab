@@ -30,7 +30,8 @@ FEATURE_NAME: typing.Final[dict] = {
   'ldp': 'LDP-based label distribution',
   'bgp': 'BGP Labeled Unicast',
   'vpn': 'MPLS/VPN',
-  '6pe': '6PE (IPv6 transport over LDP)'
+  '6pe': '6PE (IPv6 transport over LDP)',
+  'l2vpn': 'MPLS/L2VPN',
 }
 
 def node_adjust_ldp(node: Box, topology: Box, features: Box) -> None:
@@ -179,6 +180,18 @@ def node_adjust_mplsvpn(node: Box, topology: Box, features: Box) -> None:
         if af in node.mpls.vpn:
           n['vpn'+af.replace('ip','')] = n.ipv4
 
+def node_adjust_mplsl2vpn(node: Box, topology: Box, features: Box) -> None:
+  if not validate_mpls_bgp_parameter(node,'l2vpn'):
+    return
+
+  if not node.bgp.get('rr',False):
+    prune_mplsvpn_af(node.mpls.l2vpn,node)
+
+  for n in node.bgp.neighbors:
+    for af in ['ipv4','ipv6']:
+      if af in n:
+        n['l2vpn'] = n[af]
+
 class MPLS(_Module):
 
   def node_pre_transform(self, node: Box, topology: Box) -> None:
@@ -197,6 +210,7 @@ class MPLS(_Module):
 
     data.bool_to_defaults(node.mpls,'bgp',DEFAULT_BGP_LU)
     data.bool_to_defaults(node.mpls,'vpn',DEFAULT_VPN_AF)
+    data.bool_to_defaults(node.mpls,'l2vpn',DEFAULT_VPN_AF)
     data.bool_to_defaults(node.mpls,'6pe',DEFAULT_6PE_AF)
     if 'bgp' in node.mpls or 'vpn' in node.mpls:
       if not 'bgp' in node.module:
@@ -204,6 +218,14 @@ class MPLS(_Module):
           f'You cannot enable BGP-LU or MPLS/VPN on node {node.name} without BGP module',
           log.MissingValue,
           'mpls')
+    if 'l2vpn' in node.mpls:
+      if not ('bgp' in node.module or 'ldp' in node.mpls):
+        log.error(
+          f'MPLS/L2VPN on node {node.name} requires either BGP or LDP module enabled',
+          log.MissingValue,
+          'mpls')
+      if 'bgp' in node.mpls.l2vpn and node.mpls.l2vpn.bgp: # Using BGP implies disabling LDP
+        node.mpls.pop('ldp',None)
 
   def node_post_transform(self, node: Box, topology: Box) -> None:
     global FEATURE_NAME
@@ -228,6 +250,9 @@ class MPLS(_Module):
 
     if 'vpn' in node.mpls:
       node_adjust_mplsvpn(node,topology,features)
+
+    if 'l2vpn' in node.mpls:
+      node_adjust_mplsl2vpn(node,topology,features)
 
     if '6pe' in node.mpls:
       node_adjust_6pe(node,topology,features)

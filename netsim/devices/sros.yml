@@ -45,6 +45,7 @@ features:
     # bgp: True
     vpn: True
     # 6pe: True
+    l2vpn: True
   vxlan:
     requires: [ evpn ] # Current implementation focuses on VXLAN+EVPN, device supports static too
   vlan:
