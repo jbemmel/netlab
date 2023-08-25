@@ -101,6 +101,7 @@
 - path: configure/port[port-id={{ portname }}]
   val:
    admin-state: enable
+   description: "{{ desc|default(l.type) }}"
    ethernet:
 {%   set eth_header = 14 + (4 if tagged else 0) %}
 {%   if l.mtu is defined and l.mtu <= (9800-eth_header) %}
