@@ -1,0 +1,22 @@
+# Service default settings and attributes
+#
+#
+supported_on: [ sros, none ]
+no_propagate: [ start_service_id ]
+start_service_id: 1000
+attributes:
+  global:
+    type: { type: str, valid_values: [] }
+    id: id
+  node:
+    type:
+    id:
+  link: dict
+  #  ref: { type: id, _alt_types: [ Box ] } # Reference one or more global service(s), gets propagated to all interfaces on link
+  interface: dict
+  # sap: id
+  #  ref: { type: id, _alt_types: [ Box ] } # Reference one or more global service(s), gets propagated to all interfaces on link
+  extra:
+    global: [ services ]
+    node: [ services ]
+# features:

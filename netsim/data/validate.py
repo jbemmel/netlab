@@ -437,7 +437,7 @@ def validate_attributes(
       continue
 
     log.error(
-      f"Invalid {data_name} attribute '{k}' found in {data_path}",
+      f"Invalid {data_name} attribute '{k}' found in {data_path} modules={modules}",
       log.IncorrectAttr,
       module)
 

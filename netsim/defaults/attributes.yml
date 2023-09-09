@@ -69,6 +69,10 @@ vlan:
   vni: { type: int, min_value: 1, max_value: 16777215 }
   mode: { type: str, valid_values: [ bridge, irb, route ] }
   prefix:
+service:   # A service is an abstract network-wide entity that operates across nodes and interfaces
+  id: { type: int, min_value: 1 }  # Every service has an ID; some service types may further restrict the range
+  type: { type: id, valid_values: [] } # Type of service, extensible through plugins/modules
+
 vrf:
   rd: rd
   import: list

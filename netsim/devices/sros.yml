@@ -62,7 +62,7 @@ clab:
   node:
     kind: vr-sros
     type: sr-1 # By default emulate SR-1
-    license: /Projects/SR_OS_VSR-SIM_license.txt
+    license: /Projects/SR_OS_VSR-SIM_license-R23.txt
   interface:
     name: eth{ifindex}
   group_vars:

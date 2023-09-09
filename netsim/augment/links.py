@@ -149,7 +149,7 @@ def validate(topology: Box) -> None:
       data=l_data,                                    # Validate link data
       topology=topology,
       data_path=l_data._linkname,
-      data_name=f'link',
+      data_name='link',
       attr_list=['link'],                             # We're checking node attributes
       modules=topology.get('module',[]),              # ... against topology modules
       extra_attributes=providers,                     # Allow provider-specific attributes in links
@@ -162,7 +162,7 @@ def validate(topology: Box) -> None:
         data=intf,                                      # Validate interface data
         topology=topology,
         data_path=f'{l_data._linkname}.{intf.node}',
-        data_name=f'interface',
+        data_name='interface',
         attr_list=['interface','link'],                 # We're checking interface or link attributes
         modules=n_data.get('module',[]),                # ... against node modules
         extra_attributes=providers,                     # Allow provider-specific attributes in interfaces
@@ -175,7 +175,7 @@ def validate(topology: Box) -> None:
         data=l_data.prefix,                             # Validate link prefix
         topology=topology,
         data_path=f'{l_data._linkname}.prefix',         # Topology path to link prefix
-        data_name=f'prefix',
+        data_name='prefix',
         attr_list=['prefix'],                           # We're checking prefix attributes
         modules=None,                                   # No module attributes in prefix
         module='links')
