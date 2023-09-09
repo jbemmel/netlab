@@ -334,7 +334,7 @@ def must_be_int(
       value: typing.Any,
       min_value:  typing.Optional[int] = None,          # Minimum value
       max_value:  typing.Optional[int] = None,          # Maximum value
-                ) -> typing.Union[bool,str,typing.Callable]:
+               ) -> typing.Union[bool,str,typing.Callable]:
 
   def transform_to_int(value: typing.Any) -> int:
     return int(value)

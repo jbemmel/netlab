@@ -3,10 +3,18 @@
 The **service** module introduces the homonymous abstract concept of a 'service', an association across multiple interfaces on multiple nodes.
 The closest match in the current code base would be a 'vlan', but a 'service' is more abstract and intended to be extended by other modules or plugins.
 
-A service has a name (identifier), a numerical id, and a 'type'. The default definition lists no types, values can be added by extensions and then referenced in template logic ( `for s in topology.services { if (s.type=='X') { do something useful with s } }` ). By making templates conditional on the service type, the addition of other service types does not affect existing templates (again, unlike vlans)
+A service has a name (identifier), a numerical id, and a 'type'. The default definition lists no types, values can be added by extensions and then referenced in template logic ( `for s in interface.services { if (s.type=='X') { do something useful with s } }` ). By making templates conditional on the service type, the addition of other service types does not affect/conflict with existing templates (again, unlike vlans)
 
-Besides extensibility, a second consideration why 'vlan' isn't suitable, is the complex attribute copying logic involved with VLAN SVI interfaces.
-Service objects are declared at global or node level, and then referenced from node interfaces. As syntactic sugar, a service can be associated with a link which causes it to be associated with all interfaces attached to that link. From there, an individual extension module - like **vlan** (ffs) - may decide to create a virtual interface and move (some of) the merged service attributes there (warning about any inconsistencies), whereas another - like **epipe** - might leave them all on the physical interfaces.
+Besides extensibility, a second consideration why 'vlan' isn't suitable, is the complex attribute copying logic and constraints involved with VLAN SVI interfaces.
+
+Service objects are declared at global or node level, and then referenced from node interfaces. As syntactic sugar, a service can be associated with a link which causes it to be associated with/copied to all interfaces attached to that link.
+
+There are several ways to associate a service with an interface:
+* Through a Service Access Point (SAP, customer access point) - by specifying **sap-id**
+* Through a (spoke) Service Distribution Point (SDP) - by specifying **spoke-sdp**
+
+## Modeling vlans as a type of service: For Future Study (FFS)
+It would be possible to migrate/modify the logic in the 'vlan' module to include a 'vlan' type service. This exercise is explicitly left as a potential future endeavour, and out of scope of the current 'service' module. Consequently, the examples given below refer to a hypothetical 'vlan' type service for illustrative purposes only
 
 ```
 services:
@@ -65,9 +73,40 @@ links:
      type: vlan
      vlan.id: 100
      vlan.mode: bridge
- 
 ```
 i.e. the service 'name' is resolved to the node local or global entity, and all its attributes are copied (unless overridden). Only referenced services are included, whether defined globally or only for this specific node.
+
+## Service data model presented to templates
+
+As part of the transformation logic, service dictionaries are converted into a list. A 'name' attribute is added, such that templates can do the following:
+```
+{% for i in interfaces if 'service' in i %}
+{% for s in i.service if s.type=="epipe" %}
+... etc
+```
+
+## Defining new service types
+
+A new service type can be defined as follows:
+```
+def init(topology: Box) -> None:
+    topology.defaults.service.attributes['global'].type.valid_values.extend(["epipe"])
+```
+This adds the new 'epipe' type globally; Netlab will copy it to node level automatically
+
+## Defining extra attributes for services
+
+A service definition can be extended with custom module specific attributes at 2 levels:
+1. Global/node level:
+```
+topology.defaults.evpn.attributes.service.evi = { "type": "int", "service_type": "vxlan" }
+```
+2. Node interface level (as explained above, link level attributes get copied to interface level)
+```
+topology.defaults.evpn.attributes.service_interface.eth_tag = { "type": "int", "service_type": "epipe" }
+```
+
+If 'service_type' is specified (as a string or list of strings), the corresponding attribute is allowed only in services of that/those type(s)
 
 
 

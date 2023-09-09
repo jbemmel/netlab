@@ -22,7 +22,7 @@ class SERVICE(_Module):
     ):
         if "type" not in svc_data:
             log.error(
-                f'Must specify a "type" for service {svc} {f"on node {node.name}" if node else ""}',
+                f'Must specify a "type" for service {svc}{f" on node {node.name}" if node else ""}',
                 log.MissingValue,
                 "service",
             )
@@ -32,7 +32,7 @@ class SERVICE(_Module):
             key="type",
             path=f"services.{svc}",
             module="service",
-            valid_values=topology.defaults.service.type.valid_values,
+            valid_values=topology.defaults.service.attributes['global'].type.valid_values,
         )
         validate_attributes(
             svc_data,
@@ -81,10 +81,10 @@ class SERVICE(_Module):
                 return topology.services[s]
             return None
 
-        def resolve_refs(link):
-            if "service" in link:
+        def resolve_refs(intf):
+            if "service" in intf:
                 svcs = []
-                for s, d in list(link.service.items()):
+                for s, d in list(intf.service.items()):
                     svc = lookup_service(s)
                     print(f"Found service: {s}->{svc} d={d}")
                     new_svc = svc + (d or {}) + { 'name': s }
@@ -93,7 +93,7 @@ class SERVICE(_Module):
                     validate_attributes(
                         new_svc,
                         topology,
-                        data_path=f"link.service.{s}",
+                        data_path=f"interface.service.{s}",
                         data_name="service",
                         attr_list=["service","service_interface"],
                         # attributes=topology.default.service,
@@ -103,14 +103,14 @@ class SERVICE(_Module):
                     svcs.append( new_svc )
                 
                 # Reformat 'service' as list with 'name', more convenient for scripts
-                link.service = svcs
+                intf.service = svcs
 
         # print( f"JvB: Check {node.interfaces}" )
-        for link in node.get("interfaces", []):
-            print(f"JvB service node_post_transform check {link}")
-            resolve_refs(link)
+        for intf in node.get("interfaces", []):
+            print(f"JvB service node_post_transform check {intf}")
+            resolve_refs(intf)
 
-            for n in link.get("neighbors", []):
+            for n in intf.get("neighbors", []):
                 resolve_refs(n)
 
         # Cleanup topology.links
