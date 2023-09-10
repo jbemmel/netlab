@@ -10,8 +10,8 @@ from ..data.validate import must_be_string, validate_attributes
 import warnings
 
 EXTRA_ATTS = {
-    "service.name": "str", 
-    "service.sap-id": { "type": "int", "_alt_types": "str" },
+    "service.name": "str",
+    "service.sap-id": {"type": "int", "_alt_types": "str"},
     "service.spoke-sdp": "int",
 }
 
@@ -32,7 +32,9 @@ class SERVICE(_Module):
             key="type",
             path=f"services.{svc}",
             module="service",
-            valid_values=topology.defaults.service.attributes['global'].type.valid_values,
+            valid_values=topology.defaults.service.attributes[
+                "global"
+            ].type.valid_values,
         )
         validate_attributes(
             svc_data,
@@ -81,13 +83,14 @@ class SERVICE(_Module):
                 return topology.services[s]
             return None
 
-        def resolve_refs(intf):
+        def resolve_refs(intf, resolve_sap_id=False):
             if "service" in intf:
                 svcs = []
+                sap_resolved = False
                 for s, d in list(intf.service.items()):
                     svc = lookup_service(s)
                     print(f"Found service: {s}->{svc} d={d}")
-                    new_svc = svc + (d or {}) + { 'name': s }
+                    new_svc = svc + (d or {}) + {"name": s}
 
                     # Validate attributes
                     validate_attributes(
@@ -95,28 +98,61 @@ class SERVICE(_Module):
                         topology,
                         data_path=f"interface.service.{s}",
                         data_name="service",
-                        attr_list=["service","service_interface"],
+                        attr_list=["service", "service_interface"],
                         # attributes=topology.default.service,
                         extra_attributes=EXTRA_ATTS,
                         modules=node.get("module", []),
                     )
-                    svcs.append( new_svc )
-                
+
+                    # Resolve any sap-id to VLANs if requested
+                    if (
+                        resolve_sap_id
+                        and "sap-id" in new_svc
+                        and new_svc["sap-id"] == "vlan"
+                    ):
+                        if "vlan" not in intf:
+                            log.error(
+                                f"sap-id vlan resolution requested but no vlan on link {intf} node {node.name}",
+                                log.MissingValue,
+                                "service",
+                            )
+                            return False
+                        elif "access_id" in intf.vlan:
+                            new_svc["sap-id"] = None  # access vlan -> untagged
+                            sap_resolved = True
+                        elif "trunk" in intf.vlan:  # TODO
+                            log.error(
+                                f"sap-id vlan resolution for trunk on {intf} node {node.name} not supported yet",
+                                log.IncorrectAttr,
+                                "service",
+                            )
+                            return False
+
+                    svcs.append(new_svc)
+
                 # Reformat 'service' as list with 'name', more convenient for scripts
                 intf.service = svcs
+
+                # Check if any SAPs were resolved, if so remove any VLAN
+                if sap_resolved:
+                    intf.pop("vlan", None)  # TODO remove SVI too
+                return True
+
+            return False  # no 'service' on interface
 
         # print( f"JvB: Check {node.interfaces}" )
         for intf in node.get("interfaces", []):
             print(f"JvB service node_post_transform check {intf}")
-            resolve_refs(intf)
 
-            for n in intf.get("neighbors", []):
-                resolve_refs(n)
+            # Only resolve neighbors if a service is present
+            if resolve_refs(intf, resolve_sap_id=True):
+                for n in intf.get("neighbors", []):
+                    resolve_refs(n)
 
-                # Add system IP, some services need this
-                nb = topology.nodes[n.node]
-                if 'loopback' in nb and 'ipv4' in nb.loopback:
-                    n.system_ip = str(netaddr.IPNetwork(nb.loopback.ipv4).ip)
+                    # Add system IP, some services need this
+                    nb = topology.nodes[n.node]
+                    if "loopback" in nb and "ipv4" in nb.loopback:
+                        n.system_ip = str(netaddr.IPNetwork(nb.loopback.ipv4).ip)
 
         # Cleanup topology.links
         for link in topology.links:
