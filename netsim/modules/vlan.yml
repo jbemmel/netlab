@@ -24,8 +24,8 @@ attributes:
   # Do not copy these VLAN attributes into SVI interfaces
   vlan_svi_no_propagate: [ gateway ]
   #
-  # Do not copy these attributes into SVI interfaces
-  phy_ifattr: [ bridge, ifindex, parentindex, ifname, linkindex, type, vlan, mtu, _selfloop_ifindex ]
+  # Do not copy these attributes into SVI interfaces, nor remove them
+  phy_ifattr: [ bridge, ifindex, parentindex, ifname, linkindex, type, vlan, mtu, _selfloop_ifindex, service ]
   #
   # Keep these subinterface attributes
   keep_subif: [ vlan, ifindex, ifname, type ]

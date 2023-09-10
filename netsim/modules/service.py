@@ -1,8 +1,8 @@
 #
 # Service transformation module
 #
-
-from box import Box, BoxList
+import netaddr
+from box import Box
 
 from . import _Module
 from ..utils import log
@@ -11,7 +11,7 @@ import warnings
 
 EXTRA_ATTS = {
     "service.name": "str", 
-    "service.sap-id": "int",
+    "service.sap-id": { "type": "int", "_alt_types": "str" },
     "service.spoke-sdp": "int",
 }
 
@@ -112,6 +112,11 @@ class SERVICE(_Module):
 
             for n in intf.get("neighbors", []):
                 resolve_refs(n)
+
+                # Add system IP, some services need this
+                nb = topology.nodes[n.node]
+                if 'loopback' in nb and 'ipv4' in nb.loopback:
+                    n.system_ip = str(netaddr.IPNetwork(nb.loopback.ipv4).ip)
 
         # Cleanup topology.links
         for link in topology.links:
