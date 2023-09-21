@@ -76,7 +76,7 @@
      description: "{{ n.name }}"
      peer-as: {{ n.as }}
      group: "{{ peer_group }}"
-  {{ bgp_families(n,ipv4=(af=='ipv4' or 'ipv4' not in n),ipv6=(af=='ipv6')) | indent(2) }}
+  {# { bgp_families(n,ipv4=(af=='ipv4' or 'ipv4' not in n),ipv6=(af=='ipv6')) | indent(2) } #}
 
 {%    if n.local_as is defined %}
      local-as:
