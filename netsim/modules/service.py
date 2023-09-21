@@ -5,6 +5,7 @@ import netaddr
 from box import Box
 
 from . import _Module
+from ..augment import devices
 from ..utils import log
 from ..data.validate import must_be_string, validate_attributes
 import warnings
@@ -18,11 +19,11 @@ EXTRA_ATTS = {
 
 class SERVICE(_Module):
     def _validate_svc_type(
-        self, svc: str, svc_data: Box, topology: Box, node: Box = None
+        self, svc: str, svc_data: Box, topology: Box, node: Box, features: Box
     ):
         if "type" not in svc_data:
             log.error(
-                f'Must specify a "type" for service {svc}{f" on node {node.name}" if node else ""}',
+                f'Must specify a "type" for service {svc} on node {node.name}',
                 log.MissingValue,
                 "service",
             )
@@ -32,25 +33,25 @@ class SERVICE(_Module):
             key="type",
             path=f"services.{svc}",
             module="service",
-            valid_values=topology.defaults.service.attributes[
-                "global"
-            ].type.valid_values,
+            valid_values=features.service.attributes["global"].type.valid_values 
+            # topology.defaults.service.attributes["global"].type.valid_values,
         )
-        validate_attributes(
-            svc_data,
-            topology,
-            data_path=f"services.{svc}",
-            data_name="service",
-            attr_list=["service"],
-            # attributes=topology.default.service,
-            modules=node.get("module", []) if node else topology.get("module", []),
-        )
+        # Duplicate, happens at node interface resolution
+        # validate_attributes(
+        #     svc_data,
+        #     topology,
+        #     data_path=f"services.{svc}",
+        #     data_name="service",
+        #     attr_list=["service"],
+        #     attributes=features.service.attributes,
+        #     modules=node.get("module", []),
+        # )
 
     def module_pre_transform(self, topology: Box) -> None:
-        # Validate service types globally and per node
-        if "services" in topology:
-            for s, data in topology.services.items():
-                self._validate_svc_type(s, data, topology)
+        # Validate service types ONLY per node
+        # if "services" in topology:
+        #     for s, data in topology.services.items():
+        #         self._validate_svc_type(s, data, topology)
 
         # Promote link-level service attributes to all interfaces on that link
         for link in topology.links:
@@ -70,12 +71,20 @@ class SERVICE(_Module):
         print("JvB service node_post_transform")
 
         if "services" in node:
+            features = devices.get_device_features(node,topology.defaults)
+            if 'service' not in features:
+                log.error(
+                f'Node {node.name} does not support "service" module',
+                log.IncorrectAttr,
+                "service",
+                )
+                return False
             for s, data in node.services.items():
-                self._validate_svc_type(s, data, topology, node)
+                self._validate_svc_type(s, data, topology, node, features)
 
     def node_post_transform(self, node: Box, topology: Box) -> None:
         print("JvB service node_post_transform")
-
+        features = devices.get_device_features(node,topology.defaults)
         def lookup_service(s):
             if "services" in node and s in node.services:
                 return node.services[s]
@@ -92,14 +101,14 @@ class SERVICE(_Module):
                     print(f"Found service: {s}->{svc} d={d}")
                     new_svc = svc + (d or {}) + {"name": s}
 
-                    # Validate attributes
+                    # Validate attributes, this includes service type
                     validate_attributes(
                         new_svc,
                         topology,
                         data_path=f"interface.service.{s}",
                         data_name="service",
                         attr_list=["service", "service_interface"],
-                        # attributes=topology.default.service,
+                        attributes=features.service.attributes,
                         extra_attributes=EXTRA_ATTS,
                         modules=node.get("module", []),
                     )

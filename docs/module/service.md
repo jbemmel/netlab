@@ -19,9 +19,6 @@ services:
  epipe-1:
   id: 1
   type: epipe
- epipe-2:
-  id: 2
-  type: epipe
 
 nodes: [c1,n1,n2,c2]
 
@@ -55,3 +52,33 @@ The **sros** device supports the 'epipe' type service, and defines an **evpn** m
 At the edges, `sap-id: vlan` determines the Service Access Point (SAP) identifier based on associated VLAN (in this case, untagged)
 
 The **service** module is designed to be extensible by platforms or plugins; using different values for 'type' ensures that templates written for different types don't conflict.
+
+In general, multiple services can be associated with any given link or interface. The mapping to VLAN trunks is done in order of declaration, as follows:
+```
+vlans:
+ voice:
+  id: 100
+ data:
+  id: 200
+
+services:
+ voice-epipe:
+  id: 1
+  type: epipe
+ data-epipe:
+  id: 2
+  type: epipe
+
+links:
+- c1:
+  n1:
+   ipv4: False
+   service: 
+    voice-epipe:
+     sap-id: vlan
+    data-epipe:
+     sap-id: vlan
+  vlan.trunk: [ voice, data ]
+... 
+```
+In this case, the 'voice' VLAN would map to the 'voice-epipe' service (sap-id 100), and similar for 'data'.
