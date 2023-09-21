@@ -55,6 +55,14 @@ features:
     native_routed: True
   gateway:
     protocol: [ anycast, vrrp ]
+  service:
+    attributes:
+     global:
+      type: { type: str, valid_values: [epipe,vpls] }
+      id: id
+     node:
+      type:
+      id:
 
 clab:
   image: vrnetlab/vr-sros
