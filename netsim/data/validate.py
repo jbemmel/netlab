@@ -296,7 +296,7 @@ def validate_item(
         module)
       return False
 
-  for kw in ['type','service_type']:
+  for kw in ['type']:
     validation_attr.pop(kw,None)
 
   if data_type in ('dict','list') and not 'create_empty' in validation_attr:
