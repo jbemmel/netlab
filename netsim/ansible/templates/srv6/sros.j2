@@ -7,6 +7,7 @@
 updates:
 - path: configure/router[router-name=Base]/segment-routing/segment-routing-v6
   val:
+{% if srv6.locator|default(None) %}
    locator:
    - locator-name: {{ locator_name }}
      admin-state: enable
@@ -18,8 +19,27 @@ updates:
 {%   if not srv6.transit_only|default(False) %}
      termination-fpe: [2]
 {%   endif %}
+{% endif %}
+
+{# If Micro Segmentation is enabled, add that too #}
+{% if srv6.micro_locator|default(None) %}
+   micro-segment:
+    block-length: 32 # default
+    block:
+    - block-name: "1"
+      admin-state: enable
+      prefix:
+       ip-prefix: {{ srv6.micro_locator }}
+   micro-segment-locator:
+   - locator-name: {{ locator_name }}-micro
+     admin-state: enable
+     block: "1"
+     un:
+      value: {{ id }}
+{% endif %}
 
    base-routing-instance:
+{% if srv6.locator|default(None) %}
     locator:
     - locator-name: {{ locator_name }}
       function:
@@ -40,6 +60,17 @@ updates:
        end-dt6: { }
 {%     endif %}
 {%     endif %}
+{% endif %}
+{% if srv6.micro_locator|default(None) %}
+    micro-segment-locator:
+    - locator-name: {{ locator_name }}-micro
+      function:
+       ua: # see https://www.ietf.org/archive/id/draft-filsfils-spring-net-pgm-extension-srv6-usid-13.html#name-ua
+       - value: 1
+         srh-mode: usp
+         interface-name: system
+{% endif %}
+
    source-address: "{{ loopback.ipv6 | ipaddr('address') }}"
 {% if not srv6.transit_only|default(False) %}
    origination-fpe: [1]
@@ -67,7 +98,18 @@ updates:
         metric: {{ srv6.isis.metric|default(srv6.isis.cost) }}
 {%    endfor %}
 {%    endif %}
-
+{%    if srv6.micro_locator|default(None) %}
+    micro-segment-locator:
+    - locator-name: {{ locator_name }}-micro
+      level-capability: "{{ '2' if isis.type=='level-2' else ('1' if isis.type=='level-1' else '1/2') }}"
+{%    if 'isis' in srv6 and (srv6.isis.metric is defined or srv6.isis.cost is defined) %}
+      level:
+{%    for level in ['1','2'] %}
+      - level-number: "{{ level }}"
+        metric: {{ srv6.isis.metric|default(srv6.isis.cost) }}
+{%    endfor %}
+{%    endif %}
+{%    endif %}
 {% endif %}
 
 {# Enable BGP SRv6 and/or extended NH encoding #}
