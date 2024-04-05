@@ -28,6 +28,12 @@ updates:
     block:
     - block-name: "1"
       admin-state: enable
+      label-block: "micro"
+      static-function:
+       max-entries: {{ 1 + srv6_interfaces|length }} # 1 for node, 1 per interface
+{%   if not srv6.transit_only|default(False) %}
+      termination-fpe: [2]
+{%   endif %}
       prefix:
        ip-prefix: {{ srv6.micro_locator }}
    micro-segment-locator:
@@ -36,6 +42,7 @@ updates:
      block: "1"
      un:
       value: {{ id }}
+      srh-mode: usp # Ultimate Segment Pop
 {% endif %}
 
    base-routing-instance:
@@ -69,11 +76,26 @@ updates:
        - value: 1
          srh-mode: usp
          interface-name: system
+{%     for i in srv6_interfaces %}
+       - value: {{ 1 + loop.index }}
+         protection: protected
+         interface-name: {{ 'i' + i.ifname }}
+{%     endfor %}
+
 {% endif %}
 
    source-address: "{{ loopback.ipv6 | ipaddr('address') }}"
 {% if not srv6.transit_only|default(False) %}
    origination-fpe: [1]
+{% endif %}
+
+{% if srv6.micro_locator|default(None) %}
+- path: configure/router[router-name=Base]/mpls-labels
+  val:
+   reserved-label-block:
+   - label-block-name: "micro"
+     start-label: 20000
+     end-label: 20100
 {% endif %}
 
 {% if 'isis' in module and srv6.isis|default(False) %}
