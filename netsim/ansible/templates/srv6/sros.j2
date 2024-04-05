@@ -88,6 +88,7 @@ updates:
      node-protect: { }
    segment-routing-v6:
     admin-state: enable
+{% if srv6.locator|default(None) %}
     locator:
     - locator-name: {{ locator_name }}
       level-capability: "{{ '2' if isis.type=='level-2' else ('1' if isis.type=='level-1' else '1/2') }}"
@@ -98,7 +99,8 @@ updates:
         metric: {{ srv6.isis.metric|default(srv6.isis.cost) }}
 {%    endfor %}
 {%    endif %}
-{%    if srv6.micro_locator|default(None) %}
+{% endif %}
+{% if srv6.micro_locator|default(None) %}
     micro-segment-locator:
     - locator-name: {{ locator_name }}-micro
       level-capability: "{{ '2' if isis.type=='level-2' else ('1' if isis.type=='level-1' else '1/2') }}"
@@ -124,7 +126,12 @@ updates:
     - family-type: {{ af }}
       ignore-received-srv6-tlvs: False # default: True
       add-srv6-tlvs:
+{%    if srv6.locator|default(None) %}
        locator-name: {{ locator_name }}
+{%    endif %}
+{%    if srv6.micro_locator|default(None) %}
+       micro-segment-locator-name: {{ locator_name }}-micro
+{%    endif %}
 {%  endfor %}
 {% endif %}
 
