@@ -30,7 +30,8 @@ VRFs are supported on these platforms:
 | Juniper vSRX 3.0      | ✅  | ✅  | ✅  |
 | Mikrotik RouterOS 6   | ✅  | ✅  |  ❌  |
 | Mikrotik RouterOS 7   | ✅  | ✅  | ✅  |
-| SR Linux              | ✅  | ✅ [❗](caveats-srlinux) | ✅  |
+| Nokia SR Linux        | ✅  | ✅ [❗](caveats-srlinux) | ✅  |
+| Nokia SR OS           | ✅  | ✅  | ✅  |
 | VyOS                  | ✅  | ✅  | ✅  |
 
 (module-vrf-platform-routing-support)=
@@ -51,7 +52,8 @@ These platforms support routing protocols in VRFs:
 | Juniper vSRX 3.0      | ✅  | ✅  | ✅  |
 | Mikrotik RouterOS 6   | ✅  [❗](caveats-routeros6) |  ❌  | ✅  |
 | Mikrotik RouterOS 7   | ✅  |  ❌  | ✅  |
-| SR Linux              | ✅  |  ❌  | ✅  |
+| Nokia SR Linux        | ✅  |  ✅  | ✅  |
+| Nokia SR OS           | ✅  |  ✅  | ✅  |
 | VyOS                  | ✅  |  ❌  | ✅  |
 
 ```{note}

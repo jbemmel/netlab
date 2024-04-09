@@ -60,6 +60,7 @@ features:
   vrf:
     keep_module: True
     ospfv2: True
+    ospfv3: True
     bgp: True
   gateway:
     protocol: [ anycast ]

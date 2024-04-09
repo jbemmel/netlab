@@ -61,6 +61,7 @@ features:
   srv6: True
   vrf:
     ospfv2: True
+    ospfv3: True
     bgp: True
 
 clab:

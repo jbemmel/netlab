@@ -270,6 +270,7 @@ sudo pip3 install --upgrade ansible==4.10.0
 ```
 
 * OpenConfig support depends on a [pending PR](https://github.com/nokia/ansible-networking-collections/pull/21)
+* The system interface only supports /128 IPv6 addresses, /64 is supported on 'regular' loopbacks by the platform but currently not implemented for Netlab. This causes things like OSPFv3 validation tests to fail
 
 (caveats-vyos)=
 ## VyOS
