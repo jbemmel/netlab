@@ -9,6 +9,7 @@ group_vars:
   ansible_network_os: srlinux
   ansible_connection: paramiko
   netlab_console_connection: ssh
+  srlinux_grpc_port: 57400
 sr:
   srgb_range_start: 500000
   srgb_range_size: 1000
@@ -23,8 +24,6 @@ clab:
     type: ixrd2
   interface:
     name: e1-{ifindex}
-  group_vars:
-    srlinux_grpc_port: 57400
 features:
   initial:
     system_mtu: True

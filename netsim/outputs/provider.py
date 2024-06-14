@@ -37,9 +37,10 @@ class ProviderConfiguration(_TopologyOutput):
     write_provider_file(providers.select_topology(topology,topology.provider),topology.provider,filename)
 
     for subprovider in topology[topology.provider].providers.keys():  # Iterate over subproviders
-      strings.print_colored_text('[INFO]    ','bright_cyan',alt_txt=None)
-      print(f"Creating configuration file for secondary provider {subprovider}")
-      write_provider_file(
-        topology=providers.select_topology(topology,subprovider),
-        provider=subprovider,
-        filename=topology.defaults.providers[topology.provider][subprovider].filename)
+      if 'filename' in topology.defaults.providers[topology.provider][subprovider]:
+        strings.print_colored_text('[INFO]    ','bright_cyan',alt_txt=None)
+        print(f"Creating configuration file for secondary provider {subprovider}")
+        write_provider_file(
+          topology=providers.select_topology(topology,subprovider),
+          provider=subprovider,
+          filename=topology.defaults.providers[topology.provider][subprovider].filename)

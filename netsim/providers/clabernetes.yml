@@ -1,0 +1,27 @@
+#
+# Clabernetes settings
+#
+description: distributed Containerlab on Kubernetes
+config: clab.yml
+template: clab.j2
+start: kubectl apply -f clabernetes_files
+stop: kubectl delete -f clabernetes_files 
+act_probe: "kubectl get -n c9s pods"
+act_title: "Running pods"
+kubevip_version: "v0.8.0" # Kubevip load balancer version to use
+probe:
+- cmd: "kubectl version --client=true"
+  err: "kubectl is not installed"
+- cmd: "kubectl get -n c9s pods -o wide"
+  err: "Clabernetes cluster not available, see https://containerlab.dev/manual/clabernetes/quickstart/"
+
+# Flag compatibility with 'clab' provider, without specifying secondary output files
+clab: { }
+
+cleanup: [ clab.yml,clab_files,clabernetes_files ]
+
+attributes:
+  link:
+    provider: dict
+  global:
+    providers:

@@ -273,6 +273,9 @@ def augment_node_provider_data(topology: Box) -> None:
     if not find_node_device(n,topology):
       continue
 
+    # Give provider a chance to correct the image
+    providers.execute_node('node_set_image',n,topology)
+
     if not find_node_image(n,topology):
       continue
 
