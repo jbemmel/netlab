@@ -3,6 +3,8 @@
 #
 import typing
 import json
+import subprocess
+import os
 from box import Box
 
 from . import _Provider,get_forwarded_ports
@@ -101,6 +103,10 @@ def add_daemon_filemaps(node: Box, topology: Box) -> None:
 
 class Containerlab(_Provider):
   
+  def __init__(self, provider: str, data: Box) -> None:
+    super().__init__(provider,data)
+    self.use_clabernetes = data.get('use_clabernetes',False)
+
   def augment_node_data(self, node: Box, topology: Box) -> None:
     node.hostname = "clab-%s-%s" % (topology.name,node.name)
     node_fp = get_forwarded_ports(node,topology)
@@ -117,24 +123,64 @@ class Containerlab(_Provider):
     for n in topology.nodes.values():
       if n.get('clab.binds',None):
         self.create_extra_files(n,topology)
+    
+    # generate manifests for Clabernetes
+    if self.use_clabernetes:
+      try:
+        cert = external_commands.run_command(f'sudo -E clab tools cert ca create -t clab.yml -p clab-{topology.name}/.tls/ca/')
+        status = external_commands.run_command(
+                    f'sudo docker run --user {os.getuid()} \
+                     -v {os.getcwd()}:/clabernetes/work --rm \
+                     ghcr.io/srl-labs/clabernetes/clabverter \
+                     --naming non-prefixed --topologyFile clab.yml --outputDirectory clab_files/c9s',
+                    run_always=True)
+      except:
+        log.error('Error running "clabverter": {ex}',category=log.FatalError,module='clabernetes')
 
   def pre_start_lab(self, topology: Box) -> None:
     log.print_verbose('pre-start hook for Containerlab - create any bridges')
-    for brname in list_bridges(topology):
-      if use_ovs_bridge(topology):
-        create_ovs_bridge(brname)
-      else:
-        create_linux_bridge(brname)
+    if not self.use_clabernetes:
+      for brname in list_bridges(topology):
+        if use_ovs_bridge(topology):
+          create_ovs_bridge(brname)
+        else:
+          create_linux_bridge(brname)
+    else:
+      self.c9s_create_load_balancer(topology)
+
+  def post_start_lab(self, topology: Box) -> None:
+    if self.use_clabernetes:
+      self.c9s_populate_etc_hosts(topology)
+
+  def get_start_command(self, topology: Box, sname: typing.Optional[str] = None) -> typing.Union[list[str], str]:
+    if not self.use_clabernetes:
+      return super().get_start_command(topology,sname)
+    else:
+      return topology.defaults.providers[self.provider].clabernetes.start
+  
+  def get_stop_command(self, topology: Box, sname: typing.Optional[str] = None) -> str:
+    if not self.use_clabernetes:
+      return super().get_stop_command(topology,sname)
+    else:
+      return topology.defaults.providers[self.provider].clabernetes.stop
 
   def post_stop_lab(self, topology: Box) -> None:
     log.print_verbose('post-stop hook for Containerlab, cleaning up any bridges')
-    for brname in list_bridges(topology):
-      if use_ovs_bridge(topology):
-        destroy_ovs_bridge(brname)
-      else:
-        destroy_linux_bridge(brname)
+    if not self.use_clabernetes:
+      for brname in list_bridges(topology):
+        if use_ovs_bridge(topology):
+          destroy_ovs_bridge(brname)
+        else:
+          destroy_linux_bridge(brname)
+    else:
+      self.c9s_remove_load_balancer()
 
   def get_lab_status(self) -> Box:
+    if not self.use_clabernetes:
+      return self.get_clab_status()
+    # TODO: Clabernetes status
+
+  def get_clab_status(self) -> Box:
     try:
       status = external_commands.run_command(
                   'docker ps --format json',
@@ -195,3 +241,67 @@ class Containerlab(_Provider):
         f"If you're using a private Docker repository, use the 'docker image pull {node.box}'",
         f"command to pull the image from it or build/install it using this recipe:",
         dp_data.build ])
+    
+  def c9s_create_load_balancer(self, topology: Box) -> None:
+    log.print_verbose('c9s_create_load_balancer')
+
+    # create load balancer for mgmt network
+    try:
+      rbac_status = external_commands.run_command("kubectl apply -f https://kube-vip.io/manifests/rbac.yaml")
+      kv_status = external_commands.run_command("kubectl apply -f https://raw.githubusercontent.com/kube-vip/kube-vip-cloud-provider/main/manifest/kube-vip-cloud-controller.yaml")
+      cfg_status = external_commands.run_command("kubectl create configmap --namespace kube-system kubevip --from-literal range-global=172.18.1.10-172.18.1.250")
+
+      if not cfg_status:
+        log.error( "Failed to create kubevip" )
+    
+      cmd = "docker run --network host --rm ghcr.io/kube-vip/kube-vip:v0.8.0 \
+             manifest daemonset --services --inCluster --arp --interface eth0"
+      # manifest = external_commands.run_command("docker run --network host --rm ghcr.io/kube-vip/kube-vip:v0.8.0 \
+      #                                           manifest daemonset --services --inCluster --arp --interface eth0", return_stdout=True)
+      
+      ps = subprocess.Popen([ arg for arg in cmd.split(" ") ], stdout=subprocess.PIPE)
+      output = subprocess.check_output(('kubectl','apply','-f','-'), stdin=ps.stdout)
+      ps.wait()
+      log.print_verbose( f"Result: {output}" )
+    except Exception as ex:
+      log.error('Error creating kube-vip load balancer: {ex}',category=log.FatalError,module='clabernetes')
+  
+  def c9s_populate_etc_hosts(self, topology: Box) -> None:
+    log.print_verbose('c9s_populate_etc_hosts')
+
+    # Read assigned VIPs and put them in /etc/hosts
+    try:
+      # update /etc/hosts for each node with assigned VIP
+
+      for n in topology.nodes:
+        ck = external_commands.run_command(f"kubectl wait -n c9s-{topology.name} --for jsonpath={{.spec.loadBalancerIP}} service/{n} --timeout 30s")
+        if not ck:
+          log.error(f"Timeout waiting for VIP assignment for {n}")
+
+      vip_json = external_commands.run_command(f"kubectl get -n c9s-{topology.name} svc -o json",check_result=True,return_stdout=True)
+      vips = json.loads(vip_json)
+      log.print_verbose( f"VIPS: {vips}" )
+      #
+      # Permissions issue
+      # with open('/etc/hosts','w') as etc_hosts:
+      #  etc_hosts.write( f"\n### Netlab host entries for c9s hosted nodes in lab {topology.name} ###")
+      for i in vips['items']:
+        if 'annotations' in i['metadata']:  # Filter out VXLAN services
+          node = i['metadata']['name']
+          vip = i['metadata']['annotations']['kube-vip.io/loadbalancerIPs']
+          # etc_hosts.write( f"\nclab-{topology.name}-{node} {vip}")
+          external_commands.run_command(f"sed -i s/clab-{topology.name}-{node}/{vip}/g hosts.yml")
+
+    except Exception as ex:
+      log.error(f'Error populating VIPs in /etc/hosts: {ex}',category=log.FatalError,module='clabernetes')
+  
+  def c9s_remove_load_balancer(self) -> None:
+    log.print_verbose('c9s_remove_load_balancer')
+
+    try:
+      cfg_status = external_commands.run_command("kubectl delete configmap --namespace kube-system kubevip")
+      kv_status = external_commands.run_command("kubectl delete -f https://raw.githubusercontent.com/kube-vip/kube-vip-cloud-provider/main/manifest/kube-vip-cloud-controller.yaml")
+      rbac_status = external_commands.run_command("kubectl delete -f https://kube-vip.io/manifests/rbac.yaml")
+    
+    except Exception as ex:
+      log.error('Error creating kube-vip load balancer: {ex}',category=log.FatalError,module='clabernetes')

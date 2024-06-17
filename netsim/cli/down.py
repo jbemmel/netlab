@@ -89,9 +89,7 @@ def stop_provider_lab(
   p_topology = providers.select_topology(topology,p_name)
   p_module   = providers.get_provider_module(topology,p_name)
 
-  exec_command = None
-  if sname is not None:
-    exec_command = topology.defaults.providers[pname][sname].stop
+  exec_command = p_module.get_stop_command(topology,sname)
 
   p_module.call('pre_stop_lab',p_topology)
   external_commands.stop_lab(topology.defaults,p_name,"netlab down",exec_command)
@@ -153,7 +151,8 @@ def stop_all(topology: Box, args: argparse.Namespace) -> None:
     try:
       log.section_header('Stopping',f'{s_provider} nodes','yellow')
       stop_provider_lab(topology,p_provider,s_provider)
-    except:
+    except Exception as ex:
+      log.error( f"Exception while stopping lab: {ex}" )
       if not args.force:
         sys.exit(1)
     print()
@@ -162,7 +161,8 @@ def stop_all(topology: Box, args: argparse.Namespace) -> None:
     lab_status_change(topology,f'stopping {p_provider} provider')
     log.section_header('Stopping',f'{p_provider} nodes','yellow')
     stop_provider_lab(topology,p_provider)
-  except:
+  except Exception as ex:
+    log.error( f"Exception while stopping lab: {ex}" )
     if not args.force:
       sys.exit(1)
 

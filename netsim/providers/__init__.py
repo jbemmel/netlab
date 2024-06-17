@@ -42,6 +42,18 @@ class _Provider(Callback):
   def get_full_template_path(self) -> str:
     return str(_files.get_moddir()) + '/' + self.get_template_path()
 
+  def get_start_command(self, topology: Box, sname: typing.Optional[str] = None) -> typing.Union[list[str], str]:
+    if sname is not None:
+      return topology.defaults.providers[self.provider][sname].start
+    else:
+      return topology.defaults.providers[self.provider].start
+
+  def get_stop_command(self, topology: Box, sname: typing.Optional[str] = None) -> str:
+    if sname is not None:
+      return topology.defaults.providers[self.provider][sname].stop
+    else:
+      return topology.defaults.providers[self.provider].stop
+
   def find_extra_template(self, node: Box, fname: str, topology: Box) -> typing.Optional[str]:
     if fname in node.get('config',[]):                    # Are we dealing with extra-config template?
       path_prefix = topology.defaults.paths.custom.dirs

@@ -188,7 +188,7 @@ def provider_probes(topology: Box) -> None:
 """
 Start lab topology for a single provider
 """
-def start_provider_lab(topology: Box, pname: str, sname: typing.Optional[str] = None) -> None:
+def start_provider_lab(topology: Box, args: argparse.Namespace, pname: str, sname: typing.Optional[str] = None) -> None:
   p_name   = sname or pname
   p_module = providers.get_provider_module(topology,p_name)
 
@@ -199,11 +199,7 @@ def start_provider_lab(topology: Box, pname: str, sname: typing.Optional[str] = 
 
   status_start_provider(topology,p_name)
   p_module.call('pre_start_lab',p_topology)
-  if sname is not None:
-    exec_command = topology.defaults.providers[pname][sname].start
-  else:
-    exec_command = topology.defaults.providers[pname].start
-
+  exec_command = p_module.get_start_command(topology, sname)
   exec_list = exec_command if isinstance(exec_command,list) else [ exec_command ]
   for cmd in exec_list:
     print(f"provider {p_name}: executing {cmd}")
@@ -331,12 +327,12 @@ def run(cli_args: typing.List[str]) -> None:
     _status.lock_directory()
 
   log.section_header('Starting',f'{p_provider} nodes')
-  start_provider_lab(topology,p_provider)
+  start_provider_lab(topology,args,p_provider)
 
   for s_provider in topology[p_provider].providers:
     log.section_header('Starting',f'{s_provider} nodes')
     recreate_secondary_config(topology,p_provider,s_provider)
-    start_provider_lab(topology,p_provider,s_provider)
+    start_provider_lab(topology,args,p_provider,s_provider)
 
   if args.reload:
     reload_saved_config(args,topology)
