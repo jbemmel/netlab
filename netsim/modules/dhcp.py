@@ -35,11 +35,18 @@ def check_protocol_support(node: Box, topology: Box) -> bool:
   # DHCP clients
   #
   for intf in node.interfaces:
-    if not intf.get('dhcp.client',False):
+    if not intf.get('dhcp.client',False):         # Not a DHCP client? OK
       continue
+
+    # Also a DHCP relay or server? That wouldn't work
+    if intf.get('dhcp.server',False) or node.get('dhcp.server',False):
+      intf.dhcp.pop('client',None)                # ... remove the client flag
+      if not intf.dhcp:
+        intf.pop('dhcp',None)
+      continue                                    # ... and move on
     for af in ('ipv4','ipv6'):
       if not af in intf.dhcp.client:
-        continue
+        continue        
       if not features.dhcp.client[af]:
         log.error(
           f'Node {node.name} (device {node.device}) does not support {af} DHCP client',
@@ -115,38 +122,107 @@ Each DHCP pool could have:
 '''
 
 def build_topology_dhcp_pools(topology: Box) -> None:
-  topology.dhcp.pools = []
+  pools = data.get_empty_box()
+
+  # Phase 1: Build a list of potential pools from VLANs
+  #
+  for vname,vdata in topology.get('vlans',{}).items():
+    if vdata.get('mode') == 'route':                        # Won't deal with routed VLANs
+      continue
+
+    pid = strings.make_id(f'vlan_{vname}')
+    for af in log.AF_LIST:
+      af_pfx = vdata.get(f'prefix.{af}',None)
+      if isinstance(af_pfx,str):
+        pools[pid][af] = af_pfx
+
+      if vdata.get(f'gateway.{af}',None):
+        pools[pid].gateway[af] = vdata.gateway[af]
+
+    if pid in pools and 'vrf' in vdata:                     # Copy VLAN VRF if we got some usable prefixes
+      pools[pid].vrf = vdata.vrf
+
+  # Phase 2: Iterate over node interfaces, find SVIs, and build excluded IP list
+  #
+  for node,ndata in topology.get('nodes',{}).items():
+    for intf in ndata.get('interfaces',[]):
+      vname = intf.get('vlan.name')
+      if not vname:
+        continue
+      pid = strings.make_id(f'vlan_{vname}')
+
+      if pid not in pools:
+        continue
+
+      # Iterate over all address families, finding true interface addresses,
+      # converting them from CIDR format to IPv4/IPv6 address format, and
+      # appending them to the pool.excluded.af list
+      #
+      for af in log.AF_LIST:
+        if af in intf and isinstance(intf[af],str):
+          data.append_to_list(pools[pid].excluded,af,str(netaddr.IPNetwork(intf[af]).ip))
 
   for link in topology.get('links',[]):                     # Iterate over lab topology links
     if not link.get('dhcp.subnet'):                         # dhcp.subnet is set if there's at least one DHCP client on the link
       continue
 
-    subnet = data.get_empty_box()                           # Create a DHCP pool data structure
-    if 'vrf' in link:                                       # Copy link VRF information into the pool
-      subnet.vrf = link.vrf                                 # ... to support VRF-aware DHCP servers
+    vname = link.get('vlan.access',None)
+    lname = link.get('name','') or link.get('_linkname','')
+    if vname:
+      pid = strings.make_id(f'vlan_{vname}')
+    else:
+      pid = strings.make_id(lname)
+      pools[pid].name = lname
+      if 'vrf' in link:                                     # Copy VRF information from non-VLAN links
+        pools[pid].vrf = link.vrf                           # ... to support VRF-aware DHCP servers
 
-    for af in ('ipv4','ipv6'):                              # Iterate over link address families
-      if af not in link.dhcp.subnet or af not in link.prefix:
-        continue                                            # No AF prefix or no clients within this AF
+    pools[pid].active = True
+    for af in log.AF_LIST:                                  # Iterate over link address families
+      if af not in link.dhcp.subnet:
+        continue                                            # No clients within this AF
 
-      subnet[af] = link.prefix[af]                          # Copy link prefix into the pool
-      subnet.name = link.get('name','') or link.get('_linkname','')
-      subnet.clean_name = strings.make_id(subnet.name)      # Get pool name from link and clean it up
+      af_pfx = link.get(f'prefix.{af}',None)                # Get AF prefix
+      if not isinstance(af_pfx,str):
+        continue                                            # No usable AF prefix
+
+      if af in pools[pid]:                                  # Pool already has a prefix
+        if pools[pid][af] != af_pfx:                        # Check for mismatch between link and VLAN prefix
+          log.error(
+            f'Mismatch in DHCP pool {pid} prefix {pools[pid][af]}, link {lname} claims the prefix should be {af_pfx}',
+            category=log.IncorrectValue,
+            module='dhcp')
+      else:
+        pools[pid][af] = af_pfx                             # New pool, add prefix
 
       if af in link.get('gateway',{}):                      # Save default gateway if present
-        subnet.gateway[af] = str(netaddr.IPNetwork(link.gateway[af]).ip)
+        pools[pid].gateway[af] = str(netaddr.IPNetwork(link.gateway[af]).ip)
 
       for intf in link.get('interfaces',[]):                # Now iterate over the interfaces attached to the link
-        if af not in intf or af in intf.get('dhcp.client',{}):
+        if af not in intf:                                  # Irrelevant interface, move on
+          continue
+        if not isinstance(intf[af],str):                    # Not a usable IP address, move on
+          continue
+
+        #
+        # Find the true (node) interface -- it might have a different DHCP.client setting
+        node_intf = [ nif for nif in topology.nodes[intf.node].interfaces if intf.ifindex == nif.ifindex ]
+        if not node_intf:                                   # Failed to find the interface
+          continue                                          # ... weird, but it's better than crashing
+        if node_intf[0].get(f'dhcp.client.{af}',False):
           continue                                          # Ignore IP addresses of DHCP clients
 
-        if af not in subnet.excluded:                       # Create the excluded list if needed
-          subnet.excluded[af] = []
+        # Append non-DHCP addresses to the excluded list
+        data.append_to_list(pools[pid].excluded,af,str(netaddr.IPNetwork(intf[af]).ip))        
 
-        addr = str(netaddr.IPNetwork(intf[af]).ip)          # Transform interface CIDR address into pure address
-        subnet.excluded[af].append(addr)                    # ... and append it to the excluded addresses
-
-    topology.dhcp.pools.append(subnet)                      # Append the new pool to the list of pools
+  topology.dhcp.pools = []                                  # Finally, convert pool data into a list of pools
+  for pname,pdata in pools.items():                         # Iterate over collected pools
+    if not pdata.active:                                    # We might be dealing with a VLAN that has no
+      continue                                              # ... DHCP clients
+    pdata.pop('active',None)                                # Found an active DHCP pool, remove the 'active' flag
+    if not 'name' in pdata:                                 # VLAN pools might not have a 'name' attribute
+      pdata.name = pname
+    pdata.clean_name = pname                                # ... set the 'clean_name'
+    topology.dhcp.pools.append(pdata)                       # ... and append the new pool to the list of pools
 
 '''
 Set the dhcp.pools list in the DHCP server node data
@@ -238,22 +314,26 @@ class DHCP(_Module):
   """
   def link_pre_transform(self, link: Box, topology: Box) -> None:
     for intf in link.get('interfaces',[]):
+      if not intf.node in topology.nodes:           # Node is not valid. Weird, but move on
+        continue
+
+      node = topology.nodes[intf.node]              # Get parent node
       for af in ('ipv4','ipv6'):
-        if intf.get(af,False) != 'dhcp':            # Interface is not using DHCP, move on
-          continue
+        if intf.get(af,False) == 'dhcp':            # Deal with IPv4/IPv6 address set to DHCP
+          intf.dhcp.client[af] = True               # Set DHCP client flag on the interface
+          intf.pop(af)                              # Pop the interface address -- we don't want to confuse link augmentation
+          if link.get(f'dhcp.client.{af}',None) is False:
+            log.error(
+              f'Node {intf.name} cannot get a DHCP {af} address on link {link._linkname} that has DHCP disabled')
+            continue
 
-        if not intf.node in topology.nodes:         # Node is not valid. Weird, but move on
-          continue
+        # Copy link DHCP client status to interface in case the node does not have DHCP module enabled
+        if link.get(f'dhcp.client.{af}',False) and intf.get(f'dhcp.client.{af}',None) is not False:
+          intf.dhcp.client[af] = True
 
-        intf.pop(af)                                # Pop the interface address -- we don't want to confuse link augmentation
-        intf.dhcp.client[af] = True                 # Set DHCP client flag on the interface
-        link.dhcp.subnet[af] = True                 # ... and 'we have DHCP clients' flag on the subnet
-
-        node = topology.nodes[intf.node]            # Get parent node
-        if 'module' not in node:                    # ... and enable DHCP module on the node
-          node.module = [ 'dhcp' ]
-        elif 'dhcp' not in node.module:
-          node.module.append('dhcp')
+        if intf.get(f'dhcp.client.{af}',False):     # Do we have DHCP client on this interface?
+          data.append_to_list(node,'module','dhcp') # ... enable DHCP module on the node
+          link.dhcp.subnet[af] = True               # ... and set 'we have DHCP clients' flag on the subnet
 
   """
   Final DHCP transformation:
@@ -262,18 +342,20 @@ class DHCP(_Module):
   * Remove static interface addresses on DHCP clients
   * Build DHCP pools on DHCP servers
   """
-  def node_post_transform(self, node: Box, topology: Box) -> None:
-    if not check_protocol_support(node,topology):
-      return
+  def module_post_transform(self, topology: Box) -> None:
+    for node in topology.nodes.values():
+      if not check_protocol_support(node,topology):
+        continue
 
-    for intf in node.get('interfaces',[]):
-      for af in ('ipv4','ipv6'):
-        if intf.get(f'dhcp.client.{af}',False):
-          intf.pop(af,None)
-          check_dynamic_routing(intf,node,topology)
+      for intf in node.get('interfaces',[]):
+        for af in ('ipv4','ipv6'):
+          if intf.get(f'dhcp.client.{af}',False):
+            intf.pop(af,None)
+            check_dynamic_routing(intf,node,topology)
 
-        if intf.get('dhcp.server',False):
-          set_dhcp_relay(intf,node.name,topology)
-
-    if node.get('dhcp.server',False):
-      set_dhcp_server_pools(node,topology)
+          if intf.get('dhcp.server',False):
+            set_dhcp_relay(intf,node.name,topology)
+        
+    for node in topology.nodes.values():
+      if node.get('dhcp.server',False):
+        set_dhcp_server_pools(node,topology)
