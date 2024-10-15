@@ -88,7 +88,6 @@ def validate_vlan_attributes(obj: Box, topology: Box) -> None:
       obj.vlans[vname] = data.get_empty_box()
 
     vdata = obj.vlans[vname]
-
     if not 'mode' in vdata:                                         # Do we have 'mode' set in the VLAN definition?
       if default_fwd_mode and obj is not topology:                  # Propagate default VLAN forwarding mode if needed
         vdata.mode = default_fwd_mode
@@ -1125,7 +1124,6 @@ create_vlan_access_links -- create VLAN access links based on VLAN 'links' attri
 def create_vlan_access_links(topology: Box) -> None:
   if not 'vlans' in topology:                                               # No global VLANs, nothing to do
     return
-
   for vname,vdata in topology.vlans.items():                                # Iterate over global VLANs
     if not isinstance(vdata,Box):                                           # VLAN not yet a dictionary?
       continue                                                              # ... no problem, skip it

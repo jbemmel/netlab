@@ -413,6 +413,8 @@ def assign_link_prefix(
     }
   if not link.prefix:
     link.pop('prefix',None)
+  else:
+    pfx_list._auto_assigned = True
 
   set_fhrp_gateway(link,pfx_list,nodes,link_path)
   return pfx_list

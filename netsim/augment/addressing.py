@@ -88,7 +88,7 @@ def normalize_prefix(pfx: typing.Union[str,Box]) -> Box:
 
 def rebuild_prefix(pfx: typing.Union[dict,Box]) -> Box:
   out_pfx = get_empty_box()
-  for af in ('ipv4','ipv6','allocation','_name'):
+  for af in ('ipv4','ipv6','allocation','_name','_auto_assigned'):
     if af in pfx:
       out_pfx[af] = str(pfx[af]) if not isinstance(pfx[af],bool) else pfx[af]
   return out_pfx
