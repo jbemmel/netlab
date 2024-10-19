@@ -77,6 +77,7 @@ cEOS MPLS data plane was introduced in release 4.32.1F.
 
 * Apart from the VLAN configuration, Catalyst 8000v implementation uses the same configuration templates as CSR 1000v.
 * Catalyst 8000v accepts CSR 1000v-based VXLAN configuration, but the validation tests fail. You cannot configure VXLAN on Catalyst 8000v with the current _netlab_ release.
+* MPLS and SR-MPLS require a license that enables the advanced functionality after a reboot. That license is automatically enabled in recent _netlab_ and _vrnetlab_ releases, but you cannot apply it to a running lab; you have to rebuild the Catalyst 8000v Vagrant box or container.
 
 See also [CSR 1000v](caveats-csr) and [Cisco IOSv](caveats-iosv) caveats.
 
@@ -121,6 +122,17 @@ Host 192.168.121.*
 * Additionaly, you might have to execute `sudo update-crypto-policies --set LEGACY` on AlmaLinux/RHEL.
 
 [^CSP]: Change the address range if you're using a different IP prefix for the management network or if you're using the *multilab* plugin.
+
+(caveats-iol)=
+## Cisco IOS on Linux (IOL) and IOL Layer-2 Image
+
+* Cisco IOL and IOL L2 images work only as containers created with Roman Dodin's fork of [vrnetlab](https://github.com/hellt/vrnetlab/).
+* You need Containerlab 0.58.0 or greater to run these images.
+* You cannot use VLANs 1002 through 1005 with Cisco IOL layer-2 image
+* Bridging (bridge groups) does not work in Cisco IOL (router) image.
+* Containerlab 0.58.0 sets the same base MAC address for all IOL nodes, resulting in duplicate spanning tree system IDs. Lab topologies with more than one IOL node might not work correctly.
+
+See also [common Cisco IOS](caveats-iosv) caveats.
 
 (caveats-iosxr)=
 ## Cisco IOS XRv
@@ -232,6 +244,7 @@ We're not testing Fortinet implementation as part of the regular integration tes
 * FRR initial container configuration might fail if your Ubuntu distribution does not include the VRF kernel module. Install the VRF kernel module with the `sudo apt install linux-generic` and reboot the server.
 * FRR 9.0 and later creates malformed IS-IS LSPs; the bug has been fixed in release 10.0.1 ([details](https://github.com/FRRouting/frr/issues/14514)). You cannot build an IS-IS network using Arista EOS and FRR if you're running an affected version of FRR.
 * FRR configures BFD as part of OSPFv2/OSPFv3 configuration.
+* STP is *disabled* on Linux bridges used to implement VLANs on this platform, so FRR devices cannot be used in topologies that include L2 loops. Cumulus (with FRR inside) may work better in that case
 
 (caveats-junos)=
 ## Common Junos caveats

@@ -67,7 +67,7 @@ def cleanup_unicast_ip(node: Box) -> None:
 # parameters from interfaces and returns a list of active protocols so we know what to clean on the
 # node level.
 
-def cleanup_protocol_parameters(node: Box,topology: Box) -> list:
+def cleanup_intf_protocol_parameters(node: Box,topology: Box) -> list:
   active_proto: list = []
 
   proto_list = topology.defaults.gateway.attributes.protocols         # List of known FHRP protocols
@@ -82,6 +82,8 @@ def cleanup_protocol_parameters(node: Box,topology: Box) -> list:
     for k in list(intf.gateway):                                      # Now iterate over all keywords in interface gateway settings
       if k != gw_proto and k in proto_list:                           # ... found FHRP protocol that is NOT the active protocol
         intf.gateway.pop(k,None)                                      # ... useless, pop it
+      elif k in node.get('gateway'):                                  # Do we have node-level parameters for this protocol?
+        intf.gateway[k] = node.gateway[k] + intf.gateway[k]           # ... copy them to all interfaces
 
   return active_proto
 
@@ -119,7 +121,7 @@ class FHRP(_Module):
   '''
   def module_init(self, topology: Box) -> None:
     gw = data.get_global_settings(topology,'gateway')
-    if not gw or gw is None:
+    if not gw or gw is None or not isinstance(gw,Box):
       log.error(
         f'Global/default gateway parameters are missing. We need at least a gateway ID',
         log.IncorrectType,
@@ -137,7 +139,8 @@ class FHRP(_Module):
       # Check the link gateway ID. If it doesn't exist, get returns None, and the function
       # returns immediately (no error is reported due to required == False).
       #
-      process_gw_id(link.get('gateway.id',None),required=False,path=f'Link {link._linkname}')
+      if isinstance(link.get('gateway',None),Box):
+        process_gw_id(link.get('gateway.id',None),required=False,path=f'Link {link._linkname}')
 
     vlans = topology.get('vlans',None)                    # We might have global VLAN definitions
     if isinstance(vlans,Box):                             # If we do and the data looks sane
@@ -195,7 +198,7 @@ class FHRP(_Module):
       return
 
     cleanup_unicast_ip(node)
-    active_proto = cleanup_protocol_parameters(node,topology)         # Cleanup interface parameters and get a list of active protocols
+    active_proto = cleanup_intf_protocol_parameters(node,topology)    # Cleanup interface parameters and get a list of active protocols
     if 'gateway' in node:
       for k in list(node.gateway):                                    # Iterate over node-level gateway parameters
         if not k in active_proto:                                     # Not a parameter for a FHRP active on this node?
