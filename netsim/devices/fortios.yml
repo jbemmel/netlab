@@ -16,6 +16,14 @@ group_vars:
   ansible_httpapi_validate_certs: no
   ansible_httpapi_port: 80
   netlab_console_connection: ssh
+clab:
+  image: vrnetlab/vr-fortios
+  interface:
+    name: eth{ifindex}  # port{} does not work with Containerlab
+  node:
+    kind: fortinet_fortigate
+  group_vars:
+    ansible_command_timeout: 120 # Default 60 is too short
 external:
   image: none
 features:
