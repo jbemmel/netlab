@@ -272,7 +272,7 @@ def create_vagrant_batches(topology: Box) -> None:
 class Libvirt(_Provider):
 
   """
-  post_transform hook: mark multi-provider links as LAN links
+  pre_transform hook: mark multi-provider links as LAN links
   """
   def pre_transform(self, topology: Box) -> None:
     if not 'links' in topology:
@@ -288,20 +288,23 @@ class Libvirt(_Provider):
 
     _Provider.pre_transform(self,topology)
 
-    p2p_bridge = topology.defaults.get('providers.libvirt.p2p_bridge',False)
+    # p2p_bridge = topology.defaults.get('providers.libvirt.p2p_bridge',False)
     for l in topology.links:
       if l.get('libvirt.uplink',None):                           # Set 'public' attribute if the link has an uplink
         if not 'public' in l.libvirt:                            # ... but no 'public' libvirt attr
           l.libvirt.public = 'bridge'                            # ... default mode is bridge (MACVTAP)
 
-      must_be_lan = l.get('libvirt.provider',None) and 'vlan' not in l.type
-      must_be_lan = must_be_lan or (p2p_bridge and l.get('type','p2p') == 'p2p')
-      if must_be_lan:
-        l.type = 'lan'
-        if not 'bridge' in l:
-          l.bridge = "%s_%d" % (topology.name[0:10],l.linkindex)
+     # must_be_lan = l.get('libvirt.provider',None) and 'vlan' not in l.type
+     # must_be_lan = must_be_lan or (p2p_bridge and l.get('type','p2p') == 'p2p')
+     # if must_be_lan:
+     #   # l.type = 'lan'
+     #   l._must_be_lan = True
+     #   l.libvirt.ifname = f"{topology.defaults.get('providers.libvirt.vifprefix','')}_{ l.interfaces[0].node }_{ l.linkindex }"
+     #   if not 'bridge' in l:
+     #     l.bridge = "%s_%d" % (topology.name[0:10],l.linkindex) # Not used, but we let Libvirt create one
 
   def node_post_transform(self, node: Box, topology: Box) -> None:
+    print(f"node_post_transform: {node.interfaces} \n {topology.links}")
     if node.get('_set_ifindex'):
       pad_node_interfaces(node,topology)
 
@@ -316,20 +319,22 @@ class Libvirt(_Provider):
         check_uplink_name(link)                                     # ... check it has a valid interface name
         link.pop('bridge',None)                                     # ... remove bridge name (there's no bridge)
 
-      if link.type != 'lan':                                        # Multi-provider links are always LAN links
-        continue
+      # if link.type != 'lan' and '_must_be_lan' not in link:         # Multi-provider links are always LAN links
+      #   continue
 
       if len(link.provider) <= 1:                                   # Skip single-provider links
         continue
 
-      if 'clab' in link.provider:                                   # Find links with clab subprovider
-        link.node_count = 999                                       # ... and fake link count to force clab to use a bridge
-        if 'libvirt' in link.provider:                              # If the link uses libvirt provider
-          link.clab.external_bridge = True                          # ... then the Linux bridge will be create by vagrant-libvirt
+      # if 'clab' in link.provider:                                   # Find links with clab subprovider
+      #   link.node_count = 999                                       # ... and fake link count to force clab to use a bridge
+      #   if 'libvirt' in link.provider:                              # If the link uses libvirt provider
+      #     link.clab.external_bridge = True                          # ... then the Linux bridge will be create by vagrant-libvirt
+      if 'clab' in link.provider and 'bridge' in link:
+        link.clab.external_bridge = True                            # ... then the Linux bridge will be create by vagrant-libvirt
 
     for node in topology.nodes.values():                            # Now find P2P tunnel links and create interface data needed for Vagrantfile
       for intf in node.interfaces:
-        if not intf.get('linkindex',None):                          # Cannot get interface index, skip it
+        if not intf.get('linkindex',None):                          # Cannot get linkindex, skip it
           continue
         if intf.get('virtual_interface',None):                      # Virtual interface, skip it
           continue
@@ -343,32 +348,45 @@ class Libvirt(_Provider):
 
         if 'libvirt' in link:                                       # Do we have libvirt-specific data on the link?
           intf.libvirt = link.libvirt + intf.libvirt                # ... then add it to the interface data
-          continue                                                  # ... and move on -- links with libvirt attributes
+          # continue                                                  # ... and move on -- links with libvirt attributes
                                                                     # ... are not tunnels
-        if len(link.provider) > 1:                                  # Skip multi-provider links
-          continue
-
-        if len(link.interfaces) == 2 and link.type == 'p2p':
-          intf.libvirt.type = "tunnel"                              # ... found a true libvirt-only P2P link, set type to tunnel
-
-        if intf.get('libvirt.type') != 'tunnel':                    # The current link is not a tunnel link, move on
-          continue
-
-        link.pop("bridge",None)                                     # And now the real work starts. Pop the bridge attribute first
+        # if len(link.provider) > 1:                                  # Skip multi-provider links
+        #  continue
 
         remote_if_list = [ rif for rif in link.interfaces if rif.node != node.name or rif.ifindex != intf.ifindex ]
-        if len(remote_if_list) != 1:                                # There should be only one remote interface attached to this link
-          log.fatal(
-            f'Cannot find remote interface for P2P link\n... node {node.name}\n... intf {intf}\n... link {link}\n... iflist {remote_if_list}')
-          return
+        if len(link.provider) == 1:
+          if len(link.interfaces) == 2 and link.type in ['p2p','lag']:
+            intf.libvirt.type = "tunnel"                              # ... found a true libvirt-only P2P link, set type to tunnel
 
-        remote_if = remote_if_list[0]                               # Get remote interface
-        intf.remote_ifindex = remote_if.ifindex                     # ... and copy its ifindex
-        intf.remote_id = topology.nodes[remote_if.node].id          # ... and node ID
-        if not intf.remote_id:
-          log.fatal(
-            f'Cannot find remote node ID on a P2P link\n... node {node.name}\n... intf {intf}\n... link {link}')
-          return
+          if intf.libvirt.get('type') != 'tunnel':                    # The current link is not a tunnel link, move on
+            continue
+
+          link.pop("bridge",None)                                     # And now the real work starts. Pop the bridge attribute first
+
+          if len(remote_if_list) != 1:                                # There should be only one remote interface attached to this link
+            log.fatal(
+              f'Cannot find remote interface for P2P link\n... node {node.name}\n... intf {intf}\n... link {link}\n... iflist {remote_if_list}')
+            return
+
+          remote_if = remote_if_list[0]                               # Get remote interface
+          intf.remote_ifindex = remote_if.ifindex                     # ... and copy its ifindex
+          intf.remote_id = topology.nodes[remote_if.node].id          # ... and node ID
+          if not intf.remote_id:
+            log.fatal(
+              f'Cannot find remote node ID on a P2P link\n... node {node.name}\n... intf {intf}\n... link {link}')
+            return
+        else: # multiprovider link, i.e. libvirt + containerlab
+          if link.node_count == 2:
+            _vifprefix = topology.defaults.get('providers.libvirt.vifprefix','')
+            if node.provider=='libvirt':
+              intf.libvirt.ifname = f"{_vifprefix}_{ node.name }_{ intf.ifindex }"
+            else:
+              link.clab.uplink = f"{_vifprefix}_{ remote_if_list[0].node }_{ intf.ifindex }"
+            # link.pop("bridge",None)                                 # Remove bridge -> postponed
+            link._remove_bridge = True
+
+          if not 'bridge' in link:
+            link.bridge = "%s_%d" % (topology.name[0:10],link.linkindex) # Not used, but we let Libvirt create one
 
   def pre_start_lab(self, topology: Box) -> None:
     log.print_verbose('pre-start hook for libvirt')
@@ -388,8 +406,12 @@ class Libvirt(_Provider):
     for l in topology.links:
       brname = l.get('bridge',None)
       if not brname:                                                # Link not using a Linux bridge
+        if log.debug_active('libvirt'):
+          print('libvirt post_start_lab: not brname')
         continue
       if not 'libvirt' in l.provider:                               # Not a libvirt link, skip it
+        if log.debug_active('libvirt'):
+          print('libvirt post_start_lab: not libvirt provider')
         continue
 
       if log.debug_active('libvirt'):
@@ -399,16 +421,22 @@ class Libvirt(_Provider):
       if linux_bridge is None:
         continue
 
-      l.bridge = linux_bridge
-      log.print_verbose(f"... network {brname} maps into {linux_bridge}")
-      if not linuxbridge.configure_bridge_forwarding(linux_bridge):
-        log.error(f"Cannot set forwarding mask on Linux bridge {linux_bridge}")
-        continue
-      if not external_commands.run_command(
-          ['sudo','sh','-c',f'brctl stp {linux_bridge} off']):
-        log.error(f"Cannot disable STP on Linux bridge {linux_bridge}")
-        continue
-      log.print_verbose(f"... disabled STP on {linux_bridge}")
+      if '_remove_bridge' in l:
+        log.print_verbose(f"Removing {linux_bridge}...")
+        linuxbridge.destroy_linux_bridge(linux_bridge)
+        l.pop('bridge')
+        l.pop('_remove_bridge')
+      else:
+        l.bridge = linux_bridge
+        log.print_verbose(f"... network {brname} maps into {linux_bridge}")
+        if not linuxbridge.configure_bridge_forwarding(linux_bridge):
+          log.error(f"Cannot set forwarding mask on Linux bridge {linux_bridge}")
+          continue
+        if not external_commands.run_command(
+            ['sudo','sh','-c',f'brctl stp {linux_bridge} off']):
+          log.error(f"Cannot disable STP on Linux bridge {linux_bridge}")
+          continue
+        log.print_verbose(f"... disabled STP on {linux_bridge}")
 
   def get_lab_status(self) -> Box:
     try:
