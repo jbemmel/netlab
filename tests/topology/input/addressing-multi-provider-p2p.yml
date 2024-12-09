@@ -1,0 +1,23 @@
+---
+#
+# Regression: IP allocation failure for /31 prefix on multi-provider p2p links
+#
+provider: clab
+
+addressing:
+ p2p:
+  prefix: 31                 # '30' succeeds
+
+groups:
+  _auto_create: True
+  core:
+    members: [ c1,c2 ]
+
+  tor:
+    members: [ l1 ]
+    provider: libvirt        # <- mixed provider causes issues when link type changes to 'lan'
+
+links:
+- c1:
+  c2:
+  pool: p2p                  # fails: Cannot assign host index 2 in ipv4 from prefix 10.1.0.0/31 to node c2
