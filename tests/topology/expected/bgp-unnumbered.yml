@@ -51,11 +51,11 @@ links:
   interfaces:
   - ifindex: 2
     ifname: swp2
-    ipv4: 10.10.10.1/24
+    ipv4: 10.10.10.2/24
     node: r2
   - ifindex: 1
     ifname: swp1
-    ipv4: 10.10.10.2/24
+    ipv4: 10.10.10.3/24
     node: r3
   linkindex: 2
   node_count: 2
@@ -185,7 +185,7 @@ nodes:
           ipv4: true
         as: 65200
         ifindex: 2
-        ipv4: 10.10.10.2
+        ipv4: 10.10.10.3
         name: r3
         type: ebgp
       next_hop_self: true
@@ -222,13 +222,13 @@ nodes:
       type: p2p
     - ifindex: 2
       ifname: swp2
-      ipv4: 10.10.10.1/24
+      ipv4: 10.10.10.2/24
       linkindex: 2
       mtu: 1500
       name: r2 -> r3
       neighbors:
       - ifname: swp1
-        ipv4: 10.10.10.2/24
+        ipv4: 10.10.10.3/24
         node: r3
       role: external
       type: p2p
@@ -274,7 +274,7 @@ nodes:
           ipv4: true
         as: 65100
         ifindex: 1
-        ipv4: 10.10.10.1
+        ipv4: 10.10.10.2
         name: r2
         type: ebgp
       next_hop_self: true
@@ -295,13 +295,13 @@ nodes:
     interfaces:
     - ifindex: 1
       ifname: swp1
-      ipv4: 10.10.10.2/24
+      ipv4: 10.10.10.3/24
       linkindex: 2
       mtu: 1500
       name: r3 -> r2
       neighbors:
       - ifname: swp2
-        ipv4: 10.10.10.1/24
+        ipv4: 10.10.10.2/24
         node: r2
       role: external
       type: p2p

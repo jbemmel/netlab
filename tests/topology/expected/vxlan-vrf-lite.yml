@@ -94,7 +94,7 @@ links:
 - _linkname: links[4]
   bridge: input_4
   gateway:
-    ipv4: 172.16.2.2/24
+    ipv4: 172.16.2.6/24
   interfaces:
   - ifindex: 1
     ifname: eth1
@@ -102,7 +102,7 @@ links:
     node: rh1
   - ifindex: 2
     ifname: Ethernet2
-    ipv4: 172.16.2.2/24
+    ipv4: 172.16.2.6/24
     node: s1
   linkindex: 4
   node_count: 2
@@ -114,15 +114,15 @@ links:
 - _linkname: links[5]
   bridge: input_5
   gateway:
-    ipv4: 172.16.3.2/24
+    ipv4: 172.16.3.7/24
   interfaces:
   - ifindex: 1
     ifname: eth1
-    ipv4: 172.16.3.1/24
+    ipv4: 172.16.3.2/24
     node: rh2
   - ifindex: 2
     ifname: Ethernet2
-    ipv4: 172.16.3.2/24
+    ipv4: 172.16.3.7/24
     node: s2
   linkindex: 5
   node_count: 2
@@ -134,15 +134,15 @@ links:
 - _linkname: links[6]
   bridge: input_6
   gateway:
-    ipv4: 172.16.4.2/24
+    ipv4: 172.16.4.8/24
   interfaces:
   - ifindex: 1
     ifname: eth1
-    ipv4: 172.16.4.1/24
+    ipv4: 172.16.4.3/24
     node: rh3
   - ifindex: 2
     ifname: Ethernet2
-    ipv4: 172.16.4.2/24
+    ipv4: 172.16.4.8/24
     node: s3
   linkindex: 6
   node_count: 2
@@ -154,15 +154,15 @@ links:
 - _linkname: links[7]
   bridge: input_7
   gateway:
-    ipv4: 172.16.5.2/24
+    ipv4: 172.16.5.6/24
   interfaces:
   - ifindex: 1
     ifname: eth1
-    ipv4: 172.16.5.1/24
+    ipv4: 172.16.5.4/24
     node: bh1
   - ifindex: 3
     ifname: Ethernet3
-    ipv4: 172.16.5.2/24
+    ipv4: 172.16.5.6/24
     node: s1
   linkindex: 7
   node_count: 2
@@ -174,15 +174,15 @@ links:
 - _linkname: links[8]
   bridge: input_8
   gateway:
-    ipv4: 172.16.6.2/24
+    ipv4: 172.16.6.7/24
   interfaces:
   - ifindex: 1
     ifname: eth1
-    ipv4: 172.16.6.1/24
+    ipv4: 172.16.6.5/24
     node: bh2
   - ifindex: 3
     ifname: Ethernet3
-    ipv4: 172.16.6.2/24
+    ipv4: 172.16.6.7/24
     node: s2
   linkindex: 8
   node_count: 2
@@ -207,15 +207,15 @@ nodes:
     interfaces:
     - bridge: input_7
       gateway:
-        ipv4: 172.16.5.2/24
+        ipv4: 172.16.5.6/24
       ifindex: 1
       ifname: eth1
-      ipv4: 172.16.5.1/24
+      ipv4: 172.16.5.4/24
       linkindex: 7
       name: bh1 -> s1
       neighbors:
       - ifname: Ethernet3
-        ipv4: 172.16.5.2/24
+        ipv4: 172.16.5.6/24
         node: s1
         vrf: blue
       role: stub
@@ -236,15 +236,15 @@ nodes:
     interfaces:
     - bridge: input_8
       gateway:
-        ipv4: 172.16.6.2/24
+        ipv4: 172.16.6.7/24
       ifindex: 1
       ifname: eth1
-      ipv4: 172.16.6.1/24
+      ipv4: 172.16.6.5/24
       linkindex: 8
       name: bh2 -> s2
       neighbors:
       - ifname: Ethernet3
-        ipv4: 172.16.6.2/24
+        ipv4: 172.16.6.7/24
         node: s2
         vrf: blue
       role: stub
@@ -335,7 +335,7 @@ nodes:
     interfaces:
     - bridge: input_4
       gateway:
-        ipv4: 172.16.2.2/24
+        ipv4: 172.16.2.6/24
       ifindex: 1
       ifname: eth1
       ipv4: 172.16.2.1/24
@@ -343,7 +343,7 @@ nodes:
       name: rh1 -> s1
       neighbors:
       - ifname: Ethernet2
-        ipv4: 172.16.2.2/24
+        ipv4: 172.16.2.6/24
         node: s1
         vrf: red
       role: stub
@@ -364,15 +364,15 @@ nodes:
     interfaces:
     - bridge: input_5
       gateway:
-        ipv4: 172.16.3.2/24
+        ipv4: 172.16.3.7/24
       ifindex: 1
       ifname: eth1
-      ipv4: 172.16.3.1/24
+      ipv4: 172.16.3.2/24
       linkindex: 5
       name: rh2 -> s2
       neighbors:
       - ifname: Ethernet2
-        ipv4: 172.16.3.2/24
+        ipv4: 172.16.3.7/24
         node: s2
         vrf: red
       role: stub
@@ -393,15 +393,15 @@ nodes:
     interfaces:
     - bridge: input_6
       gateway:
-        ipv4: 172.16.4.2/24
+        ipv4: 172.16.4.8/24
       ifindex: 1
       ifname: eth1
-      ipv4: 172.16.4.1/24
+      ipv4: 172.16.4.3/24
       linkindex: 6
       name: rh3 -> s3
       neighbors:
       - ifname: Ethernet2
-        ipv4: 172.16.4.2/24
+        ipv4: 172.16.4.8/24
         node: s3
         vrf: red
       role: stub
@@ -438,7 +438,7 @@ nodes:
     - bridge: input_4
       ifindex: 2
       ifname: Ethernet2
-      ipv4: 172.16.2.2/24
+      ipv4: 172.16.2.6/24
       linkindex: 4
       name: s1 -> rh1
       neighbors:
@@ -451,12 +451,12 @@ nodes:
     - bridge: input_7
       ifindex: 3
       ifname: Ethernet3
-      ipv4: 172.16.5.2/24
+      ipv4: 172.16.5.6/24
       linkindex: 7
       name: s1 -> bh1
       neighbors:
       - ifname: eth1
-        ipv4: 172.16.5.1/24
+        ipv4: 172.16.5.4/24
         node: bh1
       role: stub
       type: lan
@@ -567,12 +567,12 @@ nodes:
           - bridge: input_7
             ifindex: 3
             ifname: Ethernet3
-            ipv4: 172.16.5.2/24
+            ipv4: 172.16.5.6/24
             linkindex: 7
             name: s1 -> bh1
             neighbors:
             - ifname: eth1
-              ipv4: 172.16.5.1/24
+              ipv4: 172.16.5.4/24
               node: bh1
             ospf:
               area: 0.0.0.0
@@ -623,7 +623,7 @@ nodes:
           - bridge: input_4
             ifindex: 2
             ifname: Ethernet2
-            ipv4: 172.16.2.2/24
+            ipv4: 172.16.2.6/24
             linkindex: 4
             name: s1 -> rh1
             neighbors:
@@ -697,12 +697,12 @@ nodes:
     - bridge: input_5
       ifindex: 2
       ifname: Ethernet2
-      ipv4: 172.16.3.2/24
+      ipv4: 172.16.3.7/24
       linkindex: 5
       name: s2 -> rh2
       neighbors:
       - ifname: eth1
-        ipv4: 172.16.3.1/24
+        ipv4: 172.16.3.2/24
         node: rh2
       role: stub
       type: lan
@@ -710,12 +710,12 @@ nodes:
     - bridge: input_8
       ifindex: 3
       ifname: Ethernet3
-      ipv4: 172.16.6.2/24
+      ipv4: 172.16.6.7/24
       linkindex: 8
       name: s2 -> bh2
       neighbors:
       - ifname: eth1
-        ipv4: 172.16.6.1/24
+        ipv4: 172.16.6.5/24
         node: bh2
       role: stub
       type: lan
@@ -826,12 +826,12 @@ nodes:
           - bridge: input_8
             ifindex: 3
             ifname: Ethernet3
-            ipv4: 172.16.6.2/24
+            ipv4: 172.16.6.7/24
             linkindex: 8
             name: s2 -> bh2
             neighbors:
             - ifname: eth1
-              ipv4: 172.16.6.1/24
+              ipv4: 172.16.6.5/24
               node: bh2
             ospf:
               area: 0.0.0.0
@@ -882,12 +882,12 @@ nodes:
           - bridge: input_5
             ifindex: 2
             ifname: Ethernet2
-            ipv4: 172.16.3.2/24
+            ipv4: 172.16.3.7/24
             linkindex: 5
             name: s2 -> rh2
             neighbors:
             - ifname: eth1
-              ipv4: 172.16.3.1/24
+              ipv4: 172.16.3.2/24
               node: rh2
             ospf:
               area: 0.0.0.0
@@ -956,12 +956,12 @@ nodes:
     - bridge: input_6
       ifindex: 2
       ifname: Ethernet2
-      ipv4: 172.16.4.2/24
+      ipv4: 172.16.4.8/24
       linkindex: 6
       name: s3 -> rh3
       neighbors:
       - ifname: eth1
-        ipv4: 172.16.4.1/24
+        ipv4: 172.16.4.3/24
         node: rh3
       role: stub
       type: lan
@@ -1046,12 +1046,12 @@ nodes:
           - bridge: input_6
             ifindex: 2
             ifname: Ethernet2
-            ipv4: 172.16.4.2/24
+            ipv4: 172.16.4.8/24
             linkindex: 6
             name: s3 -> rh3
             neighbors:
             - ifname: eth1
-              ipv4: 172.16.4.1/24
+              ipv4: 172.16.4.3/24
               node: rh3
             ospf:
               area: 0.0.0.0

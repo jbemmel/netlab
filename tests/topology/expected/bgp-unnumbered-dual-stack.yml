@@ -104,7 +104,7 @@ links:
     node: test
   - ifindex: 1
     ifname: eth1
-    ipv4: 172.31.1.2/24
+    ipv4: 172.31.1.5/24
     ipv6: true
     node: x4
   linkindex: 5
@@ -124,7 +124,7 @@ links:
   - ifindex: 2
     ifname: eth2
     ipv4: true
-    ipv6: 2001:db8:1::2/64
+    ipv6: 2001:db8:1::5/64
     node: x4
   linkindex: 6
   node_count: 2
@@ -200,7 +200,7 @@ nodes:
           ipv6: true
         as: 65004
         ifindex: 5
-        ipv4: 172.31.1.2
+        ipv4: 172.31.1.5
         ipv6: true
         local_if: eth5
         name: x4
@@ -212,7 +212,7 @@ nodes:
         ifindex: 6
         ipv4: true
         ipv4_rfc8950: true
-        ipv6: 2001:db8:1::2
+        ipv6: 2001:db8:1::5
         name: x4
         type: ebgp
       next_hop_self: true
@@ -285,7 +285,7 @@ nodes:
       name: test -> x4
       neighbors:
       - ifname: eth1
-        ipv4: 172.31.1.2/24
+        ipv4: 172.31.1.5/24
         ipv6: true
         node: x4
       role: external
@@ -301,7 +301,7 @@ nodes:
       neighbors:
       - ifname: eth2
         ipv4: true
-        ipv6: 2001:db8:1::2/64
+        ipv6: 2001:db8:1::5/64
         node: x4
       role: external
       type: p2p
@@ -582,7 +582,7 @@ nodes:
     interfaces:
     - ifindex: 1
       ifname: eth1
-      ipv4: 172.31.1.2/24
+      ipv4: 172.31.1.5/24
       ipv6: true
       linkindex: 5
       name: x4 -> test
@@ -598,7 +598,7 @@ nodes:
       ifindex: 2
       ifname: eth2
       ipv4: true
-      ipv6: 2001:db8:1::2/64
+      ipv6: 2001:db8:1::5/64
       linkindex: 6
       name: x4 -> test
       neighbors:

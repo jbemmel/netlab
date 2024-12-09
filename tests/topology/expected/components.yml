@@ -145,15 +145,15 @@ links:
 - _linkname: pod_1_l1_components.tor.links[1]
   bridge: input_5
   gateway:
-    ipv4: 172.16.0.1/24
+    ipv4: 172.16.0.4/24
   interfaces:
   - ifindex: 1
     ifname: eth1
-    ipv4: 172.16.0.1/24
+    ipv4: 172.16.0.4/24
     node: pod_1_l1_leaf
   - ifindex: 1
     ifname: eth1
-    ipv4: 172.16.0.2/24
+    ipv4: 172.16.0.3/24
     node: pod_1_l1_srv
   linkindex: 5
   node_count: 2
@@ -164,15 +164,15 @@ links:
 - _linkname: pod_1_l2_components.tor.links[1]
   bridge: input_6
   gateway:
-    ipv4: 172.16.1.1/24
+    ipv4: 172.16.1.6/24
   interfaces:
   - ifindex: 1
     ifname: eth1
-    ipv4: 172.16.1.1/24
+    ipv4: 172.16.1.6/24
     node: pod_1_l2_leaf
   - ifindex: 1
     ifname: eth1
-    ipv4: 172.16.1.2/24
+    ipv4: 172.16.1.5/24
     node: pod_1_l2_srv
   linkindex: 6
   node_count: 2
@@ -243,15 +243,15 @@ links:
 - _linkname: pod_2_l1_components.tor.links[1]
   bridge: input_11
   gateway:
-    ipv4: 172.16.2.1/24
+    ipv4: 172.16.2.10/24
   interfaces:
   - ifindex: 1
     ifname: eth1
-    ipv4: 172.16.2.1/24
+    ipv4: 172.16.2.10/24
     node: pod_2_l1_leaf
   - ifindex: 1
     ifname: eth1
-    ipv4: 172.16.2.2/24
+    ipv4: 172.16.2.9/24
     node: pod_2_l1_srv
   linkindex: 11
   node_count: 2
@@ -262,15 +262,15 @@ links:
 - _linkname: pod_2_l2_components.tor.links[1]
   bridge: input_12
   gateway:
-    ipv4: 172.16.3.1/24
+    ipv4: 172.16.3.12/24
   interfaces:
   - ifindex: 1
     ifname: eth1
-    ipv4: 172.16.3.1/24
+    ipv4: 172.16.3.12/24
     node: pod_2_l2_leaf
   - ifindex: 1
     ifname: eth1
-    ipv4: 172.16.3.2/24
+    ipv4: 172.16.3.11/24
     node: pod_2_l2_srv
   linkindex: 12
   node_count: 2
@@ -587,13 +587,13 @@ nodes:
       bridge: input_5
       ifindex: 1
       ifname: eth1
-      ipv4: 172.16.0.1/24
+      ipv4: 172.16.0.4/24
       linkindex: 5
       mtu: 1500
       name: pod_1_l1_leaf -> pod_1_l1_srv
       neighbors:
       - ifname: eth1
-        ipv4: 172.16.0.2/24
+        ipv4: 172.16.0.3/24
         node: pod_1_l1_srv
       ospf:
         area: 0.0.0.0
@@ -670,16 +670,16 @@ nodes:
     interfaces:
     - bridge: input_5
       gateway:
-        ipv4: 172.16.0.1/24
+        ipv4: 172.16.0.4/24
       ifindex: 1
       ifname: eth1
-      ipv4: 172.16.0.2/24
+      ipv4: 172.16.0.3/24
       linkindex: 5
       mtu: 1500
       name: pod_1_l1_srv -> pod_1_l1_leaf
       neighbors:
       - ifname: eth1
-        ipv4: 172.16.0.1/24
+        ipv4: 172.16.0.4/24
         node: pod_1_l1_leaf
       role: stub
       type: lan
@@ -745,13 +745,13 @@ nodes:
       bridge: input_6
       ifindex: 1
       ifname: eth1
-      ipv4: 172.16.1.1/24
+      ipv4: 172.16.1.6/24
       linkindex: 6
       mtu: 1500
       name: pod_1_l2_leaf -> pod_1_l2_srv
       neighbors:
       - ifname: eth1
-        ipv4: 172.16.1.2/24
+        ipv4: 172.16.1.5/24
         node: pod_1_l2_srv
       ospf:
         area: 0.0.0.0
@@ -828,16 +828,16 @@ nodes:
     interfaces:
     - bridge: input_6
       gateway:
-        ipv4: 172.16.1.1/24
+        ipv4: 172.16.1.6/24
       ifindex: 1
       ifname: eth1
-      ipv4: 172.16.1.2/24
+      ipv4: 172.16.1.5/24
       linkindex: 6
       mtu: 1500
       name: pod_1_l2_srv -> pod_1_l2_leaf
       neighbors:
       - ifname: eth1
-        ipv4: 172.16.1.1/24
+        ipv4: 172.16.1.6/24
         node: pod_1_l2_leaf
       role: stub
       type: lan
@@ -1159,13 +1159,13 @@ nodes:
       bridge: input_11
       ifindex: 1
       ifname: eth1
-      ipv4: 172.16.2.1/24
+      ipv4: 172.16.2.10/24
       linkindex: 11
       mtu: 1500
       name: pod_2_l1_leaf -> pod_2_l1_srv
       neighbors:
       - ifname: eth1
-        ipv4: 172.16.2.2/24
+        ipv4: 172.16.2.9/24
         node: pod_2_l1_srv
       ospf:
         area: 0.0.0.0
@@ -1242,16 +1242,16 @@ nodes:
     interfaces:
     - bridge: input_11
       gateway:
-        ipv4: 172.16.2.1/24
+        ipv4: 172.16.2.10/24
       ifindex: 1
       ifname: eth1
-      ipv4: 172.16.2.2/24
+      ipv4: 172.16.2.9/24
       linkindex: 11
       mtu: 1500
       name: pod_2_l1_srv -> pod_2_l1_leaf
       neighbors:
       - ifname: eth1
-        ipv4: 172.16.2.1/24
+        ipv4: 172.16.2.10/24
         node: pod_2_l1_leaf
       role: stub
       type: lan
@@ -1317,13 +1317,13 @@ nodes:
       bridge: input_12
       ifindex: 1
       ifname: eth1
-      ipv4: 172.16.3.1/24
+      ipv4: 172.16.3.12/24
       linkindex: 12
       mtu: 1500
       name: pod_2_l2_leaf -> pod_2_l2_srv
       neighbors:
       - ifname: eth1
-        ipv4: 172.16.3.2/24
+        ipv4: 172.16.3.11/24
         node: pod_2_l2_srv
       ospf:
         area: 0.0.0.0
@@ -1400,16 +1400,16 @@ nodes:
     interfaces:
     - bridge: input_12
       gateway:
-        ipv4: 172.16.3.1/24
+        ipv4: 172.16.3.12/24
       ifindex: 1
       ifname: eth1
-      ipv4: 172.16.3.2/24
+      ipv4: 172.16.3.11/24
       linkindex: 12
       mtu: 1500
       name: pod_2_l2_srv -> pod_2_l2_leaf
       neighbors:
       - ifname: eth1
-        ipv4: 172.16.3.1/24
+        ipv4: 172.16.3.12/24
         node: pod_2_l2_leaf
       role: stub
       type: lan

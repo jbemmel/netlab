@@ -476,7 +476,7 @@ def get_prefix_IPAM_policy(link: Box, pfx: typing.Union[netaddr.IPNetwork,bool],
 
   if pfx_size == 1:                                                   # Do we have a single node attached to a /32 link?
     return 'loopback' if len(link.interfaces) == 1 else 'error'       # ... if so, we'll use loopback address allocation
-  elif len(link.interfaces) == 2 and gwid==0:
+  elif pfx_size <= 4 and len(link.interfaces) == 2 and gwid==0:
     return 'p2p'
 
   add_extra_ip = 0                                                    # /29 or shorter prefix

@@ -3,7 +3,7 @@ dhcp:
   - clean_name: links_1_
     excluded:
       ipv4:
-      - 172.16.0.1
+      - 172.16.0.2
     ipv4: 172.16.0.0/24
     name: links[1]
 input:
@@ -26,14 +26,14 @@ links:
         ipv4: true
     ifindex: 1
     ifname: eth1
-    ipv4: 172.16.0.2/24
+    ipv4: 172.16.0.1/24
     node: h1
   - dhcp:
       client:
         ipv4: true
     ifindex: 1
     ifname: eth1
-    ipv4: 172.16.0.1/24
+    ipv4: 172.16.0.2/24
     node: dhs
   libvirt:
     provider:
@@ -73,7 +73,7 @@ nodes:
       - clean_name: links_1_
         excluded:
           ipv4:
-          - 172.16.0.1
+          - 172.16.0.2
         ipv4: 172.16.0.0/24
         name: links[1]
       server: true
@@ -83,7 +83,7 @@ nodes:
     - bridge: input_1
       ifindex: 1
       ifname: eth1
-      ipv4: 172.16.0.1/24
+      ipv4: 172.16.0.2/24
       linkindex: 1
       mtu: 1500
       name: dhs -> h1
@@ -92,7 +92,7 @@ nodes:
           client:
             ipv4: true
         ifname: eth1
-        ipv4: 172.16.0.2/24
+        ipv4: 172.16.0.1/24
         node: h1
       role: stub
       type: lan
@@ -126,7 +126,7 @@ nodes:
           client:
             ipv4: true
         ifname: eth1
-        ipv4: 172.16.0.1/24
+        ipv4: 172.16.0.2/24
         node: dhs
       role: stub
       type: lan

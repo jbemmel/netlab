@@ -30,12 +30,12 @@ links:
   - ifindex: 1
     ifname: GigabitEthernet0/1
     ipv4: 10.1.0.2/30
-    ipv6: 2001:db8:1::2/64
+    ipv6: 2001:db8:1::1/64
     node: rr1
   - ifindex: 1
     ifname: GigabitEthernet0/1
     ipv4: 10.1.0.1/30
-    ipv6: 2001:db8:1::1/64
+    ipv6: 2001:db8:1::3/64
     node: pe1
   linkindex: 1
   node_count: 2
@@ -48,12 +48,12 @@ links:
   - ifindex: 2
     ifname: GigabitEthernet0/2
     ipv4: 10.1.0.6/30
-    ipv6: 2001:db8:1:1::2/64
+    ipv6: 2001:db8:1:1::1/64
     node: rr1
   - ifindex: 1
     ifname: GigabitEthernet0/1
     ipv4: 10.1.0.5/30
-    ipv6: 2001:db8:1:1::1/64
+    ipv6: 2001:db8:1:1::4/64
     node: pe2
   linkindex: 2
   node_count: 2
@@ -71,7 +71,7 @@ links:
   - ifindex: 2
     ifname: GigabitEthernet0/2
     ipv4: 10.1.0.9/30
-    ipv6: 2001:db8:1:2::1/64
+    ipv6: 2001:db8:1:2::3/64
     node: pe1
   linkindex: 3
   node_count: 2
@@ -89,7 +89,7 @@ links:
   - ifindex: 2
     ifname: GigabitEthernet0/2
     ipv4: 10.1.0.13/30
-    ipv6: 2001:db8:1:3::1/64
+    ipv6: 2001:db8:1:3::4/64
     node: pe2
   linkindex: 4
   node_count: 2
@@ -173,12 +173,12 @@ links:
   - ifindex: 3
     ifname: GigabitEthernet0/3
     ipv4: 10.1.0.17/30
-    ipv6: 2001:db8:1:4::1/64
+    ipv6: 2001:db8:1:4::6/64
     node: e2
   - ifindex: 1
     ifname: GigabitEthernet0/1
     ipv4: 10.1.0.18/30
-    ipv6: 2001:db8:1:4::2/64
+    ipv6: 2001:db8:1:4::7/64
     node: nar
   linkindex: 10
   node_count: 2
@@ -345,13 +345,13 @@ nodes:
     - ifindex: 3
       ifname: GigabitEthernet0/3
       ipv4: 10.1.0.17/30
-      ipv6: 2001:db8:1:4::1/64
+      ipv6: 2001:db8:1:4::6/64
       linkindex: 10
       name: e2 -> nar
       neighbors:
       - ifname: GigabitEthernet0/1
         ipv4: 10.1.0.18/30
-        ipv6: 2001:db8:1:4::2/64
+        ipv6: 2001:db8:1:4::7/64
         node: nar
       ospf:
         area: 0.0.0.0
@@ -393,13 +393,13 @@ nodes:
     - ifindex: 1
       ifname: GigabitEthernet0/1
       ipv4: 10.1.0.18/30
-      ipv6: 2001:db8:1:4::2/64
+      ipv6: 2001:db8:1:4::7/64
       linkindex: 10
       name: nar -> e2
       neighbors:
       - ifname: GigabitEthernet0/3
         ipv4: 10.1.0.17/30
-        ipv6: 2001:db8:1:4::1/64
+        ipv6: 2001:db8:1:4::6/64
         node: e2
       type: p2p
     loopback:
@@ -471,13 +471,13 @@ nodes:
     - ifindex: 1
       ifname: GigabitEthernet0/1
       ipv4: 10.1.0.1/30
-      ipv6: 2001:db8:1::1/64
+      ipv6: 2001:db8:1::3/64
       linkindex: 1
       name: pe1 -> rr1
       neighbors:
       - ifname: GigabitEthernet0/1
         ipv4: 10.1.0.2/30
-        ipv6: 2001:db8:1::2/64
+        ipv6: 2001:db8:1::1/64
         node: rr1
       ospf:
         area: 0.0.0.0
@@ -487,7 +487,7 @@ nodes:
     - ifindex: 2
       ifname: GigabitEthernet0/2
       ipv4: 10.1.0.9/30
-      ipv6: 2001:db8:1:2::1/64
+      ipv6: 2001:db8:1:2::3/64
       linkindex: 3
       name: pe1 -> rr2
       neighbors:
@@ -590,13 +590,13 @@ nodes:
     - ifindex: 1
       ifname: GigabitEthernet0/1
       ipv4: 10.1.0.5/30
-      ipv6: 2001:db8:1:1::1/64
+      ipv6: 2001:db8:1:1::4/64
       linkindex: 2
       name: pe2 -> rr1
       neighbors:
       - ifname: GigabitEthernet0/2
         ipv4: 10.1.0.6/30
-        ipv6: 2001:db8:1:1::2/64
+        ipv6: 2001:db8:1:1::1/64
         node: rr1
       ospf:
         area: 0.0.0.0
@@ -606,7 +606,7 @@ nodes:
     - ifindex: 2
       ifname: GigabitEthernet0/2
       ipv4: 10.1.0.13/30
-      ipv6: 2001:db8:1:3::1/64
+      ipv6: 2001:db8:1:3::4/64
       linkindex: 4
       name: pe2 -> rr2
       neighbors:
@@ -712,13 +712,13 @@ nodes:
     - ifindex: 1
       ifname: GigabitEthernet0/1
       ipv4: 10.1.0.2/30
-      ipv6: 2001:db8:1::2/64
+      ipv6: 2001:db8:1::1/64
       linkindex: 1
       name: rr1 -> pe1
       neighbors:
       - ifname: GigabitEthernet0/1
         ipv4: 10.1.0.1/30
-        ipv6: 2001:db8:1::1/64
+        ipv6: 2001:db8:1::3/64
         node: pe1
       ospf:
         area: 0.0.0.0
@@ -728,13 +728,13 @@ nodes:
     - ifindex: 2
       ifname: GigabitEthernet0/2
       ipv4: 10.1.0.6/30
-      ipv6: 2001:db8:1:1::2/64
+      ipv6: 2001:db8:1:1::1/64
       linkindex: 2
       name: rr1 -> pe2
       neighbors:
       - ifname: GigabitEthernet0/1
         ipv4: 10.1.0.5/30
-        ipv6: 2001:db8:1:1::1/64
+        ipv6: 2001:db8:1:1::4/64
         node: pe2
       ospf:
         area: 0.0.0.0
@@ -829,7 +829,7 @@ nodes:
       neighbors:
       - ifname: GigabitEthernet0/2
         ipv4: 10.1.0.9/30
-        ipv6: 2001:db8:1:2::1/64
+        ipv6: 2001:db8:1:2::3/64
         node: pe1
       ospf:
         area: 0.0.0.0
@@ -845,7 +845,7 @@ nodes:
       neighbors:
       - ifname: GigabitEthernet0/2
         ipv4: 10.1.0.13/30
-        ipv6: 2001:db8:1:3::1/64
+        ipv6: 2001:db8:1:3::4/64
         node: pe2
       ospf:
         area: 0.0.0.0

@@ -48,8 +48,8 @@ links:
     node: s1
   - ifindex: 1
     ifname: eth1
-    ipv4: 192.168.42.1/24
-    ipv6: 2001:db8:cafe:d001::1/64
+    ipv4: 192.168.42.6/24
+    ipv6: 2001:db8:cafe:d001::6/64
     node: dhs
   libvirt:
     provider:
@@ -219,8 +219,8 @@ nodes:
         ipv4: 192.168.42.2/24
       ifindex: 1
       ifname: eth1
-      ipv4: 192.168.42.1/24
-      ipv6: 2001:db8:cafe:d001::1/64
+      ipv4: 192.168.42.6/24
+      ipv6: 2001:db8:cafe:d001::6/64
       linkindex: 1
       mtu: 1500
       name: dhs -> s1
@@ -367,8 +367,8 @@ nodes:
       name: s1 -> dhs
       neighbors:
       - ifname: eth1
-        ipv4: 192.168.42.1/24
-        ipv6: 2001:db8:cafe:d001::1/64
+        ipv4: 192.168.42.6/24
+        ipv6: 2001:db8:cafe:d001::6/64
         node: dhs
       type: lan
     - bridge: input_2
@@ -424,9 +424,9 @@ nodes:
       dhcp:
         relay:
           ipv4:
-          - 192.168.42.1
+          - 192.168.42.6
           ipv6:
-          - 2001:db8:cafe:d001::1
+          - 2001:db8:cafe:d001::6
         server:
         - dhs
       gateway:
@@ -458,7 +458,7 @@ nodes:
       dhcp:
         relay:
           ipv4:
-          - 192.168.42.1
+          - 192.168.42.6
         server:
         - dhs
       ifindex: 6
