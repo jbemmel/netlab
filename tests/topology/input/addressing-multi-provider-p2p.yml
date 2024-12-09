@@ -2,6 +2,7 @@
 #
 # Regression: IP allocation failure for /31 prefix on multi-provider p2p links
 #
+defaults.device: frr
 provider: clab
 
 addressing:
