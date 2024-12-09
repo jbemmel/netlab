@@ -293,12 +293,12 @@ links:
   - ifindex: 15
     ifname: GigabitEthernet15
     ipv4: true
-    ipv6: 2001:db8:42:43::1/64
+    ipv6: 2001:db8:42:43::7/64
     node: r1
   - ifindex: 15
     ifname: GigabitEthernet15
     ipv4: true
-    ipv6: 2001:db8:42:43::2/64
+    ipv6: 2001:db8:42:43::15/64
     node: r2
   linkindex: 14
   name: Link with unnumbered static prefix
@@ -330,11 +330,11 @@ links:
   interfaces:
   - ifindex: 20000
     ifname: Tunnel0
-    ipv4: 10.1.0.1/30
+    ipv4: 10.1.0.2/30
     node: r4
   - ifindex: 20000
     ifname: Tunnel0
-    ipv4: 10.1.0.2/30
+    ipv4: 10.1.0.1/30
     node: r3
   linkindex: 16
   name: Tunnel from a P2P pool
@@ -559,13 +559,13 @@ nodes:
       ifindex: 15
       ifname: GigabitEthernet15
       ipv4: true
-      ipv6: 2001:db8:42:43::1/64
+      ipv6: 2001:db8:42:43::7/64
       linkindex: 14
       name: Link with unnumbered static prefix
       neighbors:
       - ifname: GigabitEthernet15
         ipv4: true
-        ipv6: 2001:db8:42:43::2/64
+        ipv6: 2001:db8:42:43::15/64
         node: r2
       type: p2p
     loopback:
@@ -795,13 +795,13 @@ nodes:
       ifindex: 15
       ifname: GigabitEthernet15
       ipv4: true
-      ipv6: 2001:db8:42:43::2/64
+      ipv6: 2001:db8:42:43::15/64
       linkindex: 14
       name: Link with unnumbered static prefix
       neighbors:
       - ifname: GigabitEthernet15
         ipv4: true
-        ipv6: 2001:db8:42:43::1/64
+        ipv6: 2001:db8:42:43::7/64
         node: r1
       type: p2p
     loopback:
@@ -1021,12 +1021,12 @@ nodes:
       type: p2p
     - ifindex: 20000
       ifname: Tunnel0
-      ipv4: 10.1.0.2/30
+      ipv4: 10.1.0.1/30
       linkindex: 16
       name: Tunnel from a P2P pool
       neighbors:
       - ifname: Tunnel0
-        ipv4: 10.1.0.1/30
+        ipv4: 10.1.0.2/30
         node: r4
       pool: p2p
       type: tunnel
@@ -1083,12 +1083,12 @@ nodes:
       type: p2p
     - ifindex: 20000
       ifname: Tunnel0
-      ipv4: 10.1.0.1/30
+      ipv4: 10.1.0.2/30
       linkindex: 16
       name: Tunnel from a P2P pool
       neighbors:
       - ifname: Tunnel0
-        ipv4: 10.1.0.2/30
+        ipv4: 10.1.0.1/30
         node: r3
       pool: p2p
       type: tunnel

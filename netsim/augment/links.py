@@ -476,11 +476,11 @@ def get_prefix_IPAM_policy(link: Box, pfx: typing.Union[netaddr.IPNetwork,bool],
 
   if pfx_size == 1:                                                   # Do we have a single node attached to a /32 link?
     return 'loopback' if len(link.interfaces) == 1 else 'error'       # ... if so, we'll use loopback address allocation
-  elif pfx_size == 2:
+  elif pfx_size <= 4:
     ips = len(link.interfaces) + (1 if gwid!=0 else 0)                # Calculate how many IPs we need
-    return 'p2p' if ips <= 2 else 'error'                             # P2P allocation policy can support at most 2 addresses
+    return 'p2p' if ips <= 2 else 'error'                             # P2P allocation policy and /30-31 prefix can support at most 2 addresses
 
-  add_extra_ip = 0                                                    # > 2 case
+  add_extra_ip = 0                                                    # /29 or shorter prefix
   subtract_reserved_ip = -2
   if gwid > 0:                                                        # Gateway ID at the front of the subnet -- need one extra IP
     add_extra_ip = 1
@@ -647,7 +647,8 @@ def assign_interface_addresses(link: Box, addr_pools: Box, ndict: Box, defaults:
         allocation_policy = pfx_list.allocation
       else:
         allocation_policy = get_prefix_IPAM_policy(link,pfx_net,ndict)    # get IPAM policy based on prefix and link size
-        print(f"JvB: got alloc_policy={allocation_policy} for {pfx_net}")
+      if log.debug_active('addressing'): # pragma: no cover (debugging)
+        print(f'Using allocation_policy: {allocation_policy} for prefix {pfx_net}')
 
     if allocation_policy == 'error':                                      # Something went wrong, cannot assing IP addresses
       rq = f'{len(link.interfaces)} nodes'
