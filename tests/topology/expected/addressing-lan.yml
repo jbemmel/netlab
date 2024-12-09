@@ -293,12 +293,12 @@ links:
   - ifindex: 15
     ifname: GigabitEthernet15
     ipv4: true
-    ipv6: 2001:db8:42:43::7/64
+    ipv6: 2001:db8:42:43::1/64
     node: r1
   - ifindex: 15
     ifname: GigabitEthernet15
     ipv4: true
-    ipv6: 2001:db8:42:43::15/64
+    ipv6: 2001:db8:42:43::2/64
     node: r2
   linkindex: 14
   name: Link with unnumbered static prefix
@@ -559,13 +559,13 @@ nodes:
       ifindex: 15
       ifname: GigabitEthernet15
       ipv4: true
-      ipv6: 2001:db8:42:43::7/64
+      ipv6: 2001:db8:42:43::1/64
       linkindex: 14
       name: Link with unnumbered static prefix
       neighbors:
       - ifname: GigabitEthernet15
         ipv4: true
-        ipv6: 2001:db8:42:43::15/64
+        ipv6: 2001:db8:42:43::2/64
         node: r2
       type: p2p
     loopback:
@@ -795,13 +795,13 @@ nodes:
       ifindex: 15
       ifname: GigabitEthernet15
       ipv4: true
-      ipv6: 2001:db8:42:43::15/64
+      ipv6: 2001:db8:42:43::2/64
       linkindex: 14
       name: Link with unnumbered static prefix
       neighbors:
       - ifname: GigabitEthernet15
         ipv4: true
-        ipv6: 2001:db8:42:43::7/64
+        ipv6: 2001:db8:42:43::1/64
         node: r1
       type: p2p
     loopback:
