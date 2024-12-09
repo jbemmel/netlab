@@ -52,11 +52,11 @@ links:
   interfaces:
   - ifindex: 2
     ifname: GigabitEthernet0/2
-    ipv6: 2001:db8:2::7/64
+    ipv6: 2001:db8:2::1/64
     node: r1
   - ifindex: 2
     ifname: GigabitEthernet0/2
-    ipv6: 2001:db8:2::15/64
+    ipv6: 2001:db8:2::2/64
     node: r2
   linkindex: 2
   name: Standard P2P link
@@ -89,7 +89,7 @@ links:
   interfaces:
   - ifindex: 4
     ifname: GigabitEthernet0/4
-    ipv6: 2001:db8:2:1::7/64
+    ipv6: 2001:db8:2:1::1/64
     node: r1
   - ifindex: 4
     ifname: GigabitEthernet0/4
@@ -170,7 +170,7 @@ nodes:
       type: lan
     - ifindex: 2
       ifname: GigabitEthernet0/2
-      ipv6: 2001:db8:2::7/64
+      ipv6: 2001:db8:2::1/64
       isis:
         network_type: point-to-point
         passive: false
@@ -178,7 +178,7 @@ nodes:
       name: Standard P2P link
       neighbors:
       - ifname: GigabitEthernet0/2
-        ipv6: 2001:db8:2::15/64
+        ipv6: 2001:db8:2::2/64
         node: r2
       type: p2p
     - bridge: input_3
@@ -199,7 +199,7 @@ nodes:
       type: lan
     - ifindex: 4
       ifname: GigabitEthernet0/4
-      ipv6: 2001:db8:2:1::7/64
+      ipv6: 2001:db8:2:1::1/64
       isis:
         network_type: point-to-point
         passive: false
@@ -296,7 +296,7 @@ nodes:
       type: lan
     - ifindex: 2
       ifname: GigabitEthernet0/2
-      ipv6: 2001:db8:2::15/64
+      ipv6: 2001:db8:2::2/64
       isis:
         network_type: point-to-point
         passive: false
@@ -304,7 +304,7 @@ nodes:
       name: Standard P2P link
       neighbors:
       - ifname: GigabitEthernet0/2
-        ipv6: 2001:db8:2::7/64
+        ipv6: 2001:db8:2::1/64
         node: r1
       type: p2p
     - bridge: input_3
@@ -329,7 +329,7 @@ nodes:
       name: Unaddressed node on a P2P link
       neighbors:
       - ifname: GigabitEthernet0/4
-        ipv6: 2001:db8:2:1::7/64
+        ipv6: 2001:db8:2:1::1/64
         node: r1
       type: p2p
     isis:

@@ -55,13 +55,13 @@ links:
   interfaces:
   - ifindex: 1
     ifname: GigabitEthernet0/1
-    ipv4: 172.31.0.4/24
-    ipv6: 2001:db8:2::4/64
+    ipv4: 172.31.0.1/24
+    ipv6: 2001:db8:2::1/64
     node: ce1
   - ifindex: 1
     ifname: GigabitEthernet0/1
-    ipv4: 172.31.0.1/24
-    ipv6: 2001:db8:2::1/64
+    ipv4: 172.31.0.2/24
+    ipv6: 2001:db8:2::2/64
     node: pe1
   linkindex: 1
   node_count: 2
@@ -74,8 +74,8 @@ links:
   interfaces:
   - ifindex: 1
     ifname: GigabitEthernet0/1
-    ipv4: 172.31.1.5/24
-    ipv6: 2001:db8:2:1::5/64
+    ipv4: 172.31.1.1/24
+    ipv6: 2001:db8:2:1::1/64
     node: ce2
   - ifindex: 1
     ifname: GigabitEthernet0/1
@@ -151,8 +151,8 @@ nodes:
           ipv6: true
         as: 65000
         ifindex: 1
-        ipv4: 172.31.0.1
-        ipv6: 2001:db8:2::1
+        ipv4: 172.31.0.2
+        ipv6: 2001:db8:2::2
         name: pe1
         type: ebgp
       next_hop_self: true
@@ -163,14 +163,14 @@ nodes:
     interfaces:
     - ifindex: 1
       ifname: GigabitEthernet0/1
-      ipv4: 172.31.0.4/24
-      ipv6: 2001:db8:2::4/64
+      ipv4: 172.31.0.1/24
+      ipv6: 2001:db8:2::1/64
       linkindex: 1
       name: ce1 -> pe1
       neighbors:
       - ifname: GigabitEthernet0/1
-        ipv4: 172.31.0.1/24
-        ipv6: 2001:db8:2::1/64
+        ipv4: 172.31.0.2/24
+        ipv6: 2001:db8:2::2/64
         node: pe1
       role: external
       type: p2p
@@ -225,8 +225,8 @@ nodes:
     interfaces:
     - ifindex: 1
       ifname: GigabitEthernet0/1
-      ipv4: 172.31.1.5/24
-      ipv6: 2001:db8:2:1::5/64
+      ipv4: 172.31.1.1/24
+      ipv6: 2001:db8:2:1::1/64
       linkindex: 2
       name: ce2 -> pe2
       neighbors:
@@ -348,8 +348,8 @@ nodes:
           ipv6: true
         as: 65001
         ifindex: 1
-        ipv4: 172.31.0.4
-        ipv6: 2001:db8:2::4
+        ipv4: 172.31.0.1
+        ipv6: 2001:db8:2::1
         name: ce1
         type: ebgp
       next_hop_self: true
@@ -360,14 +360,14 @@ nodes:
     interfaces:
     - ifindex: 1
       ifname: GigabitEthernet0/1
-      ipv4: 172.31.0.1/24
-      ipv6: 2001:db8:2::1/64
+      ipv4: 172.31.0.2/24
+      ipv6: 2001:db8:2::2/64
       linkindex: 1
       name: pe1 -> ce1
       neighbors:
       - ifname: GigabitEthernet0/1
-        ipv4: 172.31.0.4/24
-        ipv6: 2001:db8:2::4/64
+        ipv4: 172.31.0.1/24
+        ipv6: 2001:db8:2::1/64
         node: ce1
       role: external
       type: p2p
@@ -449,8 +449,8 @@ nodes:
           ipv6: true
         as: 65002
         ifindex: 1
-        ipv4: 172.31.1.5
-        ipv6: 2001:db8:2:1::5
+        ipv4: 172.31.1.1
+        ipv6: 2001:db8:2:1::1
         name: ce2
         type: ebgp
       next_hop_self: true
@@ -467,8 +467,8 @@ nodes:
       name: pe2 -> ce2
       neighbors:
       - ifname: GigabitEthernet0/1
-        ipv4: 172.31.1.5/24
-        ipv6: 2001:db8:2:1::5/64
+        ipv4: 172.31.1.1/24
+        ipv6: 2001:db8:2:1::1/64
         node: ce2
       role: external
       type: p2p

@@ -461,7 +461,7 @@ def assign_link_prefix(
 Get IPAM policy for link/prefix
 
 * If the prefix is a bool ==> unnumbered
-* If the link is a P2P link ==> p2p (for backward compatibility)
+* If the link is a P2P link (has only 2 nodes with no gateway) ==> p2p (for backward compatibility)
 * If the prefix is large enough ==> id_based
 * Otherwise use sequential policy
 
@@ -476,7 +476,7 @@ def get_prefix_IPAM_policy(link: Box, pfx: typing.Union[netaddr.IPNetwork,bool],
 
   if pfx_size == 1:                                                   # Do we have a single node attached to a /32 link?
     return 'loopback' if len(link.interfaces) == 1 else 'error'       # ... if so, we'll use loopback address allocation
-  elif pfx_size <= 4 and len(link.interfaces) == 2 and gwid==0:
+  elif len(link.interfaces) == 2 and gwid==0:                         # For all prefix sizes, when 2 nodes use 'p2p'
     return 'p2p'
 
   add_extra_ip = 0                                                    # /29 or shorter prefix
