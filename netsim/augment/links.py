@@ -472,25 +472,23 @@ def get_prefix_IPAM_policy(link: Box, pfx: typing.Union[netaddr.IPNetwork,bool],
     return 'unnumbered'
 
   gwid = get_gateway_id(link) or 0                                    # Get link gateway ID (if set) --- must be int for min to work
-  if link.type == 'p2p' and not gwid:                                 # P2P allocation policy cannot be used with default gateway
-    return 'p2p' if pfx.first != pfx.last else 'error'
-
   pfx_size = pfx.last - pfx.first + 1
-  add_extra_ip = 0
-  subtract_reserved_ip = -2
 
-  if pfx_size > 2:
-    if gwid > 0:                                                      # Gateway ID at the front of the subnet -- need one extra IP
-      add_extra_ip = 1
-    if gwid < 0:                                                      # Don't allow node address allocation beyond last-in-subnet gateway
-      subtract_reserved_ip = min(subtract_reserved_ip,gwid-1)
-
-    pfx_size = pfx_size + subtract_reserved_ip
-
-  max_id = max([ ndict[intf.node].id for intf in link.interfaces if intf.node in ndict ])
   if pfx_size == 1:                                                   # Do we have a single node attached to a /32 link?
     return 'loopback' if len(link.interfaces) == 1 else 'error'       # ... if so, we'll use loopback address allocation
+  elif pfx_size == 2:
+    ips = len(link.interfaces) + (1 if gwid!=0 else 0)                # Calculate how many IPs we need
+    return 'p2p' if ips <= 2 else 'error'                             # P2P allocation policy can support at most 2 addresses
 
+  add_extra_ip = 0                                                    # > 2 case
+  subtract_reserved_ip = -2
+  if gwid > 0:                                                        # Gateway ID at the front of the subnet -- need one extra IP
+    add_extra_ip = 1
+  elif gwid < 0:                                                      # Don't allow node address allocation beyond last-in-subnet gateway
+    subtract_reserved_ip = min(subtract_reserved_ip,gwid-1)
+  pfx_size = pfx_size + subtract_reserved_ip
+
+  max_id = max([ ndict[intf.node].id for intf in link.interfaces if intf.node in ndict ])
   if max_id <= pfx_size:                                              # If we can fit all node IDs attached to this link into the prefix
     return 'id_based'                                                 # ... we'll use ID-based address allocation
   if len(link.interfaces) + add_extra_ip <= pfx_size:                 # Otherwise, if the prefix is big enough
@@ -649,6 +647,7 @@ def assign_interface_addresses(link: Box, addr_pools: Box, ndict: Box, defaults:
         allocation_policy = pfx_list.allocation
       else:
         allocation_policy = get_prefix_IPAM_policy(link,pfx_net,ndict)    # get IPAM policy based on prefix and link size
+        print(f"JvB: got alloc_policy={allocation_policy} for {pfx_net}")
 
     if allocation_policy == 'error':                                      # Something went wrong, cannot assing IP addresses
       rq = f'{len(link.interfaces)} nodes'

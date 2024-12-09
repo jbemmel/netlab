@@ -6,11 +6,17 @@ groups:
   tor:
     members:
     - l1
+    node_data:
+      provider: libvirt
 input:
 - topology/input/addressing-multi-provider-p2p.yml
 - package:topology-defaults.yml
+libvirt:
+  providers:
+    clab: true
 links:
 - _linkname: links[1]
+  bridge: input_1
   interfaces:
   - ifindex: 1
     ifname: eth1
@@ -20,12 +26,15 @@ links:
     ifname: eth1
     ipv4: 10.1.0.1/31
     node: c2
+  libvirt:
+    provider:
+      clab: true
   linkindex: 1
   node_count: 2
   pool: p2p
   prefix:
     ipv4: 10.1.0.0/31
-  type: p2p
+  type: lan
 name: input
 nodes:
   c1:
@@ -44,7 +53,8 @@ nodes:
     hostname: clab-input-c1
     id: 1
     interfaces:
-    - ifindex: 1
+    - bridge: input_1
+      ifindex: 1
       ifname: eth1
       ipv4: 10.1.0.0/31
       linkindex: 1
@@ -55,7 +65,7 @@ nodes:
         ipv4: 10.1.0.1/31
         node: c2
       pool: p2p
-      type: p2p
+      type: lan
     loopback:
       ifindex: 0
       ifname: lo
@@ -69,6 +79,7 @@ nodes:
       mac: 08:4f:a9:00:00:01
     mtu: 1500
     name: c1
+    provider: clab
   c2:
     af:
       ipv4: true
@@ -85,7 +96,8 @@ nodes:
     hostname: clab-input-c2
     id: 2
     interfaces:
-    - ifindex: 1
+    - bridge: input_1
+      ifindex: 1
       ifname: eth1
       ipv4: 10.1.0.1/31
       linkindex: 1
@@ -96,7 +108,7 @@ nodes:
         ipv4: 10.1.0.0/31
         node: c1
       pool: p2p
-      type: p2p
+      type: lan
     loopback:
       ifindex: 0
       ifname: lo
@@ -110,20 +122,12 @@ nodes:
       mac: 08:4f:a9:00:00:02
     mtu: 1500
     name: c2
+    provider: clab
   l1:
     af:
       ipv4: true
-    box: quay.io/frrouting/frr:10.0.1
-    clab:
-      binds:
-      - clab_files/l1/daemons:/etc/frr/daemons
-      - clab_files/l1/hosts:/etc/hosts
-      config_templates:
-      - daemons:/etc/frr/daemons
-      - hosts:/etc/hosts
-      kind: linux
+    box: debian/bookworm64
     device: frr
-    hostname: clab-input-l1
     id: 3
     interfaces: []
     loopback:
@@ -137,6 +141,5 @@ nodes:
       ifname: eth0
       ipv4: 192.168.121.103
       mac: 08:4f:a9:00:00:03
-    mtu: 1500
     name: l1
-provider: clab
+provider: libvirt
