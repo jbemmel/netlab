@@ -1,10 +1,21 @@
-{% for ifdata in interfaces if ifdata.vlan.access_id is defined %}
+{% for ifdata in interfaces if ifdata.vlan.access is defined %}
+{%   set vlan = vlans[ifdata.vlan.access] %}
+{%   if vlan.vni is defined and vlan.vxlan.l2tunnel is defined %}
+{%     if loop.first %}
+- set:
+    system:
+      config:
+        snippet:
+          ifupdown2_eni:
+            vxlan48: |
+              bridge-l2protocol-tunnel all
+{%     endif %}
 - set:
     system:
       config:
         snippet:
           ifupdown2_eni:
             {{ ifdata.ifname }}: |
-              bridge-l2protocol-tunnel all
-# TODO: Set same flag on VNI interface
+              bridge-l2protocol-tunnel {{ vlan.vxlan.l2tunnel }}
+{%   endif %}
 {% endfor %}
