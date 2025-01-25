@@ -1,0 +1,10 @@
+{% for ifdata in interfaces if ifdata.vlan.access_id is defined %}
+- set:
+    system:
+      config:
+        snippet:
+          ifupdown2_eni:
+            {{ ifdata.ifname }}: |
+              bridge-l2protocol-tunnel all
+# TODO: Set same flag on VNI interface
+{% endfor %}

@@ -1,0 +1,16 @@
+# vxlan.l2tunnel attributes
+#
+---
+devices:
+  cumulus_nvue:
+    features.vxlan.l2tunnel: True
+
+vxlan:
+  attributes:
+    global:
+      l2tunnel: { type: str, valid_values: [ "all", "lacp", "stp", "lldp", "cdp" ] }
+    node:
+      l2tunnel: { type: str, valid_values: [ "all", "lacp", "stp", "lldp", "cdp" ] }
+      # copy: global -> "must be a dict?"
+    link:
+      l2tunnel: { type: str, valid_values: [ "all", "lacp", "stp", "lldp", "cdp" ] }
