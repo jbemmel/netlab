@@ -1,6 +1,6 @@
 {% for ifdata in interfaces if ifdata.vlan.access is defined %}
 {%   set vlan = vlans[ifdata.vlan.access] %}
-{%   if vlan.vni is defined and vlan.vxlan.l2tunnel is defined %}
+{%   if vlan.vlan.l2_vxlan_tunnel is defined %}
 {%     if loop.first %}
 - set:
     system:
@@ -16,6 +16,20 @@
         snippet:
           ifupdown2_eni:
             {{ ifdata.ifname }}: |
-              bridge-l2protocol-tunnel {{ vlan.vxlan.l2tunnel }}
+              bridge-l2protocol-tunnel {{ vlan.vlan.l2_vxlan_tunnel }}
+#            eni_stanzas: |
+#              auto vni{{ vlan.id }}
+#              iface vni{{ vlan.id }}
+#                bridge-access {{ vlan.id }}
+#                bridge-l2protocol-tunnel {{ vlan.vlan.l2_vxlan_tunnel }}
+#                bridge-learning off
+#                mstpctl-bpduguard yes
+#                mstpctl-portbpdufilter yes
+#                vxlan-id {{ vlan.id }}
+#                vxlan-local-tunnelip {{ loopback.ipv4 | ipaddr('address') }}
+#
+#              auto br_default
+#              iface br_default
+#                bridge-ports vni{{ vlan.id }}
 {%   endif %}
 {% endfor %}
