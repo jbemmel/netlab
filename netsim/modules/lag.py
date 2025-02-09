@@ -12,6 +12,7 @@ ID_SET = 'lag_id'
 PEERLINK_ID_SET = 'peerlink_id'
 
 PEERLINK_ID_ATT = 'lag.mlag.peergroup'
+PEERVLAN_NAME = "_peervlan"
 
 """
 populate_lag_id_set -- Collect any user defined lag.ifindex values globally and initialize ID generator
@@ -64,16 +65,27 @@ def check_lag_config(node: str, linkname: str, topology: Box) -> bool:
 
 """
 check_mlag_support - check if the given node supports mlag
+
+Return: Tuple with (<supported>, VLAN to create (if any))
 """
-def check_mlag_support(node: str, linkname: str, topology: Box) -> bool:
+def check_mlag_support(node: str, linkname: str, topology: Box) -> tuple[bool,int]:
   _n = topology.nodes[node]
   features = devices.get_device_features(_n,topology.defaults)
   if not features.lag.get('mlag',False):
     log.error(f'Node {_n.name} ({_n.device}) does not support MLAG, cannot be part of peerlink or M-side of LAG {linkname}',
       category=log.IncorrectValue,
       module='lag')
-    return False
-  return True
+    return (False,None)
+
+  # For devices that declare a routed VLAN to be used for mlag, check that the VLAN module is enabled
+  if features.lag.mlag.get('peer.vlan',None):
+    if 'vlan' not in _n.get('module',[]):
+      log.error(f'Node {_n.name} ({_n.device}) uses a VLAN for MLAG, but the vlan module is not enabled',
+        category=log.IncorrectValue,
+        module='lag')
+      return (False,None)
+    return (True,features.lag.mlag.peer.vlan)
+  return (True,None)
 
 """
 normalized_members - builds a normalized list of lag member links, checking various conditions
@@ -253,7 +265,7 @@ def create_lag_interfaces(l: Box, topology: Box) -> None:
       if not check_lag_config(node,l._linkname,topology):
         return
     elif is_mlag:
-      if not check_mlag_support(node,l._linkname,topology):
+      if not check_mlag_support(node,l._linkname,topology)[0]:
         return
       ifatts.lag._mlag = True                     # Set internal flag
 
@@ -288,7 +300,6 @@ def create_peer_links(l: Box, topology: Box) -> None:
   for idx,member in enumerate(members):
     member = l2_linkdata + member                 # Copy L2 data into member link
     if idx==0:                                    # For the first member, use the existing link
-      topology.links[l.linkindex-1] = l + member  # Update topology (l is a copy)
       first_pair = [ i.node for i in member.interfaces ]
       _devs = { topology.nodes[n].device for n in first_pair }
       if len(_devs)!=1:                           # Check that both are the same device type
@@ -296,9 +307,22 @@ def create_peer_links(l: Box, topology: Box) -> None:
           category=log.IncorrectValue,
           module='lag')
         return
-      for node in first_pair:
-        if not check_mlag_support(node,l._linkname,topology):
+      for i in member.interfaces:
+        supported, peer_vlan = check_mlag_support(i.node,l._linkname,topology)
+        if not supported:
           return
+        if peer_vlan:
+          vlan = data.get_empty_box()
+          vlan.id = peer_vlan
+          vlan.mode = 'irb'
+          vlan.prefix = "10.11.12.0/30"
+          member.pop('prefix',None)
+          l.pop('prefix',None)
+          topology.nodes[i.node].vlans[PEERVLAN_NAME] = vlan
+          # topology.vlans[PEERVLAN_NAME] = vlan
+          i.vlan.trunk = i.get('vlan.trunk',{}) + { PEERVLAN_NAME: {} }
+          # l.vlan.trunk = l.get('vlan.trunk',[]) + [ PEERVLAN_NAME ]
+      topology.links[l.linkindex-1] = l + member  # Update topology (l is a copy)
       if log.debug_active('lag'):
         print(f'LAG create_peer_links -> updated first link {l} from {member} -> {topology.links[l.linkindex-1]}')
     else:
