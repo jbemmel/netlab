@@ -1,0 +1,20 @@
+# Netbrain attributes
+#
+---
+netbrain:
+  attributes:
+    global:
+      create_map: bool
+      expand_topology: { type: string, valid_values: [ "no", "L2", "L3" ] }
+      api_user: str
+      api_url: str
+      api_stub: str
+
+# Default values
+  create_map: True
+  expand_topology: "no"
+
+# API connection properties
+  api_user: "netlab"
+  api_url: "https://integrationlab.netbraintech.com"
+  api_stub: "Netlab"
