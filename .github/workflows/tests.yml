@@ -31,9 +31,9 @@ jobs:
     - name: Run Mypy
       run: |
         set -e
-        mypy --install-types -p netsim
+        mypy --install-types --non-interactive -p netsim
         for file in netsim/extra/*/plugin.py; do
-          python3 -m mypy $file -- --install-types
+          python3 -m mypy $file -- --install-types --non-interactive
         done
     - name: Run transformation tests
       run: |
