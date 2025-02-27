@@ -132,4 +132,4 @@ def netbrain_get_configs(topology: Box) -> None:
       files.create_file_from_text(out_file,"!"+config["configuration"].replace("\\r\\n","\r\n"))
       log.info( f"Config for {nodename} saved under {out_file}" )
     else:
-      log.warning( f"Unable to get config for {nodename}: {config}" )
+      log.error( f"Unable to get config for {nodename}: {config}", category=Warning )
