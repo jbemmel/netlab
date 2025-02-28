@@ -59,10 +59,10 @@ def netbrain_call_api(session: requests.Session, url: str, data: str = "") -> ty
   global _config_name
 
   try:
-    if data is None:
-      result = session.get(url,verify=False)
-    else:
+    if data:
       result = session.post(url,data=data,verify=False)
+    else:
+      result = session.get(url,verify=False)
     result.raise_for_status()
     return result.json()
   except requests.exceptions.HTTPError as err:
