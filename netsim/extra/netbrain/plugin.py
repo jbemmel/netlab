@@ -118,7 +118,7 @@ def netbrain_create_map(session: requests.Session, topology: Box, expand_topolog
     log.info(f"Netbrain plugin: Map {map_result['mapName']} created for {len(devices)} nodes " +
              f"at {api_url}/{map_result['mapUrl']}")
 
-def dellos10_clean_config(config: str) -> None:
+def dellos10_clean_config(config: str) -> str:
     config = config.replace("\\r\\n","\r\n")
 
     # Remove config on ports 47-55 which get remapped
