@@ -2,20 +2,7 @@
 #
 ---
 netbrain:
-  attributes:
-    global:
-      create_map: bool
-      get_config: bool
-      expand_topology: { type: string, valid_values: [ "no", "L2", "L3" ] }
-      api_user: str
-      api_url: str
-      api_stub: str
-
-    node:
-      get_config:
-
-# Default values
-  create_map: False      # Use -s defaults.netbrain.create_map=True to create a map once, not every time
+  create_map: False      # Use -s netbrain.create_map=True to create a map once, not every time
   get_config: True
   expand_topology: "no"
 
@@ -23,3 +10,17 @@ netbrain:
   api_user: "netlab"
   api_url: "https://integrationlab.netbraintech.com"
   api_stub: "Netlab"
+
+attributes:
+  global:
+    netbrain:
+      create_map: bool
+      get_config: bool
+      expand_topology: { type: string, valid_values: [ "no", "L2", "L3" ] }
+      api_user: str
+      api_url: str
+      api_stub: str
+
+  node:
+    netbrain:
+      get_config: bool   # Can enable/disable on a per-node basis

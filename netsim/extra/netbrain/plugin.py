@@ -8,6 +8,7 @@ import os
 import requests
 import json
 import pathlib
+import re
 
 requests.packages.urllib3.disable_warnings()
 
@@ -37,35 +38,38 @@ Create a map of all nodes in the topology
 '''
 def post_transform(topology: Box) -> None:
   create_map = topology.get('defaults.netbrain.create_map',False)
-  if create_map:
-    expand_topology = topology.get('defaults.netbrain.expand_topology',"no")
-    netbrain_create_map(topology,expand_topology)
-
   get_configs = topology.get('defaults.netbrain.get_config',True)
-  if get_configs:
-    netbrain_get_configs(topology)
+  if not (create_map or get_configs):
+    return
+  with requests.Session() as session:
+    global NETBRAIN_TOKEN
+    session.headers.update( {'Content-Type': 'application/json','Accept': 'application/json',
+                             'Token': NETBRAIN_TOKEN } )
+    if create_map:
+      expand_topology = topology.get('defaults.netbrain.expand_topology',"no")
+      netbrain_create_map(session,topology,expand_topology)
+
+    get_configs = topology.get('defaults.netbrain.get_config',True)
+    if get_configs:
+      netbrain_get_configs(session,topology)
 
 #############################################################################################
 
-def netbrain_call_api(url: str, data: str = None) -> typing.Dict:
-  global NETBRAIN_TOKEN
+def netbrain_call_api(session: requests.Session, url: str, data: str = None) -> typing.Dict:
   global _config_name
-
-  headers = {'Content-Type': 'application/json', 'Accept': 'application/json'}
-  headers["Token"] = NETBRAIN_TOKEN
 
   try:
     if data is None:
-      result = requests.get(url, headers=headers, verify=False)
+      result = session.get(url,verify=False)
     else:
-      result = requests.post(url, headers=headers, data=data, verify=False)
+      result = session.post(url,data=data,verify=False)
     result.raise_for_status()
     return result.json()
   except requests.exceptions.HTTPError as err:
     log.error( f"Error accessing Netbrain API at {url}: {err}",log.FatalError,_config_name)
     return {}
 
-def netbrain_create_map(topology: Box, expand_topology: str) -> None:
+def netbrain_create_map(session: requests.Session, topology: Box, expand_topology: str) -> None:
   global _config_name
 
   api_url = topology.get('defaults.netbrain.api_url')
@@ -73,7 +77,7 @@ def netbrain_create_map(topology: Box, expand_topology: str) -> None:
 
   # Determine the first tenant/domain that {api_user} is setup with, ideally only one of each
   users_url = api_url + f"/ServicesAPI/API/V1/CMDB/Users?username={api_user}"
-  users_result = netbrain_call_api(users_url)
+  users_result = netbrain_call_api(session,users_url)
   if not users_result:
     return
 
@@ -105,21 +109,40 @@ def netbrain_create_map(topology: Box, expand_topology: str) -> None:
     }
   }
   create_map_url = api_url + "/ServicesAPI/API/V1/Triggers/Run"
-  map_result = netbrain_call_api(create_map_url, data=json.dumps(CREATE_MAP_BODY))
+  map_result = netbrain_call_api(session,create_map_url,data=json.dumps(CREATE_MAP_BODY))
   if not map_result:
     return
   if 'error' in map_result:
     log.error(f"Error creating map: {map_result['error']}",log.FatalError,_config_name)
   else:
-    log.info(f"Netbrain plugin: Map {map_result['mapName']} created for {len(devices)} nodes at {api_url}/{map_result['mapUrl']}")
+    log.info(f"Netbrain plugin: Map {map_result['mapName']} created for {len(devices)} nodes " +
+             f"at {api_url}/{map_result['mapUrl']}")
 
-def netbrain_get_configs(topology: Box) -> None:
+def dellos10_clean_config(config: str):
+    config = config.replace("\\r\\n","\r\n")
+
+    # Remove config on ports 47-55 which get remapped
+    for port in range(47,56):
+      config = re.sub(f'interface ethernet1/1/{port}[^!]+!\r\n','',config)
+
+    # Map ports 57-65 by -10 to 47-55
+    config = re.sub(r'1/1/([5][7-9]|6[0-5])', lambda m: f"1/1/{int(m.group(1)) - 10}", config)
+
+    # Remove login banner, interferes with CLI prompt logic on vrnetlab
+    config = re.sub(r'banner[^\^]+\^[^\^]+\^C','', config)
+
+    # Remove mgmt lines - they break ssh login
+    config = re.sub(r'interface mgmt1/1/1[^!]+!\r\n','',config)
+
+    return "!" + config
+
+def netbrain_get_configs(session: requests.Session, topology: Box) -> None:
   api_url = topology.get('defaults.netbrain.api_url')
   for nodename, node in topology.nodes.items():
-    if not node.get('netbrain.get_config',True):
+    if not node.get('netbrain.get_config',True) or node.get('unmanaged',False):
       continue
     config_url = api_url + f"/ServicesAPI/API/V1/CMDB/DataEngine/DeviceData/Configuration?hostname={nodename}"
-    config = netbrain_call_api(config_url)
+    config = netbrain_call_api(session,config_url)
     if 'configuration' in config:
       out_folder = "netbrain_configs"
       pathlib.Path(out_folder).mkdir(parents=True, exist_ok=True)
@@ -129,7 +152,11 @@ def netbrain_get_configs(topology: Box) -> None:
       else:
         out_file += ".j2"
         node.config = node.get('config',[]) + [ out_file ]
-      files.create_file_from_text(out_file,"!"+config["configuration"].replace("\\r\\n","\r\n"))
+
+      config_str = config["configuration"]
+      if node.device == "dellos10":
+        config_str = dellos10_clean_config(config_str)
+      files.create_file_from_text(out_file,config_str)
       log.info( f"Config for {nodename} saved under {out_file}" )
     else:
-      log.error( f"Unable to get config for {nodename}: {config}", category=Warning )
+      log.error( f"Unable to get config for {nodename}: {config}",category=Warning )
