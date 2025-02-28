@@ -6,11 +6,12 @@ from netsim.augment import devices
 import os
 
 import requests
+import urllib3
 import json
 import pathlib
 import re
 
-requests.packages.urllib3.disable_warnings()
+urllib3.disable_warnings()
 
 _config_name = 'netbrain'
 
@@ -24,7 +25,7 @@ def topology_expand(topology: Box) -> None:
   # Check that env.NETBRAIN_TOKEN is available
   global NETBRAIN_TOKEN
 
-  NETBRAIN_TOKEN = os.getenv('NETBRAIN_TOKEN')
+  NETBRAIN_TOKEN = os.getenv('NETBRAIN_TOKEN') or ""
   if not NETBRAIN_TOKEN:
     log.error( f"Environment variable 'NETBRAIN_TOKEN' must be defined with a valid Netbrain token",
       log.MissingValue,
@@ -54,8 +55,7 @@ def post_transform(topology: Box) -> None:
       netbrain_get_configs(session,topology)
 
 #############################################################################################
-
-def netbrain_call_api(session: requests.Session, url: str, data: str = None) -> typing.Dict:
+def netbrain_call_api(session: requests.Session, url: str, data: str = "") -> typing.Dict:
   global _config_name
 
   try:
@@ -118,7 +118,7 @@ def netbrain_create_map(session: requests.Session, topology: Box, expand_topolog
     log.info(f"Netbrain plugin: Map {map_result['mapName']} created for {len(devices)} nodes " +
              f"at {api_url}/{map_result['mapUrl']}")
 
-def dellos10_clean_config(config: str):
+def dellos10_clean_config(config: str) -> None:
     config = config.replace("\\r\\n","\r\n")
 
     # Remove config on ports 47-55 which get remapped
