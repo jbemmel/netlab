@@ -17,6 +17,7 @@
    plugins/fabric.md
    plugins/mlag.vtep.md
    plugins/multilab.md
+   plugins/netbrain.md
    plugins/node.clone.md
    plugins/vrrp.version.md
 ```
