@@ -60,3 +60,44 @@ updates:
 {%     endif %}
 {%   endfor %}
 {% endfor %}
+
+{#
+   Static routes
+#}
+{% if routing.static|default([]) %}
+{% macro config_sr(sr_data,af,vrf='default') %}
+{%   set gname = 'blackhole' if 'discard' in sr_data.nexthop else sr_data.nexthop[af]|replace(':','_') %}
+- path: /network-instance[name={{vrf}}]/next-hop-groups/group[name={{gname}}]
+  value:
+{%   if gname=='blackhole' %}
+    blackhole:
+      generate-icmp: True
+{%   else %}
+    nexthop:
+    - index: 0
+      ip-address: {{ sr_data.nexthop[af] }}
+{%   endif %}
+{%   for afm in af %}
+- path: /network-instance[name={{vrf}}]/static-routes
+  value:
+    route:
+    - prefix: {{ sr_data[af] }}
+      next-hop-group: {{ gname }}
+{%   endfor %}
+{% endmacro -%}
+{#
+ # Global static routes
+ #}
+{%   for sr_data in routing.static if 'vrf' not in sr_data %}
+{%     for sr_af in ['ipv4','ipv6'] if sr_af in sr_data %}
+{{       config_sr(sr_data,sr_af) -}}
+{%     endfor %}
+{%   endfor %}
+{%   for r_vrf in routing.static|map(attribute='vrf',default=False)|unique if r_vrf %}
+{%     for sr_data in routing.static if sr_data.vrf|default('') == r_vrf %}
+{%       for sr_af in ['ipv4','ipv6'] if sr_af in sr_data %}
+{{         config_sr(sr_data,sr_af,r_vrf) -}}
+{%       endfor %}
+{%     endfor %}
+{%   endfor %}
+{% endif %}

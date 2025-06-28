@@ -14,6 +14,7 @@ group_vars:
     bgp: [ bgp, bgp-evpn ]
     connected: [ local ]
     isis: [ isis ]
+    static: [ static ]
 sr:
   srgb_range_start: 500000
   srgb_range_size: 1000
@@ -75,6 +76,10 @@ features:
         prefix: True
       set: [ locpref, med ]
     prefix: True
+    static:
+      vrf: True
+      inter_vrf: False
+      discard: True
   sr: True
   vlan:
     model: router
