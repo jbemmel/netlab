@@ -1,3 +1,4 @@
+{% import '_route_map_cumulus_nvue.j2' as routemap with context %}
 ---
 {% if routing.static|default([]) %}
 {%   for sr_data in routing.static %}
@@ -35,4 +36,11 @@
 {%       endif %}
 {%     endfor %}
 {%   endfor %}
+{% endif %}
+
+{% if routing.policy|default([]) %}
+{{   routemap.create_route_maps(routing.policy) -}}
+{% endif %}
+{% if routing.prefix|default({}) %}
+{%   include '_prefix_list_cumulus_nvue.j2' %}
 {% endif %}

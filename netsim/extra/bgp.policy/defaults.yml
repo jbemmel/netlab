@@ -19,6 +19,8 @@ devices:
       out: int
   cumulus:
     copy: frr
+  cumulus_nvue.features.bgp:
+    aggregate: True
   dellos10.features.bgp:
     _default_locpref: True
   ios.features.bgp:

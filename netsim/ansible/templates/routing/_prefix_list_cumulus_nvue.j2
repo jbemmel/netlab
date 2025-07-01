@@ -1,0 +1,14 @@
+{% for pf_af in af if pf_af in routing._prefix|default({}) %}
+{%   for p_name,p_value in routing._prefix[pf_af].items() %}
+{%     for p_entry in p_value %}
+{%       if loop.first %}
+- set:
+    router:
+      policy:
+        prefix-list:
+          {{ p_name }}:
+            type: {{ pf_af }}
+{%       endif %}
+{%     endfor %}
+{%   endfor %}
+{% endfor %}

@@ -56,6 +56,12 @@ features:
     timers: True
     priority: True
   routing:
+    policy:
+      set:
+        locpref: True
+        med: True
+      match: [ prefix ]
+    prefix: True
     static:
       vrf: True
       inter_vrf: True

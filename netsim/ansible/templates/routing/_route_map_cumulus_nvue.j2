@@ -1,0 +1,47 @@
+{#
+   This macro generates the elements of route-map entries using NVUE
+#}
+{% macro route_map_entry(p_entry,match_af) %}
+{%   if 'set' in p_entry %}
+                set:
+{%     if 'locpref' in p_entry.set %}
+                  local-preference: {{ p_entry.set.locpref }}
+{%     endif %}
+{%     if 'med' in p_entry.set %}
+                  metric: {{ p_entry.set.med }}
+{%     endif %}
+{%     if 'weight' in p_entry.set %}
+                  weight: {{ p_entry.set.weight }}
+{%     endif %}
+{%   endif %}
+{%   if 'match' in p_entry %}
+{%   endif %}
+{% endmacro %}
+{#
+   This macro builds a single route map and uses the callback to define a route map entry.
+#}
+{% macro build_route_map(rp_name,rp_list,match_af) -%}
+{%   for p_entry in rp_list %}
+- set: 
+    router:
+      policy:
+        route-map:
+          {{ rp_name }}:
+            rule:
+              '{{ p_entry.sequence|default(loop.index * 10) }}':
+                action: 
+                  {{ p_entry.action|default('permit') }}: {}
+{{              route_map_entry(p_entry,match_af) }}
+{%-  endfor %}
+{%- endmacro %}
+{#
+   This macro creates route maps from the routing.policy dictionary
+#}
+{% macro create_route_maps(rp_dict) -%}
+{%   set cb = caller %}
+{%   for rp_name,rp_list in rp_dict.items() %}
+{%     for rm_af in af %}
+{{       build_route_map('%s-%s'|format(rp_name,rm_af),rp_list,rm_af) }}
+{%-    endfor %}
+{%   endfor %}
+{%- endmacro %}
