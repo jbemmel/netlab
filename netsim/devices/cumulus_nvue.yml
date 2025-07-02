@@ -60,8 +60,20 @@ features:
       set:
         locpref: True
         med: True
-      match: [ prefix ]
+        weight: True
+        prepend: True
+        community:
+          standard: True
+          large: True
+          extended: True
+          append: True
+          delete: clist
+          delete_list: True
+      match: [ prefix, nexthop, aspath, community ]
     prefix: True
+    aspath: True
+    community:
+      expanded: True
     static:
       vrf: True
       inter_vrf: True
