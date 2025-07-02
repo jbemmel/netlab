@@ -1,14 +1,24 @@
 {% for pf_af in af if pf_af in routing._prefix|default({}) %}
 {%   for p_name,p_value in routing._prefix[pf_af].items() %}
 {%     for p_entry in p_value %}
-{%       if loop.first %}
 - set:
     router:
       policy:
         prefix-list:
-          {{ p_name }}:
+          {{ p_name }}-{{ pf_af }}:
             type: {{ pf_af }}
-{%       endif %}
+            rule:
+              '{{ p_entry.sequence }}':
+                match:
+                  {{ p_entry[pf_af] }}:{% if p_entry.min is not defined and p_entry.max is not defined +%} {}{% else +%}
+{%                  if p_entry.max is defined %}
+                    max-prefix-len: {{ p_entry.max }}
+{%                  endif %}
+{%                  if p_entry.min is defined %}
+                    min-prefix-len: {{ p_entry.min }}
+{%                  endif %}
+{%                endif +%}
+                action: {{ p_entry.action }}
 {%     endfor %}
 {%   endfor %}
 {% endfor %}

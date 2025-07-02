@@ -13,8 +13,27 @@
 {%     if 'weight' in p_entry.set %}
                   weight: {{ p_entry.set.weight }}
 {%     endif %}
+{%     if 'bandwidth' in p_entry.set %}
+                  ext-community-bw: {{ p_entry.set.bandwidth }}
+{%     endif %}
+{%     if 'prepend' in p_entry.set %}
+                  as-path-prepend:
+                    as: {{ bgp.as }}
+                    last-as: {{ p_entry.set.count|default(1) }}
+{%     endif %}
 {%   endif %}
+{# TODO:
+    community              Collection of BGP communities
+    community-delete-list  Delete community list
+#}
 {%   if 'match' in p_entry %}
+{# TODO:
+    ip-prefix-list
+    as-path-list
+    community-list
+    metric
+    local-preference
+#}
 {%   endif %}
 {% endmacro %}
 {#
