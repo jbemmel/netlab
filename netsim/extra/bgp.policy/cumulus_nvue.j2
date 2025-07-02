@@ -21,9 +21,14 @@
 {%    endfor %}
 {%  endfor %}
 {% endmacro %}
-
+{#
+Need at least 1 statement here
+#}
+- set:
+    router:
+      bgp:
+        enable: on
 {{ aggregate_config('default',bgp) }}
-
 {% if vrfs is defined %}
 {%   for vname,vdata in vrfs.items() if vdata.bgp is defined %}
 {{ aggregate_config(vname,vdata.bgp) }}
