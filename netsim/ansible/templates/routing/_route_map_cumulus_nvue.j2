@@ -18,8 +18,12 @@
 {%     endif %}
 {%     if 'prepend' in p_entry.set %}
                   as-path-prepend:
-                    as: {{ bgp.as }}
-                    last-as: {{ p_entry.set.count|default(1) }}
+{%       if 'path' in p_entry %}
+                    as: {{ p_entry.path }}
+{%       else %}
+{%         set count = p_entry.set.prepend.count|default(1) %}
+                    as: '{{ bgp.as }}{%- for n in range(1,count) %},{{ bgp.as }}{% endfor %}'
+{%       endif %}
 {%     endif %}
 {%   endif %}
 {# TODO:
