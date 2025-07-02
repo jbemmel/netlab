@@ -1,7 +1,7 @@
 ---
 {% macro aggregate_config(vrf,vrf_bgp) -%}
 {%  for af in ['ipv4','ipv6'] %}
-{%    for a_entry in bgp.aggregate|default([]) if af in a_entry %}
+{%    for a_entry in vrf_bgp.aggregate|default([]) if af in a_entry %}
 {%      if loop.first %}
 - set:
     vrf:
@@ -14,6 +14,10 @@
 {%      endif %}
                   {{ a_entry[af] }}:
                     summary-only: {{ 'on' if a_entry.summary_only|default(false) else 'off' }}
+{%      if a_entry.attributes|default(false) %}
+                    route-map: {{ a_entry.attributes }}-{{ af }}
+{%      endif %}
+{#                  suppress_policy not supported #}
 {%    endfor %}
 {%  endfor %}
 {% endmacro %}
