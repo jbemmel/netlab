@@ -3,18 +3,14 @@
 set -e # Exit immediately when any command fails
 
 {# Configure STP priority on VLAN bridges and ports #}
-{% for i in interfaces if 'vlan' in i %}
+{% for i in interfaces %}
 
 {# Check if port_priority defined at link/interface level #}
-{%  if i.stp is defined %}
+{%  if i.stp is defined and 'port_priority' in i.stp %}
 {%    if i.vlan.access_id is defined and i.vlan.mode|default('') != 'route' %}
-{%      if 'port_priority' in i.stp %}
 bridge link set dev {{ i.ifname }} priority {{ i.stp.port_priority * 4 }}
-{%      endif %}
-{%      if 'port_cost' in i.stp %}
-bridge link set dev {{ i.ifname }} cost {{ i.stp.port_cost }}
-{%      endif %}
 {%    endif %}
+
 {# Check if priority defined at node or VLAN level #}
 {%  elif i.type=='svi' %} 
 {%    set vlan = vlans[ i.vlan.name ] %}
