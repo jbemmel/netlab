@@ -1,8 +1,6 @@
 message: |
-  The devices under test form a loop in the red VLAN.
-
-  The link with the lowest port cost should be forwarding, all other links
-  should be blocked.
+  The device under test sits between a root bridge and a probe checking the path cost towards the root.
+  The DUT should configure the long form port cost and report it downstream
 
 module: [ vlan, stp ]
 
@@ -30,7 +28,7 @@ links:
     stp.port_cost: 200000000 # Max allowed cost, must use long form
   vlan.access: red
 - dut:
-  x2:
+  x2:                        # eos sets a default cost of 20000, based on link speed
   vlan.access: red
 
 validate:
