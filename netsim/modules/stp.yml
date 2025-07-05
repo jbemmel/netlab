@@ -36,6 +36,7 @@ attributes:
     enable: bool
     port_priority: { type: int, min_value: 0, max_value: 15 }               # 4-bit value, default '8' if not set
     port_type: { type: str, valid_values: [ normal, edge, network, auto ] }
+    port_cost: { type: int, min_value: 1, max_value: 200000000 }            # Cost in long format, IEEE 802.1D-2004
 
 _top: # Modification of global defaults
   attributes:
@@ -52,3 +53,4 @@ _top: # Modification of global defaults
 features:
   supported_protocols: Subset of supported STP variants
   enable_per_port: Whether the device supports port level granularity for enable/disable
+  long_port_cost: Device supports setting long (32-bit) STP cost attribute on interfaces

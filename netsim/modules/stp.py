@@ -49,10 +49,10 @@ class STP(_Module):
 
     priority = node.get('stp.priority',0)
     if priority and (priority % 4096):
-        log.error(
-            f'node {node.name} (device {node.device}) stp.priority: {priority} must be a multiple of 4096',
-            log.IncorrectValue,
-            'stp')
+      log.error(
+          f'node {node.name} (device {node.device}) stp.priority: {priority} must be a multiple of 4096',
+          log.IncorrectValue,
+          'stp')
 
     stub_port_type = topology.get('stp.stub_port_type','none')
     for intf in node.get('interfaces',[]):
@@ -72,6 +72,14 @@ class STP(_Module):
             f'node {node.name} (device {node.device}) does not support configuration of STP port_type on ({intf.ifname})',
             log.IncorrectValue,
             'stp')
+        cost = intf.get('stp.port_cost',0)
+        if cost and not features.get('stp.long_port_cost'):
+          log.error(
+            f'node {node.name} (device {node.device}) does not support setting STP 32-bit long cost value {cost}',
+            more_hints=f"Found on interface {intf.ifname}",
+            category=log.IncorrectAttr,
+            module='stp')
+
       if not features.get('stp.port_type',False):                   # If the device doesn't support it, move on
         continue
       stp_port_type = intf.get('stp.port_type',None)

@@ -20,38 +20,44 @@
 {% endif %}
 
 {% for ifdata in interfaces if 'stp' in ifdata or ifdata.vlan.trunk|default({})|dict2items|map(attribute='value')|selectattr('stp','defined') %}
-{%  if loop.first %}
+{%   if loop.first %}
     interface:
-{%  endif %}
+{%   endif %}
       {{ ifdata.ifname }}:
         bridge:
           domain:
             br_default:
               stp:
-{%  if 'stp' in ifdata %}
-{%   if not ifdata.stp.enable|default(True) %}
+{%   if 'stp' in ifdata %}
+{%     if not ifdata.stp.enable|default(True) %}
                 bpdu-filter: on
-{%   elif 'port_priority' in ifdata.stp %}
+{%     else %}
+{%       if 'port_priority' in ifdata.stp %}
                 vlan:
                   '{{ ifdata.vlan.access_id|default(1) }}':
                     priority: {{ ifdata.stp.port_priority * 16 }}
-{%   endif %}
-{%   if ifdata.stp.port_type is defined %}
-{%     set port_type = ifdata.stp.port_type %}
+{%       endif %}
+{%       if ifdata.stp.port_type is defined %}
+{%         set port_type = ifdata.stp.port_type %}
                 admin-edge: {{ 'on' if port_type=='edge' else 'off' }}
                 auto-edge: {{ 'on' if port_type in ['normal','auto'] else 'off' }}
-{%   endif %}
-{%  elif ifdata.vlan.trunk_id is defined %}
-{%   for id in ifdata.vlan.trunk_id %}
-{%    if loop.first %}
+{%       endif %}
+{%       if ifdata.stp.port_cost is defined %}
+                path-cost: {{ ifdata.stp.port_cost }}
+{%       endif %}
+{%       if ifdata.vlan.trunk_id is defined %}
+{%         for id in ifdata.vlan.trunk_id %}
+{%           if loop.first %}
                 vlan:
-{%    endif %}
-{%    for vname,vdata in vlans.items() if vdata.id==id %}
-{%     if vname in ifdata.vlan.trunk and ifdata.vlan.trunk[vname].stp.port_priority is defined %}
+{%           endif %}
+{%           for vname,vdata in vlans.items() if vdata.id==id %}
+{%             if vname in ifdata.vlan.trunk and ifdata.vlan.trunk[vname].stp.port_priority is defined %}
                   '{{ id }}':
                     priority: {{ ifdata.vlan.trunk[vname].stp.port_priority * 16 }}
+{%             endif %}
+{%           endfor %}
+{%         endfor %}
+{%       endif %}
 {%     endif %}
-{%    endfor %}
-{%   endfor %}
-{%  endif %}
+{%   endif %}
 {% endfor %}

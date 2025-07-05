@@ -63,6 +63,7 @@ features:
   stp:
     supported_protocols: [ stp, rstp, pvrst ]  # PVRST requires release 5.6.0 or higher
     enable_per_port: True
+    long_port_cost: True
     port_type: True
   vlan:
     model: router

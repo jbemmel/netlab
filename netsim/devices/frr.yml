@@ -133,6 +133,7 @@ features:
   stp:
     supported_protocols: [ stp ]  # Implementation uses a separate bridge per VLAN
     enable_per_port: False
+    long_port_cost: False         # Standard Linux bridge only supports deprecated 16-bit cost value
   vlan:
     mixed_trunk: true
     model: router

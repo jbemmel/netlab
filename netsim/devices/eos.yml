@@ -96,6 +96,7 @@ features:
     # See https://www.arista.com/assets/data/pdf/Whitepapers/STPInteroperabilitywithCisco.pdf
     supported_protocols: [ stp, rstp, mstp, pvrst ]
     enable_per_port: True
+    long_port_cost: True
     port_type: True
   vlan:
     model: l3-switch

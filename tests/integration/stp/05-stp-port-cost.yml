@@ -1,0 +1,47 @@
+message: |
+  The devices under test form a loop in the red VLAN.
+
+  The link with the lowest port cost should be forwarding, all other links
+  should be blocked.
+
+module: [ vlan, stp ]
+
+groups:
+  _auto_create: true
+  duts:
+    members: [ dut ]
+  probes:
+    members: [ x1, x2 ]
+    device: eos
+    provider: clab
+
+nodes:
+  x1:
+    stp.priority: 4096  # High STP bridge priority (low value) -> becomes root
+
+vlans:
+  red:
+    mode: bridge
+    id: 42
+
+links:
+- x1:
+  dut:
+    stp.port_cost: 200000000 # Max allowed cost, must use long form
+  vlan.access: red
+- dut:
+  x2:
+  vlan.access: red
+
+validate:
+  port_cost:
+    wait: 40
+    wait_msg: Waiting for STP to enable all links
+    nodes: [ x2 ]
+    devices: [ eos ]
+    pass: Root path cost sum is correct
+    fail: Root path cost is incorrect; dut likely not setting cost correctly
+    stop_on_error: True
+    show: spanning-tree | json
+    valid: |
+      spanningTreeInstances.MST0.rootPort.cost.externalCost == 200020000
