@@ -4,6 +4,8 @@ message: |
 
 module: [ vlan, stp ]
 
+stp.protocol: pvrst # Some devices like Dell OS10 disable STP on VLANs if not in this mode
+
 groups:
   _auto_create: true
   duts:
@@ -26,12 +28,10 @@ links:
 - x1:
   dut:
     stp.port_cost: 200000000 # Max allowed cost, must use long form
-  # vlan.access: red
-  pool: l2only
+  vlan.access: red
 - dut:
   x2:                        # eos sets a default cost of 20000, based on link speed
-  # vlan.access: red
-  pool: l2only
+  vlan.access: red
 
 validate:
   port_cost:
@@ -44,4 +44,4 @@ validate:
     stop_on_error: True
     show: spanning-tree | json
     valid: |
-      spanningTreeInstances.MST0.rootPort.cost.externalCost == 200020000
+      spanningTreeInstances.VL42.rootPort.cost.externalCost == 200020000
