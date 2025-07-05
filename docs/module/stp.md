@@ -9,14 +9,14 @@ Many platforms already support and enable STP by default; this module provides e
 
 The following table describes per-platform support of individual STP features:
 
-| Operating system   | STP | MSTP | RSTP | Per-VLAN<br>RSTP | Enable<br>per port |
-| ------------------ |:---:|:---:|:---:|:---:|:---:|
-| Arista EOS[^EOS]   | ✅  | ✅  | ✅  | ✅ |  ✅ |
-| Aruba AOS-CX[^AOSCX] | ❗  | ✅  | ❌  | ✅ |  ✅ |
-| Cumulus Linux 4.x[^CL] | ✅  |  ❌  | ✅  | ❌   |  ✅ |
-| Cumulus 5.x (NVUE)[^CL] | ✅  |  ❌  | ✅  | ❌   |  ✅ |
-| Dell OS10[^OS10]   | ✅  | ✅  | ✅  | ❗ |  ✅ |
-| FRR[^FRR]          | ✅  |  ❌  |  ❌  |  ❌ | ❌   |
+| Operating system   | STP | MSTP | RSTP | Per-VLAN<br>RSTP | Enable<br>per port | Long form cost
+| ------------------ |:---:|:---:|:---:|:---:|:---:|:---:|
+| Arista EOS[^EOS]   | ✅  | ✅  | ✅  | ✅ |  ✅ | ✅ |
+| Aruba AOS-CX[^AOSCX] | ❗  | ✅  | ❌  | ✅ |  ✅ | ❌   |
+| Cumulus Linux 4.x[^CL] | ✅  |  ❌  | ✅  | ❌   |  ✅ | ❌   |
+| Cumulus 5.x (NVUE)[^CL] | ✅  |  ❌  | ✅  | ❌   |  ✅ | ✅ |
+| Dell OS10[^OS10]   | ✅  | ✅  | ✅  | ❗ |  ✅ | ✅ |
+| FRR[^FRR]          | ✅  |  ❌  |  ❌  |  ❌ | ❌   | ❌   |
 
 [^EOS]: MSTP is enabled by default
 [^AOSCX]: MSTP is enabled by default; STP is stated as not supported, but it is configured as MSTP (see tip below).

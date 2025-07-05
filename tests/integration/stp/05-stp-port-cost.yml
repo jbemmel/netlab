@@ -26,10 +26,12 @@ links:
 - x1:
   dut:
     stp.port_cost: 200000000 # Max allowed cost, must use long form
-  vlan.access: red
+  # vlan.access: red
+  pool: l2only
 - dut:
   x2:                        # eos sets a default cost of 20000, based on link speed
-  vlan.access: red
+  # vlan.access: red
+  pool: l2only
 
 validate:
   port_cost:

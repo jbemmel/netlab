@@ -36,6 +36,7 @@ links:
   h2:
   bandwidth: 2000
 
+
 validate:
   ping:
     description: IPv4 ping H1,H2 => R
