@@ -1,5 +1,5 @@
 {% if not stp.enable|default(True) %}
-no spanning-tree vlan 1-4094
+spanning-tree mode none
 {% else %}
 {%   set proto_map = { 'stp': 'rstp', 'rstp': 'rstp', 'pvrst': 'rapid-pvst', 'mstp': 'mstp' } %}
 {%   set mode = proto_map[stp.protocol] %}
