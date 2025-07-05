@@ -14,6 +14,7 @@ attributes:
   global:
     enable: bool
     stub_port_type: { type: str, valid_values: [ 'normal', 'edge', 'network', 'auto', 'none' ] }
+    # yamllint disable-line rule:line-length
     port_type: { type: str, valid_values: [ normal, edge, network, auto ] } # Apply this port_type to every interface that has only hosts connected
     protocol: { type: str, valid_values: [ stp, rstp, mstp, pvrst ] }
     # mstp = IEEE 802.1s, pvrst = Per-VLAN Rapid Spanning Tree (802.1w)
