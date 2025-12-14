@@ -1,0 +1,286 @@
+module netlab-topology-post-link-transform {
+  yang-version 1.1;
+  namespace "urn:netlab:topology:post-link-transform";
+  prefix "netlab-post-link";
+
+  import netlab-topology-init {
+    prefix netlab-init;
+    revision-date 2025-12-12;
+  }
+  import netlab-topology-setup {
+    prefix setup;
+    revision-date 2025-12-12;
+  }
+
+  description
+    "YANG model for netlab lab topology validation at Post-link-transform phase.
+     This model validates the topology after link transformation, when:
+     - Links have been transformed
+     - Interfaces have been created on nodes
+     - Link interfaces have been created
+     - Interface addressing has been assigned
+     
+     At this phase:
+     - Nodes have 'interfaces' lists
+     - Links have 'interfaces' lists with node attachments
+     - Interfaces have 'ifindex', 'ifname', 'ipv4', 'ipv6' attributes";
+
+  revision 2025-12-12 {
+    description "Initial version for post-link-transform phase validation";
+  }
+
+  container topology {
+    description
+      "Network lab topology structure at post-link-transform phase.";
+    
+    // Use base topology grouping for common elements
+    uses netlab-init:topology-base-grouping;
+
+    list nodes {
+      key "name";
+      description
+        "Lab devices (nodes) after link transformation. Nodes now have interfaces.";
+      
+      leaf name {
+        type string;
+        mandatory true;
+      }
+      
+      leaf id {
+        type uint32 {
+          range "1..150";
+        }
+        mandatory true;
+      }
+      
+      leaf device {
+        type string;
+        description "Device type for this node";
+      }
+      
+      leaf provider {
+        type string;
+        description "Virtualization provider for this node";
+      }
+      
+      leaf box {
+        type string;
+        description "Vagrant box or Docker container identifier";
+      }
+      
+      leaf mtu {
+        type uint32 {
+          range "64..9216";
+        }
+        description "Device-wide (system) MTU";
+      }
+      
+      anydata mgmt {
+        description "Management interface configuration";
+      }
+      
+      anydata loopback {
+        description "Loopback interface configuration";
+      }
+      
+      anydata af {
+        description "Address family configuration";
+      }
+      
+      leaf role {
+        type enumeration {
+          enum router;
+          enum host;
+          enum bridge;
+          enum gateway;
+        }
+        description "Node role";
+      }
+      
+      leaf-list module {
+        type string;
+        description "List of configuration modules";
+      }
+      
+      // Module-specific node attributes
+      anydata ospf {
+        description "OSPF module node attributes";
+      }
+      anydata bgp {
+        description "BGP module node attributes";
+      }
+      
+      // Nodes should have interfaces after link transformation
+      list interfaces {
+        key "ifindex";
+        description
+          "Node interfaces created during link transformation.";
+        
+        leaf ifindex {
+          type uint32 {
+            range "0..max";
+          }
+          description "Interface index";
+        }
+        
+        leaf ifname {
+          type string;
+          description "Interface name";
+        }
+        
+        leaf name {
+          type string;
+          description "Interface name/description";
+        }
+        
+        leaf ipv4 {
+          type union {
+            type boolean;
+            type string;
+          }
+          description "IPv4 address";
+        }
+        
+        leaf ipv6 {
+          type union {
+            type boolean;
+            type string;
+          }
+          description "IPv6 address";
+        }
+        
+        leaf linkindex {
+          type uint32 {
+            range "1..max";
+          }
+          description "Link index this interface belongs to";
+        }
+        
+        leaf type {
+          type string;
+          description "Interface type";
+        }
+        
+        leaf mtu {
+          type uint32 {
+            range "64..9216";
+          }
+          description "Interface MTU";
+        }
+        
+        anydata neighbors {
+          description "List of neighbor interfaces";
+        }
+        
+        anydata ospf {
+          description "OSPF module-specific interface attributes";
+        }
+        
+        anydata interface_data {
+          description "Other interface attributes";
+        }
+      }
+      
+      anydata node_attrs {
+        description "Other node attributes";
+      }
+    }
+
+    // Links now have interfaces
+    list links {
+      key "linkindex";
+      description
+        "Links between lab devices after link transformation. Links now have interfaces.";
+      
+      leaf linkindex {
+        type uint32 {
+          range "1..max";
+        }
+      }
+      
+      leaf node_count {
+        type uint32 {
+          range "1..max";
+        }
+        description "Number of nodes connected to this link";
+      }
+      
+      list interfaces {
+        key "node";
+        description
+          "Interfaces connected by this link. Each interface represents a node attachment.";
+        
+        leaf node {
+          type leafref {
+            path "../../../nodes/name";
+            require-instance true;
+          }
+          mandatory true;
+          description "Node name";
+        }
+        
+        leaf ipv4 {
+          type union {
+            type boolean;
+            type string;
+          }
+          description "IPv4 address";
+        }
+        
+        leaf ipv6 {
+          type union {
+            type boolean;
+            type string;
+          }
+          description "IPv6 address";
+        }
+        
+        leaf ifindex {
+          type uint32 {
+            range "0..max";
+          }
+          description "Interface index";
+        }
+        
+        leaf ifname {
+          type string;
+          description "Interface name";
+        }
+        
+        anydata interface_attrs {
+          description "Additional interface attributes";
+        }
+      }
+      
+      leaf type {
+        type enumeration {
+          enum p2p;
+          enum lan;
+          enum stub;
+          enum loopback;
+        }
+        description "Link type";
+      }
+      
+      anydata prefix {
+        description "Link prefix configuration";
+      }
+      
+      anydata link_attrs {
+        description "Other link attributes";
+      }
+    }
+
+    // Internal data structures
+    anydata Provider {
+      description "Provider internal data";
+    }
+    anydata pools {
+      description "Address pools";
+    }
+
+    must "count(nodes) > 0" {
+      error-message "Topology must contain at least one node";
+    }
+  }
+}

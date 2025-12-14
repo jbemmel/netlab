@@ -77,7 +77,7 @@ def adjust_inventory_host(
 
   if template_vars:
     node.inventory_hostname = node.name
-    node.netlab_device_type = host.get('netlab_device_type',host.get('ansible_network_os','none'))
+    node.netlab_device_type = node.get('netlab_device_type',node.get('ansible_network_os','none'))
     node.node_provider = n_provider
     node.netlab_interfaces = ([ node.get('loopback')] if 'loopback' in node else []) + \
                              node.get('interfaces',[])

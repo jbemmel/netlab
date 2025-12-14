@@ -1,0 +1,911 @@
+module netlab-topology-init {
+  yang-version 1.1;
+  namespace "urn:netlab:topology:init";
+  prefix "netlab-init";
+
+  description
+    "YANG model for netlab lab topology validation at the init phase.
+     
+     This model validates the topology after it has been loaded from the YAML file
+     and defaults have been merged, but before the setup phase begins. At this point:
+     
+     * The topology file has been read and parsed
+     * System and user defaults have been merged into the topology
+     * defaults.sources has been added (tracking which default files were loaded)
+     * topology.input has been set (tracking the source topology file path)
+     * Plugins have been initialized (topology.Plugin is present)
+     
+     This phase represents the topology as the user defined it, with defaults applied,
+     but before any transformation (node IDs, interfaces, etc.) has occurred.
+     
+     The model validates:
+     * User-defined topology structure (nodes, links, defaults)
+     * Attributes that are present after defaults merging
+     * Basic structural requirements (e.g., at least one node)
+     
+     Note: This model does NOT include transformed attributes such as:
+     * Node IDs (assigned during node transformation)
+     * Interfaces (created during link transformation)
+     * Internal structures like pools, Provider (added during transformation)";
+
+  revision 2025-12-12 {
+    description "Initial version";
+  }
+
+  // Groupings for reusable topology components
+  grouping defaults-grouping {
+    description "Topology-wide defaults grouping";
+    leaf device {
+      type string;
+      description
+        "Default device type used for all nodes unless overridden at the
+         node level. See supported platforms documentation for available
+         device types.";
+    }
+    leaf provider {
+      type string;
+      description
+        "Virtualization provider (libvirt, clab, or external). Default
+         value: libvirt.";
+    }
+    leaf name {
+      type string;
+      description
+        "Default topology name. If not specified, the first twelve
+         characters of the directory name are used (spaces and dots replaced
+         with underscores).";
+    }
+    leaf-list module {
+      type string;
+      description
+        "Default list of optional configuration modules used by this
+         network topology. Can be overridden at the node level.";
+    }
+    anydata yang_validation {
+      description "YANG validation plugin settings (flexible structure)";
+    }
+    anydata providers {
+      description "Provider-specific settings (flexible structure)";
+    }
+    anydata devices {
+      description "Device-specific default settings (flexible structure)";
+    }
+    anydata daemons {
+      description "Daemon-specific default settings (flexible structure)";
+    }
+    anydata outputs {
+      description "Output module default settings (flexible structure)";
+    }
+    anydata modules {
+      description "Module default settings (flexible structure)";
+    }
+    anydata attributes {
+      description "Attribute validation settings (flexible structure)";
+    }
+    anydata paths {
+      description "Search path settings (flexible structure)";
+    }
+    anydata tools {
+      description "External tools default settings (flexible structure)";
+    }
+    anydata warnings {
+      description "Warning settings (flexible structure)";
+    }
+    anydata const {
+      description "Constants and limits (flexible structure)";
+    }
+    anydata addressing {
+      description "Addressing pool defaults (flexible structure)";
+    }
+    anydata automation {
+      description "Automation settings (flexible structure)";
+    }
+    anydata hints {
+      description "Error hints settings (flexible structure)";
+    }
+    anydata multilab {
+      description "Multi-lab settings (flexible structure)";
+    }
+    anydata pools {
+      description "Address pools (flexible structure)";
+    }
+    anydata plugin {
+      description "Plugin settings (flexible structure)";
+    }
+    anydata roles {
+      description "Role settings (flexible structure)";
+    }
+    anydata vlan {
+      description "VLAN module defaults (flexible structure)";
+    }
+    anydata ospf {
+      description "OSPF module defaults (flexible structure)";
+    }
+    anydata isis {
+      description "ISIS module defaults (flexible structure)";
+    }
+    anydata evpn {
+      description "EVPN module defaults (flexible structure)";
+    }
+    anydata vrf {
+      description "VRF module defaults (flexible structure)";
+    }
+    anydata sr {
+      description "Segment Routing defaults (flexible structure)";
+    }
+    anydata mpls {
+      description "MPLS defaults (flexible structure)";
+    }
+    anydata srv6 {
+      description "SRv6 defaults (flexible structure)";
+    }
+    anydata bfd {
+      description "BFD defaults (flexible structure)";
+    }
+    anydata gateway {
+      description "Gateway defaults (flexible structure)";
+    }
+    anydata lag {
+      description "LAG defaults (flexible structure)";
+    }
+    anydata vxlan {
+      description "VXLAN defaults (flexible structure)";
+    }
+    anydata netlab {
+      description "Netlab-specific defaults (flexible structure)";
+    }
+    anydata ports {
+      description "Port mappings (flexible structure)";
+    }
+    anydata routing {
+      description "Routing policy defaults (flexible structure)";
+    }
+    anydata ripv2 {
+      description "RIP defaults (flexible structure)";
+    }
+    anydata bgp {
+      description "BGP module defaults (flexible structure)";
+    }
+    anydata dhcp {
+      description "DHCP defaults (flexible structure)";
+    }
+    anydata linux {
+      description "Linux defaults (flexible structure)";
+    }
+    anydata docker {
+      description "Docker defaults (flexible structure)";
+    }
+    anydata ansible {
+      description "Ansible defaults (flexible structure)";
+    }
+    anydata vagrant {
+      description "Vagrant defaults (flexible structure)";
+    }
+    anydata eigrp {
+      description "EIGRP defaults (flexible structure)";
+    }
+    anydata stp {
+      description "STP defaults (flexible structure)";
+    }
+    anydata lldp {
+      description "LLDP defaults (flexible structure)";
+    }
+    anydata ntp {
+      description "NTP defaults (flexible structure)";
+    }
+    anydata snmp {
+      description "SNMP defaults (flexible structure)";
+    }
+    anydata syslog {
+      description "Syslog defaults (flexible structure)";
+    }
+    anydata initial {
+      description "Initial configuration defaults (flexible structure)";
+    }
+    anydata custom_config {
+      description "Custom configuration defaults (flexible structure)";
+    }
+    anydata deploy {
+      description "Deployment defaults (flexible structure)";
+    }
+    anydata prefix {
+      description "Prefix defaults (flexible structure)";
+    }
+    anydata graph {
+      description "Graph defaults (flexible structure)";
+    }
+    anydata report {
+      description "Report defaults (flexible structure)";
+    }
+    
+    // Sources are added during the load phase (before init hook)
+    // This tracks which default files were loaded
+    container sources {
+      description
+        "Default source files. Source files are tracked during the load phase
+         to record which default files (user, system, extra) were merged into
+         the topology. This is added automatically and is not part of the
+         user-defined topology.";
+      leaf-list extra {
+        type string;
+        description "Additional source files that were included";
+      }
+      leaf-list list {
+        type string;
+        description "Complete list of source files that were loaded";
+      }
+      leaf-list user {
+        type string;
+        description "User source files (from ~/.netlab.yml) that were loaded";
+      }
+      leaf-list system {
+        type string;
+        description "System source files (from /etc/netlab/defaults.yml) that were loaded";
+      }
+      anydata other {
+        description "Other source settings (flexible structure)";
+      }
+    }
+  }
+
+  grouping nodes-grouping {
+    description "Nodes list grouping - lab devices at init phase";
+    list nodes {
+      key "name";
+      description
+        "Lab devices (nodes) at init phase. Nodes have basic structure with
+         name, device, and empty interfaces list. Node IDs, management IPs,
+         loopbacks, and other attributes are added during node transformation.";
+      
+      leaf name {
+        type string;
+        mandatory true;
+        description
+          "Node name. Node names can have up to 16 characters by default.
+           The maximum length can be changed with defaults.const.MAX_NODE_ID_LENGTH.";
+      }
+      
+      leaf device {
+        type string;
+        description
+          "Device type for this node. If not specified, the default device
+           type from defaults.device is used. See supported platforms
+           documentation for available device types.";
+      }
+      
+      leaf provider {
+        type string;
+        description
+          "Virtualization provider for this node. Allows mixing providers
+           within a single topology (e.g., some nodes using libvirt, others
+           using clab).";
+      }
+      
+      leaf id {
+        type uint32 {
+          range "1..150";
+        }
+        description
+          "Static node identifier (optional). If not specified, node ID is
+           assigned during node transformation based on node's position in
+           the nodes dictionary.";
+      }
+      
+      leaf role {
+        type enumeration {
+          enum router;
+          enum host;
+          enum bridge;
+          enum gateway;
+        }
+        description
+          "Node role. When set to 'host', the device does not get a loopback IP
+           address and uses static routing toward the default gateway.";
+      }
+      
+      leaf mtu {
+        type uint32 {
+          range "64..9216";
+        }
+        description
+          "Device-wide (system) MTU. This MTU is applied to all interfaces that
+           don't have an explicit MTU.";
+      }
+      
+      anydata loopback {
+        description
+          "Loopback interface configuration. Can be a boolean 'true' to enable
+           loopback, or a dictionary with custom IPv4/IPv6 addresses.";
+      }
+      
+      anydata mgmt {
+        description
+          "Management interface configuration. Can be specified by users to
+           override default management IP addresses.";
+      }
+      
+      leaf box {
+        type string;
+        description
+          "Vagrant box or Docker container identifier. Default images for
+           individual device types are defined in system defaults.";
+      }
+      
+      leaf-list group {
+        type string;
+        description
+          "List of group names this node belongs to. Groups can be used to
+           set node attributes, set Ansible group variables, or limit the
+           scope of netlab commands. Can be specified as a single string or
+           a list of strings.";
+      }
+      
+      // Interfaces list exists but is empty at init phase
+      // Full interface structure is created during link transformation
+      list interfaces {
+        description
+          "Node interfaces. At init phase, this list exists but is empty.
+           Interfaces are created during link transformation.";
+        key "ifindex";
+        
+        leaf ifindex {
+          type uint32 {
+            range "0..max";
+          }
+          description "Interface index";
+        }
+        
+        anydata interface_data {
+          description "Interface data (not yet created at init phase)";
+        }
+      }
+      
+      // Allow other node attributes that might be present from user input
+      anydata node_attrs {
+        description
+          "Other node attributes (flexible structure). Allows user-defined
+           attributes that are not explicitly modeled.";
+      }
+      
+      // Allow other node attributes (flexible structure for user-defined attributes)
+      anydata node_attrs {
+        description
+          "Other node attributes (flexible structure). Allows user-defined
+           attributes that are not explicitly modeled.";
+      }
+      
+      anydata clab {
+        description
+          "Containerlab-specific node settings. Can include attributes like
+           clab.type (device type when supported by containerlab) and
+           clab.license (license file needed for network devices).";
+      }
+      anydata libvirt {
+        description
+          "Libvirt-specific node settings. Can include attributes like
+           libvirt.nic_model (virtual NIC model: virtio, e1000, rtl8139, etc.).";
+      }
+      anydata external {
+        description
+          "External provider-specific node settings. Used when integrating
+           netlab topologies with external devices or management systems.";
+      }
+      
+      // Device-specific attributes (eos, frr, ios, etc.)
+      anydata eos {
+        description
+          "Arista EOS-specific node attributes (e.g., eos.systemmacaddr, eos.serialnumber).";
+      }
+      anydata frr {
+        description
+          "FRR-specific node attributes.";
+      }
+      anydata ios {
+        description
+          "Cisco IOS-specific node attributes.";
+      }
+      // Add other device-specific attributes as needed
+      
+      // Module-specific attributes (routing, bgp, ospf, etc.)
+      anydata ospf {
+        description "OSPF module-specific node attributes";
+      }
+      anydata bgp {
+        description "BGP module-specific node attributes";
+      }
+      anydata isis {
+        description "ISIS module-specific node attributes";
+      }
+      anydata vlan {
+        description "VLAN module-specific node attributes";
+      }
+      anydata vrf {
+        description "VRF module-specific node attributes";
+      }
+      anydata vrfs {
+        description
+          "Node-specific VRF definitions. Dictionary of VRF names and their attributes (rd, import, export, loopback, etc.).";
+      }
+      anydata af {
+        description "Address family configuration (ipv4, ipv6 flags)";
+      }
+      anydata routing {
+        description
+          "Routing module node attributes (e.g., routing.static for static routes).";
+      }
+      anydata bridge {
+        description
+          "Bridge module node attributes.";
+      }
+      anydata dhcp {
+        description
+          "DHCP module node attributes.";
+      }
+      // Add other module-specific attributes as needed
+
+      
+      container bgp {
+        when "../module[.='bgp']";
+        description
+          "BGP configuration. This container can only be present when the BGP
+           module is enabled on the node.";
+        must "../module[.='bgp']" {
+          error-message "BGP container can only be present when BGP module is enabled";
+        }
+        leaf as {
+          type uint32 {
+            range "1..4294967295";
+          }
+          mandatory true;
+          description
+            "BGP AS number. Nodes with the same AS number are automatically
+             grouped into an AS group (e.g., as65000).";
+        }
+      }
+      
+      must "device or ../defaults/device" {
+        error-message "Node must have a device type or a default device must be set";
+      }
+    }
+  }
+
+  grouping links-grouping {
+    description "Links list grouping - connections between lab devices at init phase";
+    list links {
+      description
+        "Links between lab devices at init phase. Links have basic structure
+         with linkindex and interfaces list containing only node names.
+         Interface addresses, types, and other details are added during
+         link transformation.";
+      key "linkindex";
+      
+      leaf linkindex {
+        type uint32 {
+          range "1..max";
+        }
+        description
+          "Link sequence number (starting with one), used to generate default
+           bridge names in libvirt. This is a read-only attribute set during
+           topology transformation.";
+      }
+      
+      list interfaces {
+        key "node";
+        description
+          "Interfaces connected by this link. At init phase, each interface
+           entry contains only the node name. Interface addresses, ifindex,
+           ifname, and other details are added during link transformation.";
+        min-elements 1;
+        
+        leaf node {
+          type leafref {
+            path "../../../nodes/name";
+            require-instance true;
+          }
+          mandatory true;
+          description
+            "Node name. At init phase, users can specify interface-specific attributes
+             like ifindex, ipv4, ipv6, etc. as dictionary values under the node key.";
+        }
+        
+        // Interface-specific attributes that can be specified by users at init phase
+        leaf ifindex {
+          type uint32 {
+            range "0..max";
+          }
+          description
+            "Interface index. Can be specified by users to control interface numbering.";
+        }
+        
+        leaf ipv4 {
+          type union {
+            type boolean;
+            type string;
+          }
+          description
+            "IPv4 address for this interface. Can be specified as an address string
+             or as a boolean 'true' for unnumbered interfaces.";
+        }
+        
+        leaf ipv6 {
+          type union {
+            type boolean;
+            type string;
+          }
+          description
+            "IPv6 address for this interface. Can be specified as an address string
+             or as a boolean 'true' for unnumbered interfaces.";
+        }
+        
+        // Other interface attributes that can be specified by users
+        anydata interface_attrs {
+          description "Other interface attributes (flexible structure for user-defined attributes)";
+        }
+      }
+      
+      // Link attributes that can be specified by users at init phase
+      leaf name {
+        type string;
+        description "Link name. Used for identification and in some provider configurations.";
+      }
+      
+      leaf type {
+        type enumeration {
+          enum p2p;
+          enum lan;
+          enum stub;
+          enum loopback;
+          enum tunnel;
+          enum vlan_member;
+          enum lag;
+        }
+        description
+          "Link type. When missing, link type is selected based on the number of devices
+           connected to the link.";
+      }
+      
+      leaf pool {
+        type string;
+        description
+          "Address pool name to use for this link. References a pool defined
+           in the addressing element.";
+      }
+      
+      anydata prefix {
+        description
+          "Prefix for this link. Can be a string (IPv4 CIDR or prefix name), 
+           a dictionary with ipv4/ipv6/allocation keys, or false (for layer-2-only links).";
+      }
+      
+      leaf bandwidth {
+        type uint32 {
+          range "1..max";
+        }
+        description
+          "Link bandwidth in Mbps. Used to configure interface bandwidth
+           when supported by the connected device(s).";
+      }
+      
+      leaf mtu {
+        type uint32 {
+          range "64..9216";
+        }
+        description "Link MTU. Valid range: 64-9216 bytes.";
+      }
+      
+      // Other link attributes that can be specified by users
+      anydata link_attrs {
+        description "Other link attributes (flexible structure for user-defined attributes)";
+      }
+      
+      container ra {
+        description
+          "IPv6 Router Advertisement (RA) configuration for this link.";
+        leaf disable {
+          type boolean;
+          description
+            "Disable Router Advertisements on this link.";
+        }
+        leaf slaac {
+          type boolean;
+          description
+            "Enable Stateless Address Autoconfiguration (SLAAC).";
+        }
+        leaf dhcp {
+          type string;
+          description
+            "DHCP configuration: 'all' or 'other'.";
+        }
+        leaf onlink {
+          type boolean;
+          description
+            "Advertise on-link prefix.";
+        }
+        anydata ra_config {
+          description
+            "Additional RA configuration attributes (flexible structure)";
+        }
+      }
+      
+      anydata link_attrs {
+        description
+          "Additional link attributes (flexible structure)";
+      }
+      
+      must "count(interfaces/node) >= 2 or type = 'stub' or type = 'loopback' or not(type)" {
+        error-message "Link must connect at least two nodes (unless it's a stub or loopback link, or type is not specified)";
+      }
+    }
+  }
+
+  grouping topology-common-grouping {
+    description "Common topology-level elements grouping";
+    anydata groups {
+      description
+        "Groups of lab objects (nodes, VLANs, or VRFs) with similar
+         attributes. Groups are specified as a dictionary with group names
+         as keys. Dictionary values can be either a list of member nodes or a
+         dictionary specifying members. Groups can be used to set node/VLAN/VRF
+         attributes, set Ansible group variables, or limit the scope of netlab
+         commands.";
+    }
+    anydata vlans {
+      description
+        "VLAN definitions. VLANs are specified as a dictionary with VLAN
+         names as keys. Each VLAN can have attributes like mode (bridge, irb,
+         route), links (list of links associated with the VLAN), and other
+         VLAN-specific settings.";
+    }
+    anydata validate {
+      description
+        "Lab validation tests. Validation tests are specified as a dictionary
+         with test names as keys. Each test can define nodes to test, wait
+         conditions, plugins to execute, and expected results.";
+    }
+    anydata prefix {
+      description
+        "Named IP prefixes that can be used to address links and VLANs or in
+         prefix lists or validation expressions. The dictionary keys are
+         prefix names (e.g., lan_1, lan_2, loopback); the values are dictionaries
+         defining individual prefixes with ipv4, ipv6, pool, and allocation
+         attributes (flexible structure).";
+    }
+    leaf-list plugin {
+      type string;
+      description
+        "List of transformation plugins to use with this topology. Plugins
+         extend the topology transformation process with custom logic.";
+    }
+    leaf-list input {
+      type string;
+      description
+        "Input topology file paths (internal). Tracks the source topology
+         files used during transformation.";
+    }
+    leaf message {
+      type string;
+      description
+        "Topology description message. Displayed after successful netlab initial
+         or netlab up commands to provide usage instructions.";
+    }
+  }
+
+  grouping topology-base-grouping {
+    description
+      "Base topology structure grouping. Contains common topology-level elements
+       (excluding nodes and links which vary by phase). This grouping can be
+       referenced by phase models to reuse common topology elements.";
+    
+    container defaults {
+      description
+        "Topology-wide defaults. System defaults are specified in the global
+         topology-defaults.yml file and imported into the lab topology under
+         the defaults top-level attribute. They can be overwritten with the
+         defaults element within the lab topology or from user- or system
+         defaults files.
+         
+         At the init phase, defaults.sources is already present (added
+         during the load phase to track which default files were loaded).";
+      uses defaults-grouping;
+    }
+
+    // Use nodes and links groupings
+    uses nodes-grouping;
+    uses links-grouping;
+
+    leaf-list module {
+      type string;
+      description
+        "Default list of optional configuration modules used by this network
+         topology. You can use device-level module attribute to override this
+         setting for individual nodes. Host nodes do not inherit global
+         configuration modules.";
+    }
+    
+    leaf message {
+      type string;
+      description
+        "Help message to display after successful 'netlab initial' or
+         'netlab up' commands. You can use this message to tell the end-user
+         how to use the lab.";
+    }
+    
+    leaf name {
+      type string;
+      description
+        "Topology name used to name Linux bridges when using libvirt Vagrant
+         plugin. If not specified, the first twelve characters of the directory
+         name are used (spaces and dots replaced with underscores).";
+    }
+    
+    leaf provider {
+      type string;
+      description
+        "Virtualization provider (libvirt, clab, or external). Default value:
+         libvirt.";
+    }
+    
+    leaf version {
+      type string;
+      description
+        "Minimum netlab version required to use this lab topology. You can
+         use either a simple version number or Python module version
+         specification (example: >= 1.6.3).";
+    }
+    
+    anydata addressing {
+      description
+        "IPv4 and IPv6 address pools used to address management, loopback,
+         LAN, P2P and stub interfaces. This can be specified by users in the
+         topology file. The internal pools structure is created during node
+         transformation.";
+    }
+    
+    anydata groups {
+      description
+        "Groups of lab objects (nodes, VLANs, or VRFs) with similar
+         attributes. Groups are specified as a dictionary with group names
+         as keys. Dictionary values can be either a list of member nodes or a
+         dictionary specifying members. Groups can be used to set node/VLAN/VRF
+         attributes, set Ansible group variables, or limit the scope of netlab
+         commands.";
+    }
+    
+    anydata vlans {
+      description
+        "VLAN definitions. VLANs are specified as a dictionary with VLAN
+         names as keys. Each VLAN can have attributes like mode (bridge, irb,
+         route), links (list of links associated with the VLAN), and other
+         VLAN-specific settings.";
+    }
+    
+    anydata validate {
+      description
+        "Lab validation tests. Validation tests are specified as a dictionary
+         with test names as keys. Each test can define nodes to test, wait
+         conditions, plugins to execute, and expected results.";
+    }
+    
+    anydata prefix {
+      description
+        "Named IP prefixes that can be used to address links and VLANs or in
+         prefix lists or validation expressions. The dictionary keys are
+         prefix names (e.g., lan_1, lan_2, loopback); the values are dictionaries
+         defining individual prefixes with ipv4, ipv6, pool, and allocation
+         attributes (flexible structure).";
+    }
+    
+    container tools {
+      description
+        "External network management tools deployed after the lab has been
+         started and configured. Tools are started as Docker containers and
+         can access the management network and management interfaces of lab
+         devices.";
+      anydata tool_definitions {
+        description
+          "Tool definitions. Each tool can have runtime, enabled, and
+           tool-specific configuration parameters (flexible structure)";
+      }
+    }
+    
+    leaf-list plugin {
+      type string;
+      description
+        "List of plugins used by this topology. Plugins extend netlab
+         functionality with custom configuration templates, validation tests,
+         or other features.";
+    }
+    
+    // Input is added during the load phase (before init hook)
+    // This tracks the source topology file path and any included default files
+    leaf-list input {
+      type string;
+      description
+        "Input topology file paths (internal). Tracks the source topology
+         files used during transformation. Added during the load phase to
+         record the main topology file and any included default files.";
+    }
+    
+    // Plugin is added during plugin initialization (during topology_init, before init hook)
+    // This contains the loaded plugin objects
+    anydata Plugin {
+      description
+        "Plugin internal data (flexible structure). Contains loaded plugin objects
+         added during plugin initialization. This is present at init phase
+         because plugins are loaded before the init hook is called.";
+    }
+    
+    // Note: Provider is an internal attribute added during transformation
+    // and is not part of user-defined topology. See phase-specific models
+    // for transformed attributes.
+    
+    anydata libvirt {
+      description
+        "Libvirt-specific topology settings. Can include libvirt-specific
+         configuration like bridge names, port mappings, and other
+         virtualization provider settings.";
+    }
+    
+    anydata clab {
+      description
+        "Containerlab-specific topology settings. Can include containerlab-specific
+         configuration like network names, container settings, and other
+         containerlab provider settings.";
+    }
+    
+    // Module-specific topology-level attributes
+    anydata ospf {
+      description "OSPF module topology-level attributes";
+    }
+    anydata bgp {
+      description "BGP module topology-level attributes";
+    }
+    anydata isis {
+      description "ISIS module topology-level attributes";
+    }
+    anydata vlan {
+      description "VLAN module topology-level attributes";
+    }
+    anydata vrf {
+      description "VRF module topology-level attributes";
+    }
+    anydata vrfs {
+      description
+        "Topology-level VRF definitions. Dictionary of VRF names and their attributes (rd, import, export, loopback, etc.).";
+    }
+    
+    // Note: input (topology file paths) is an internal attribute added during
+    // transformation and is not part of user-defined topology.
+    
+    // Global MUST statements
+    must "count(nodes) > 0" {
+      error-message "Topology must contain at least one node";
+    }
+  }
+
+  grouping topology-grouping {
+    description
+      "Topology structure grouping. Contains the complete topology container
+       structure for the init phase, including nodes and links. This grouping
+       can be referenced by other phase models to reuse the topology structure.
+       Note: Other phases may need to redefine nodes/links as they have different
+       structures after transformation.";
+    
+    uses topology-base-grouping;
+    
+    // Use nodes and links groupings
+    uses nodes-grouping;
+    uses links-grouping;
+  }
+
+  container topology {
+    description
+      "Network lab topology structure. The three major components that should
+       be present in every topology file are: nodes (lab devices), links
+       (between the lab devices), and defaults (topology-wide defaults like
+       default device type).";
+    uses topology-grouping;
+  }
+}
+
+

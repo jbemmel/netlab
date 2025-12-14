@@ -1,0 +1,7 @@
+{
+  "version": "1.0",
+  "netlab_version": "25.12.02",
+  "topology_file": "/home/jeroen/Projects/netlab/tests/integration/yang_validation/01-initial.yml",
+  "files": {},
+  "file_count": 0
+}

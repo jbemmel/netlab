@@ -1,0 +1,30 @@
+---
+yang_validation:
+  json_cache_enabled: true  # Automatically activate JSON cache when plugin is used
+  json_cache: null  # JSON cache file path (null = use NETLAB_JSON_CACHE env var or auto-detect)
+  validate_phases:  # List of transformation phases to validate at
+  - post_transform  # Default: only validate at final phase
+  dump_model: false  # Dump the model being validated to JSON files (for debugging)
+
+attributes:
+  global:
+    yang_validation:
+      json_cache_enabled:
+        type: bool
+        description: "Enable JSON cache building and loading"
+      json_cache:
+        type: str
+        _alt_types: [ NoneType ]
+        description: "JSON cache file path (null = use NETLAB_JSON_CACHE env var or auto-detect)"
+      validate_phases:
+        type: list
+        _subtype: str
+        valid_values: [ init, setup, pre_transform, post_node_transform, post_link_transform, post_transform ]
+        description: |
+          List of transformation phases to validate at. Valid phases: init, setup, pre_transform,
+          post_node_transform, post_link_transform, post_transform
+      dump_model:
+        type: bool
+        description: |
+          Dump the model being validated to JSON files (for debugging). Files are saved as
+          yang-validation-{phase}.json in the current directory.

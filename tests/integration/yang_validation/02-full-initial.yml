@@ -1,0 +1,219 @@
+---
+message: |
+  Comprehensive topology test for YANG validation plugin.
+
+  This test demonstrates all the different ways nodes and links with addressing
+  can be specified by users, covering:
+
+  Nodes:
+  * List of strings format
+  * Dictionary format with minimal attributes
+  * Dictionary format with device overrides
+  * Dictionary format with various attributes (id, role, mtu, loopback, mgmt, provider, box, group)
+
+  Links:
+  * String format (r1-r2)
+  * List format ([r1, r2])
+  * Dictionary with node keys (r1: { r2: {} })
+  * Dictionary with interfaces list
+  * Dictionary with interface attributes
+  * Stub links
+  * Links with various attributes (name, type, prefix, pool, mtu, bandwidth)
+
+  Addressing:
+  * Default addressing (no addressing section)
+  * Custom addressing pools
+  * Static prefixes on links
+  * Unnumbered interfaces
+  * L2-only links
+  * Dual-stack (IPv4 and IPv6)
+
+plugin: [yang_validation]
+
+defaults:
+  device: frr
+  yang_validation:
+    dump_model: true
+    json_cache_enabled: true
+    validate_phases:
+    - init
+    - setup
+    - pre_transform
+    - post_node_transform
+    - post_link_transform
+    - post_transform
+
+# Custom addressing pools
+addressing:
+  # Custom pool for unnumbered interfaces
+  unnumbered_p2p:
+    unnumbered: true
+
+  # Custom pool for L2-only links
+  l2only_custom:
+  # No ipv4 or ipv6 = L2-only
+
+  # Custom dual-stack pool
+  dual_stack:
+    ipv4: 192.168.100.0/24
+    ipv6: 2001:db8:100::/48
+    prefix: 26
+    prefix6: 64
+
+  # Override default pool
+  p2p:
+    ipv4: 10.10.0.0/16
+    prefix: 30
+
+groups:
+  _auto_create: True
+  routers:
+    members: [ r1, r2, r3, r4, r5, r6, r7, r8 ]
+    device: frr
+  hosts:
+    members: [ h1, h2 ]
+    role: host
+  switches:
+    members: [ s1, s2 ]
+    device: frr
+
+# Nodes specified in different ways
+# Note: In YAML, nodes must be either all list or all dictionary format
+# We use dictionary format here, but demonstrate list format in comments
+nodes:
+  # Dictionary format - minimal (just node name)
+  # Equivalent to list format: [ r1, r2 ]
+  r1:
+  r2:
+
+  # Dictionary format - minimal (just node name)
+  r3:
+
+  # Dictionary format - device override
+  r4:
+    device: frr
+
+  # Dictionary format - with static ID
+  r5:
+    id: 10
+
+  # Dictionary format - with role
+  r6:
+    role: router
+
+  # Dictionary format - with mtu
+  r7:
+    mtu: 9000
+
+  # Dictionary format - with custom loopback
+  r8:
+    loopback:
+      ipv4: 10.0.0.100/32
+
+  # Dictionary format - with custom mgmt
+  r9:
+    mgmt:
+      ipv4: 192.168.121.200
+
+  # Dictionary format - with provider
+  r10:
+    provider: libvirt
+
+  # Dictionary format - with box/image
+  r11:
+    box: debian/bookworm64
+
+  # Dictionary format - with group
+  h1:
+    group: [ hosts ]
+
+  # Dictionary format - with multiple attributes
+  h2:
+    role: host
+    group: [ hosts ]
+
+  # Dictionary format - switch nodes
+  s1:
+    group: [ switches ]
+  s2:
+    group: [ switches ]
+
+# Links specified in different ways
+links:
+# String format - point-to-point
+- r1-r2
+# String format - multi-access (3 nodes)
+- r1-r2-r3
+# List format - point-to-point
+- [ r4, r5 ]
+# List format - multi-access
+- [ r6, r7, r8 ]
+# Dictionary format - node keys, minimal
+- r9:
+  r10:
+# Dictionary format - node keys with link attributes
+- r1:
+  r4:
+  name: Core link
+  type: p2p
+# Dictionary format - node keys with prefix
+- r2:
+  r5:
+  prefix: 192.168.1.0/24
+# Dictionary format - node keys with dual-stack prefix
+- r3:
+  r6:
+  prefix:
+    ipv4: 192.168.2.0/24
+    ipv6: 2001:db8:1::/64
+# Dictionary format - node keys with pool
+- r7:
+  r8:
+  pool: dual_stack
+# Dictionary format - node keys with unnumbered pool
+- r9:
+  r10:
+  pool: unnumbered_p2p
+# Dictionary format - node keys with L2-only pool
+- s1:
+  s2:
+  pool: l2only_custom
+# Dictionary format - node keys with prefix: false (L2-only)
+- s1:
+  s2:
+  prefix: false
+# Dictionary format - interfaces list format
+- interfaces: [ r1, r11 ]
+  name: Interface list link
+# Dictionary format - interfaces list with attributes
+- interfaces: [ r2, r11 ]
+  bandwidth: 1000
+  mtu: 1500
+# Dictionary format - with interface-specific attributes
+- r3:
+    ifindex: 10
+  r11:
+    ifindex: 20
+  name: Custom ifindex link
+# Dictionary format - stub link (single node)
+- r4:
+# Dictionary format - stub link with attributes
+- r5:
+  name: Stub link
+  prefix: 192.168.10.0/24
+# Dictionary format - LAN link (explicit type)
+- r6:
+  r7:
+  r8:
+  type: lan
+  name: LAN link
+# Dictionary format - stub link (explicit type)
+- r9:
+  type: stub
+  name: Stub link explicit
+# Dictionary format - link with custom prefix allocation
+- r10:
+  r11:
+  prefix:
+    ipv4: 10.20.0.0/24
+    allocation: sequential

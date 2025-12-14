@@ -184,6 +184,19 @@ def save_to_pickle(path: str, data: Box) -> None:
 #
 read_cache: dict = {}
 
+def _read_from_cache(filename: str) -> typing.Optional[Box]:
+  """
+  Try to read a file from the in-memory cache.
+  
+  Args:
+    filename: The filename to look up in the cache
+    
+  Returns:
+    Box object with the file content if found, None otherwise
+  """
+  if filename in read_cache:
+    return Box(read_cache[filename],default_box=True,box_dots=True,default_box_none_transform=False)
+  return None
 class UniqueKeyLoader(yaml.SafeLoader):
   def construct_mapping(self, node : yaml.MappingNode, deep : bool = False) -> dict:
     mapping = []
@@ -212,8 +225,10 @@ def read_yaml(filename: typing.Optional[str] = None, string: typing.Optional[str
   if log.debug_active('defaults'):
     print(f"Reading {filename}")
 
-  if filename in read_cache:
-    return Box(read_cache[filename],default_box=True,box_dots=True,default_box_none_transform=False)
+  # Check normal cache
+  cached_result = _read_from_cache(filename)
+  if cached_result is not None:
+    return cached_result
 
   pickle_data = read_from_pickle(filename)
   if pickle_data:

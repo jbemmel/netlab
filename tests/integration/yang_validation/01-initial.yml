@@ -1,0 +1,45 @@
+---
+message: |
+  Basic topology test for YANG validation plugin.
+
+  This test verifies that:
+  * The YANG validation plugin can be included in a topology
+  * Basic topology structure is valid according to the YANG model
+  * JSON cache is automatically built when the plugin is used
+
+  The topology includes:
+  * Two nodes (r1, r2) connected by a link
+  * Basic OSPF configuration
+  * YANG validation plugin enabled
+
+plugin: [yang_validation]
+
+defaults:
+  device: frr
+  yang_validation:
+    dump_model: true
+    json_cache_enabled: true
+    validate_phases:
+    - init
+    - setup
+    - pre_transform
+    - post_node_transform
+    - post_link_transform
+    - post_transform
+
+groups:
+  _auto_create: True
+  routers:
+    members: [ r1, r2 ]
+    device: frr
+    module: [ ospf ]
+
+links:
+- r1:
+    r2:
+
+nodes:
+  r1:
+    device: frr
+  r2:
+    device: frr

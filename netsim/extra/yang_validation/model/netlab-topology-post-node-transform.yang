@@ -1,0 +1,294 @@
+module netlab-topology-post-node-transform {
+  yang-version 1.1;
+  namespace "urn:netlab:topology:post-node-transform";
+  prefix "netlab-post-node";
+
+  import netlab-topology-init {
+    prefix netlab-init;
+    revision-date 2025-12-12;
+  }
+  import netlab-topology-setup {
+    prefix setup;
+    revision-date 2025-12-12;
+  }
+
+  description
+    "YANG model for netlab lab topology validation at Post-node-transform phase.
+     This model validates the topology after node transformation, when:
+     - Nodes have been transformed (dictionaries converted to lists)
+     - Node IDs have been assigned
+     - Management IP addresses have been assigned
+     - Loopback addresses have been created (if needed)
+     
+     At this phase:
+     - Nodes are lists (not dictionaries)
+     - Nodes have 'id', 'mgmt', and 'loopback' attributes
+     - Links are not yet transformed (no interfaces created)";
+
+  revision 2025-12-12 {
+    description "Initial version for post-node-transform phase validation";
+  }
+
+  container topology {
+    description
+      "Network lab topology structure at post-node-transform phase.";
+    
+    // Use base topology grouping for common elements
+    uses netlab-init:topology-base-grouping;
+
+    // Nodes are now lists (after transformation) with IDs assigned
+    list nodes {
+      key "name";
+      description
+        "Lab devices (nodes) after node transformation. Nodes are now in list format
+         with IDs, management IPs, and loopback addresses assigned.";
+      
+      leaf name {
+        type string;
+        mandatory true;
+        description "Node name";
+      }
+      
+      leaf id {
+        type uint32 {
+          range "1..150";
+        }
+        mandatory true;
+        description
+          "Node identifier. Must be assigned during node transformation.";
+      }
+      
+      leaf device {
+        type string;
+        description "Device type for this node";
+      }
+      
+      leaf provider {
+        type string;
+        description "Virtualization provider for this node";
+      }
+      
+      leaf box {
+        type string;
+        description "Vagrant box or Docker container identifier";
+      }
+      
+      leaf mtu {
+        type uint32 {
+          range "64..9216";
+        }
+        description "Device-wide (system) MTU";
+      }
+      
+      anydata mgmt {
+        description
+          "Management interface configuration. Must be present after node transformation.";
+      }
+      
+      anydata loopback {
+        description
+          "Loopback interface configuration. May be present if node role is router.";
+      }
+      
+      anydata af {
+        description "Address family configuration";
+      }
+      
+      leaf role {
+        type enumeration {
+          enum router;
+          enum host;
+          enum bridge;
+          enum gateway;
+        }
+        description "Node role";
+      }
+      
+      leaf-list module {
+        type string;
+        description "List of configuration modules";
+      }
+      
+      leaf-list group {
+        type string;
+        description
+          "List of group names this node belongs to. Groups can be used to
+           set node attributes, set Ansible group variables, or limit the
+           scope of netlab commands.";
+      }
+      
+      // Module-specific node attributes
+      anydata ospf {
+        description "OSPF module node attributes";
+      }
+      anydata bgp {
+        description "BGP module node attributes";
+      }
+      
+      // Interfaces list exists but is empty at this phase (interfaces created during link transform)
+      list interfaces {
+        description
+          "Node interfaces. At this phase, the interfaces list exists but is empty.
+           Interfaces are created during link transformation.";
+        key "ifindex";
+        
+        leaf ifindex {
+          type uint32 {
+            range "0..max";
+          }
+          description "Interface index";
+        }
+        
+        anydata interface_data {
+          description "Interface data (not yet created at this phase)";
+        }
+      }
+      
+      // Allow other node attributes (flexible structure)
+      anydata node_attrs {
+        description "Other node attributes";
+      }
+    }
+
+    // Links have been initialized (interfaces list exists but not fully transformed)
+    list links {
+      description
+        "Links between lab devices. At this phase, links have been initialized
+         with an interfaces list, but interface addresses and node interfaces
+         are not yet created.";
+      key "linkindex";
+      
+      leaf linkindex {
+        type uint32 {
+          range "1..max";
+        }
+      }
+      
+      list interfaces {
+        description
+          "Interfaces connected by this link. At this phase, interfaces list exists
+           but interface addresses and node interfaces are not yet created.";
+        key "node";
+        
+        leaf node {
+          type leafref {
+            path "../../../nodes/name";
+            require-instance true;
+          }
+          mandatory true;
+          description "Node name";
+        }
+        
+        // Interface-specific attributes that can be specified by users
+        leaf ifindex {
+          type uint32 {
+            range "0..max";
+          }
+          description
+            "Interface index. Can be specified by users to control interface numbering.";
+        }
+        
+        leaf ipv4 {
+          type union {
+            type boolean;
+            type string;
+          }
+          description
+            "IPv4 address for this interface. Can be specified as an address string
+             or as a boolean 'true' for unnumbered interfaces.";
+        }
+        
+        leaf ipv6 {
+          type union {
+            type boolean;
+            type string;
+          }
+          description
+            "IPv6 address for this interface. Can be specified as an address string
+             or as a boolean 'true' for unnumbered interfaces.";
+        }
+        
+        anydata interface_attrs {
+          description "Other interface attributes (flexible structure for user-defined attributes)";
+        }
+      }
+      
+      // Link attributes that can be specified by users
+      leaf name {
+        type string;
+        description "Link name. Used for identification and in some provider configurations.";
+      }
+      
+      leaf type {
+        type enumeration {
+          enum p2p;
+          enum lan;
+          enum stub;
+          enum loopback;
+        }
+        description
+          "Link type. When missing, link type is selected based on the number of devices
+           connected to the link.";
+      }
+      
+      leaf pool {
+        type string;
+        description
+          "Address pool name to use for this link. References a pool defined
+           in the addressing element.";
+      }
+      
+      anydata prefix {
+        description
+          "Prefix for this link. Can be a string (IPv4 CIDR or prefix name), 
+           a dictionary with ipv4/ipv6/allocation keys, or false (for layer-2-only links).";
+      }
+      
+      leaf bandwidth {
+        type uint32 {
+          range "1..max";
+        }
+        description
+          "Link bandwidth in Mbps. Used to configure interface bandwidth
+           when supported by the connected device(s).";
+      }
+      
+      leaf mtu {
+        type uint32 {
+          range "64..9216";
+        }
+        description "Link MTU. Valid range: 64-9216 bytes.";
+      }
+      
+      anydata link_attrs {
+        description "Other link attributes";
+      }
+    }
+
+    // Addressing and pools are added during node transformation
+    anydata addressing {
+      description
+        "Addressing configuration (mgmt, loopback, p2p, lan, router_id, vrf_loopback, l2only).
+         Added during node transformation.";
+    }
+    
+    // Internal data structures
+    anydata Provider {
+      description "Provider internal data";
+    }
+    anydata pools {
+      description
+        "Address pools (mgmt, loopback, p2p, lan, router_id, vrf_loopback, l2only).
+         Added during node transformation.";
+    }
+
+    must "count(nodes) > 0" {
+      error-message "Topology must contain at least one node";
+    }
+    
+    // MUST: All nodes must have IDs after node transformation
+    must "count(nodes[id]) = count(nodes)" {
+      error-message "All nodes must have IDs assigned after node transformation";
+    }
+  }
+}

@@ -1,0 +1,56 @@
+module netlab-topology-setup {
+  yang-version 1.1;
+  namespace "urn:netlab:topology:setup";
+  prefix "netlab-setup";
+
+  import netlab-topology-init {
+    prefix netlab-init;
+    revision-date 2025-12-12;
+  }
+
+  description
+    "YANG model for netlab lab topology validation at Setup phase.
+     This model validates the topology after transform_setup, when:
+     - Topology file is loaded and defaults are merged
+     - Plugins are initialized
+     - Groups are initialized
+     - Addressing pools are setup
+     - Basic node validation is done
+     
+     This model extends the init phase model and only includes attributes
+     that are added or modified during the setup phase.
+     
+     At this phase:
+     - Nodes are dictionaries (converted to lists for validation)
+     - Links are in canonical form but not yet transformed
+     - No node IDs assigned yet
+     - No interfaces created yet";
+
+  revision 2025-12-12 {
+    description "Initial version for setup phase validation";
+  }
+
+  container topology {
+    description
+      "Network lab topology structure at setup phase.
+       This extends the init phase model with setup-specific attributes.";
+    
+    // Use topology grouping from init phase
+    uses netlab-init:topology-grouping;
+    
+    // NEW in setup phase: Internal provider data
+    anydata Provider {
+      description
+        "Provider internal data (flexible structure). Internal representation
+         of provider configuration. Added during transform_setup.";
+    }
+    
+    // NEW in setup phase: Addressing pools (processed during transform_setup)
+    anydata pools {
+      description
+        "Address pools (internal representation, flexible structure). This
+         is the processed form of the addressing element after addressing setup.
+         Added during transform_setup.";
+    }
+  }
+}
