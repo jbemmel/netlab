@@ -139,6 +139,17 @@ module netlab-topology-post-link-transform {
            connected to the link.";
       }
       
+      leaf role {
+        type enumeration {
+          enum stub;
+          enum passive;
+          enum external;
+        }
+        description
+          "Link role. Can be set to 'stub' for stub links, 'passive' for passive
+           links in routing modules, or 'external' for external links (e.g., EBGP).";
+      }
+      
       leaf pool {
         type string;
         description
@@ -173,6 +184,13 @@ module netlab-topology-post-link-transform {
           range "1..max";
         }
         description "Number of nodes connected to this link";
+      }
+      
+      leaf bridge {
+        type string;
+        description
+          "Bridge name for this link. Used in libvirt provider to specify
+           the Linux bridge name for the link.";
       }
       
       container ra {

@@ -39,11 +39,11 @@
                 "post_link_transform",
                 "post_transform"
               ],
-              "description": "List of transformation phases to validate at. Valid phases: init, setup, pre_transform, post_node_transform, post_link_transform, post_transform"
+              "description": "List of transformation phases to validate at. Valid phases: init, setup, pre_transform,\npost_node_transform, post_link_transform, post_transform\n"
             },
             "dump_model": {
               "type": "bool",
-              "description": "Dump the model being validated to JSON files (for debugging). Files are saved as yang-validation-{phase}.json in the current directory."
+              "description": "Dump the model being validated to JSON files (for debugging). Files are saved as\nyang-validation-{phase}.json in the current directory.\n"
             }
           },
           "addressing": {
@@ -1772,7 +1772,35 @@
               "-c",
               "show $@"
             ],
-            "netlab_initial": "always"
+            "netlab_initial": "always",
+            "netlab_frr_daemons": {
+              "bfd": [
+                "bfdd"
+              ],
+              "bgp": [
+                "bgpd"
+              ],
+              "ospf": [
+                "ospfd",
+                "ospf6d"
+              ],
+              "ripv2": [
+                "ripd",
+                "ripngd"
+              ],
+              "isis": [
+                "isisd"
+              ],
+              "vrf": [
+                "bgpd"
+              ],
+              "gateway": [
+                "vrrpd"
+              ],
+              "mpls": [
+                "ldpd"
+              ]
+            }
           },
           "evpn": {},
           "features": {
@@ -7139,7 +7167,6 @@
           "/home/jeroen/Projects/netlab/netsim/validate"
         ],
         "plugin": [
-          "/home/jeroen/Projects/netlab",
           "/home/jeroen/Projects/netlab/tests/integration/yang_validation",
           "/home/jeroen/.netlab",
           "/home/jeroen/Projects/netlab/netsim/extra"
@@ -7147,7 +7174,6 @@
         "custom": {
           "dirs": [
             "/home/jeroen/Projects/netlab/tests/integration/yang_validation",
-            "/home/jeroen/Projects/netlab",
             "/home/jeroen/.netlab",
             "/home/jeroen/Projects/netlab/netsim/extra"
           ],
@@ -9573,93 +9599,95 @@
         "device": "frr"
       }
     },
-    "nodes": [
-      {
-        "name": "r1",
-        "interfaces": []
-      },
-      {
-        "name": "r2",
-        "interfaces": []
-      },
-      {
-        "name": "r3",
-        "interfaces": []
-      },
-      {
-        "device": "frr",
-        "name": "r4",
-        "interfaces": []
-      },
-      {
-        "id": 10,
-        "name": "r5",
-        "interfaces": []
-      },
-      {
-        "role": "router",
-        "name": "r6",
-        "interfaces": []
-      },
-      {
-        "mtu": 9000,
-        "name": "r7",
-        "interfaces": []
-      },
-      {
-        "loopback": {
-          "ipv4": "10.0.0.100/32"
+    "nodes": {
+      "node_dict": {
+        "r1": {
+          "name": "r1",
+          "interfaces": []
         },
-        "name": "r8",
-        "interfaces": []
-      },
-      {
-        "mgmt": {
-          "ipv4": "192.168.121.200"
+        "r2": {
+          "name": "r2",
+          "interfaces": []
         },
-        "name": "r9",
-        "interfaces": []
-      },
-      {
-        "provider": "libvirt",
-        "name": "r10",
-        "interfaces": []
-      },
-      {
-        "box": "debian/bookworm64",
-        "name": "r11",
-        "interfaces": []
-      },
-      {
-        "group": [
-          "hosts"
-        ],
-        "name": "h1",
-        "interfaces": []
-      },
-      {
-        "role": "host",
-        "group": [
-          "hosts"
-        ],
-        "name": "h2",
-        "interfaces": []
-      },
-      {
-        "group": [
-          "switches"
-        ],
-        "name": "s1",
-        "interfaces": []
-      },
-      {
-        "group": [
-          "switches"
-        ],
-        "name": "s2",
-        "interfaces": []
+        "r3": {
+          "name": "r3",
+          "interfaces": []
+        },
+        "r4": {
+          "device": "frr",
+          "name": "r4",
+          "interfaces": []
+        },
+        "r5": {
+          "id": 10,
+          "name": "r5",
+          "interfaces": []
+        },
+        "r6": {
+          "role": "router",
+          "name": "r6",
+          "interfaces": []
+        },
+        "r7": {
+          "mtu": 9000,
+          "name": "r7",
+          "interfaces": []
+        },
+        "r8": {
+          "loopback": {
+            "ipv4": "10.0.0.100/32"
+          },
+          "name": "r8",
+          "interfaces": []
+        },
+        "r9": {
+          "mgmt": {
+            "ipv4": "192.168.121.200"
+          },
+          "name": "r9",
+          "interfaces": []
+        },
+        "r10": {
+          "provider": "libvirt",
+          "name": "r10",
+          "interfaces": []
+        },
+        "r11": {
+          "box": "debian/bookworm64",
+          "name": "r11",
+          "interfaces": []
+        },
+        "h1": {
+          "group": [
+            "hosts"
+          ],
+          "name": "h1",
+          "interfaces": []
+        },
+        "h2": {
+          "role": "host",
+          "group": [
+            "hosts"
+          ],
+          "name": "h2",
+          "interfaces": []
+        },
+        "s1": {
+          "group": [
+            "switches"
+          ],
+          "name": "s1",
+          "interfaces": []
+        },
+        "s2": {
+          "group": [
+            "switches"
+          ],
+          "name": "s2",
+          "interfaces": []
+        }
       }
-    ],
+    },
     "links": [
       {
         "interfaces": [

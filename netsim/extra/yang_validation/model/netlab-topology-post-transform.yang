@@ -141,6 +141,17 @@ module netlab-topology-post-transform {
            connected to the link.";
       }
       
+      leaf role {
+        type enumeration {
+          enum stub;
+          enum passive;
+          enum external;
+        }
+        description
+          "Link role. Can be set to 'stub' for stub links, 'passive' for passive
+           links in routing modules, or 'external' for external links (e.g., EBGP).";
+      }
+      
       leaf pool {
         type string;
         description

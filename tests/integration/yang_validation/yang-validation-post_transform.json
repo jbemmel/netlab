@@ -1,6 +1,6 @@
 {
   "netlab-topology-post-transform:topology": {
-    "message": "Basic topology test for YANG validation plugin.\n\nThis test verifies that:\n* The YANG validation plugin can be included in a topology\n* Basic topology structure is valid according to the YANG model\n* JSON cache is automatically built when the plugin is used\n\nThe topology includes:\n* Two nodes (r1, r2) connected by a link\n* Basic OSPF configuration\n* YANG validation plugin enabled\n",
+    "message": "Comprehensive topology test for YANG validation plugin.\n\nThis test demonstrates all the different ways nodes and links with addressing\ncan be specified by users, covering:\n\nNodes:\n* List of strings format\n* Dictionary format with minimal attributes\n* Dictionary format with device overrides\n* Dictionary format with various attributes (id, role, mtu, loopback, mgmt, provider, box, group)\n\nLinks:\n* String format (r1-r2)\n* List format ([r1, r2])\n* Dictionary with node keys (r1: { r2: {} })\n* Dictionary with interfaces list\n* Dictionary with interface attributes\n* Stub links\n* Links with various attributes (name, type, prefix, pool, mtu, bandwidth)\n\nAddressing:\n* Default addressing (no addressing section)\n* Custom addressing pools\n* Static prefixes on links\n* Unnumbered interfaces\n* L2-only links\n* Dual-stack (IPv4 and IPv6)\n",
     "plugin": [
       "yang_validation"
     ],
@@ -39,11 +39,11 @@
                 "post_link_transform",
                 "post_transform"
               ],
-              "description": "List of transformation phases to validate at. Valid phases: init, setup, pre_transform, post_node_transform, post_link_transform, post_transform"
+              "description": "List of transformation phases to validate at. Valid phases: init, setup, pre_transform,\npost_node_transform, post_link_transform, post_transform\n"
             },
             "dump_model": {
               "type": "bool",
-              "description": "Dump the model being validated to JSON files (for debugging). Files are saved as yang-validation-{phase}.json in the current directory."
+              "description": "Dump the model being validated to JSON files (for debugging). Files are saved as\nyang-validation-{phase}.json in the current directory.\n"
             }
           },
           "addressing": {
@@ -1772,7 +1772,35 @@
               "-c",
               "show $@"
             ],
-            "netlab_initial": "always"
+            "netlab_initial": "always",
+            "netlab_frr_daemons": {
+              "bfd": [
+                "bfdd"
+              ],
+              "bgp": [
+                "bgpd"
+              ],
+              "ospf": [
+                "ospfd",
+                "ospf6d"
+              ],
+              "ripv2": [
+                "ripd",
+                "ripngd"
+              ],
+              "isis": [
+                "isisd"
+              ],
+              "vrf": [
+                "bgpd"
+              ],
+              "gateway": [
+                "vrrpd"
+              ],
+              "mpls": [
+                "ldpd"
+              ]
+            }
           },
           "evpn": {},
           "features": {
@@ -7139,7 +7167,6 @@
           "/home/jeroen/Projects/netlab/netsim/validate"
         ],
         "plugin": [
-          "/home/jeroen/Projects/netlab",
           "/home/jeroen/Projects/netlab/tests/integration/yang_validation",
           "/home/jeroen/.netlab",
           "/home/jeroen/Projects/netlab/netsim/extra"
@@ -7147,7 +7174,6 @@
         "custom": {
           "dirs": [
             "/home/jeroen/Projects/netlab/tests/integration/yang_validation",
-            "/home/jeroen/Projects/netlab",
             "/home/jeroen/.netlab",
             "/home/jeroen/Projects/netlab/netsim/extra"
           ],
@@ -9526,189 +9552,7 @@
         "system": []
       },
       "plugin": [],
-      "name": "yangvalidati",
-      "module": [
-        "ospf"
-      ]
-    },
-    "groups": {
-      "routers": {
-        "members": [
-          "r1",
-          "r2"
-        ],
-        "device": "frr",
-        "module": [
-          "ospf"
-        ]
-      }
-    },
-    "links": [
-      {
-        "interfaces": [
-          {
-            "node": "r1",
-            "ipv4": "10.1.0.1/30",
-            "ifindex": 1,
-            "ifname": "eth1"
-          },
-          {
-            "node": "r2",
-            "ipv4": "10.1.0.2/30",
-            "ifindex": 1,
-            "ifname": "eth1"
-          }
-        ],
-        "linkindex": 1,
-        "node_count": 2,
-        "type": "p2p",
-        "prefix": {
-          "ipv4": "10.1.0.0/30"
-        }
-      }
-    ],
-    "nodes": [
-      {
-        "device": "frr",
-        "name": "r1",
-        "interfaces": [
-          {
-            "ipv4": "10.1.0.1/30",
-            "linkindex": 1,
-            "type": "p2p",
-            "name": "r1 -> r2",
-            "ifindex": 1,
-            "ifname": "eth1",
-            "mtu": 1500,
-            "neighbors": [
-              {
-                "ipv4": "10.1.0.2/30",
-                "ifname": "eth1",
-                "node": "r2"
-              }
-            ],
-            "ospf": {
-              "area": "0.0.0.0",
-              "passive": false,
-              "network_type": "point-to-point"
-            }
-          }
-        ],
-        "module": [
-          "ospf"
-        ],
-        "box": "debian/bookworm64",
-        "ospf": {
-          "area": "0.0.0.0",
-          "router_id": "10.0.0.1",
-          "af": {
-            "ipv4": true
-          }
-        },
-        "id": 1,
-        "role": "router",
-        "mtu": 1500,
-        "af": {
-          "ipv4": true
-        },
-        "mgmt": {
-          "ifname": "eth0",
-          "mac": "ca:fe:00:01:00:00",
-          "ipv4": "192.168.121.101"
-        },
-        "loopback": {
-          "type": "loopback",
-          "neighbors": [],
-          "virtual_interface": true,
-          "ifindex": 0,
-          "ifname": "lo",
-          "ipv4": "10.0.0.1/32",
-          "ospf": {
-            "area": "0.0.0.0",
-            "passive": false
-          }
-        }
-      },
-      {
-        "device": "frr",
-        "name": "r2",
-        "interfaces": [
-          {
-            "ipv4": "10.1.0.2/30",
-            "linkindex": 1,
-            "type": "p2p",
-            "name": "r2 -> r1",
-            "ifindex": 1,
-            "ifname": "eth1",
-            "mtu": 1500,
-            "neighbors": [
-              {
-                "ipv4": "10.1.0.1/30",
-                "ifname": "eth1",
-                "node": "r1"
-              }
-            ],
-            "ospf": {
-              "area": "0.0.0.0",
-              "passive": false,
-              "network_type": "point-to-point"
-            }
-          }
-        ],
-        "module": [
-          "ospf"
-        ],
-        "box": "debian/bookworm64",
-        "ospf": {
-          "area": "0.0.0.0",
-          "router_id": "10.0.0.2",
-          "af": {
-            "ipv4": true
-          }
-        },
-        "id": 2,
-        "role": "router",
-        "mtu": 1500,
-        "af": {
-          "ipv4": true
-        },
-        "mgmt": {
-          "ifname": "eth0",
-          "mac": "ca:fe:00:02:00:00",
-          "ipv4": "192.168.121.102"
-        },
-        "loopback": {
-          "type": "loopback",
-          "neighbors": [],
-          "virtual_interface": true,
-          "ifindex": 0,
-          "ifname": "lo",
-          "ipv4": "10.0.0.2/32",
-          "ospf": {
-            "area": "0.0.0.0",
-            "passive": false
-          }
-        }
-      }
-    ],
-    "input": [
-      "/home/jeroen/Projects/netlab/tests/integration/yang_validation/01-initial.yml",
-      "/home/jeroen/.netlab.yml",
-      "package:topology-defaults.yml"
-    ],
-    "Plugin": [
-      "<module 'netlab.plugin.yang_validation' from '/home/jeroen/Projects/netlab/netsim/extra/yang_validation/plugin.py'>",
-      "<module 'netsim.roles.host' from '/home/jeroen/Projects/netlab/netsim/roles/host.py'>",
-      "<module 'netsim.roles.router' from '/home/jeroen/Projects/netlab/netsim/roles/router.py'>",
-      "<module 'netsim.roles.bridge' from '/home/jeroen/Projects/netlab/netsim/roles/bridge.py'>"
-    ],
-    "name": "yangvalidati",
-    "provider": "libvirt",
-    "module": [
-      "ospf"
-    ],
-    "ospf": {
-      "area": "0.0.0.0"
+      "name": "yangvalidati"
     },
     "addressing": {
       "lan": {
@@ -9722,9 +9566,9 @@
         "ipv4_pfx": "10.0.0.0/24"
       },
       "p2p": {
-        "ipv4": "10.1.0.0/16",
+        "ipv4": "10.10.0.0/16",
         "prefix": 30,
-        "ipv4_pfx": "10.1.0.0/16"
+        "ipv4_pfx": "10.10.0.0/16"
       },
       "router_id": {
         "ipv4": "10.0.0.0/24",
@@ -9744,32 +9588,1644 @@
         "ipv4": "10.2.0.0/24",
         "prefix": 32,
         "ipv4_pfx": "10.2.0.0/24"
+      },
+      "unnumbered_p2p": {
+        "unnumbered": true
+      },
+      "l2only_custom": {},
+      "dual_stack": {
+        "ipv4": "192.168.100.0/24",
+        "ipv6": "2001:db8:100::/48",
+        "prefix": 26,
+        "prefix6": 64,
+        "ipv4_pfx": "192.168.100.0/24",
+        "ipv6_pfx": "2001:db8:100::/48"
       }
     },
+    "groups": {
+      "routers": {
+        "members": [
+          "r1",
+          "r2",
+          "r3",
+          "r4",
+          "r5",
+          "r6",
+          "r7",
+          "r8"
+        ],
+        "device": "frr"
+      },
+      "hosts": {
+        "members": [
+          "h1",
+          "h2"
+        ],
+        "node_data": {
+          "role": "host"
+        }
+      },
+      "switches": {
+        "members": [
+          "s1",
+          "s2"
+        ],
+        "device": "frr"
+      }
+    },
+    "nodes": {
+      "node_dict": {
+        "r1": {
+          "name": "r1",
+          "interfaces": [
+            {
+              "ipv4": "10.10.0.1/30",
+              "linkindex": 1,
+              "type": "p2p",
+              "name": "r1 -> r2",
+              "ifindex": 1,
+              "ifname": "eth1",
+              "mtu": 1500,
+              "neighbors": [
+                {
+                  "ipv4": "10.10.0.2/30",
+                  "ifname": "eth1",
+                  "node": "r2"
+                }
+              ]
+            },
+            {
+              "ipv4": "172.16.0.1/24",
+              "linkindex": 2,
+              "type": "lan",
+              "bridge": "yangvalida_2",
+              "name": "r1 -> [r2,r3]",
+              "ifindex": 2,
+              "ifname": "eth2",
+              "mtu": 1500,
+              "neighbors": [
+                {
+                  "ipv4": "172.16.0.2/24",
+                  "ifname": "eth2",
+                  "node": "r2"
+                },
+                {
+                  "ipv4": "172.16.0.3/24",
+                  "ifname": "eth1",
+                  "node": "r3"
+                }
+              ]
+            },
+            {
+              "ipv4": "10.10.0.13/30",
+              "name": "Core link",
+              "type": "p2p",
+              "linkindex": 6,
+              "ifindex": 3,
+              "ifname": "eth3",
+              "mtu": 1500,
+              "neighbors": [
+                {
+                  "ipv4": "10.10.0.14/30",
+                  "ifname": "eth2",
+                  "node": "r4"
+                }
+              ]
+            },
+            {
+              "ipv4": "10.10.0.17/30",
+              "name": "Interface list link",
+              "linkindex": 13,
+              "type": "p2p",
+              "ifindex": 4,
+              "ifname": "eth4",
+              "mtu": 1500,
+              "neighbors": [
+                {
+                  "ipv4": "10.10.0.18/30",
+                  "ifname": "eth1",
+                  "node": "r11"
+                }
+              ]
+            }
+          ],
+          "device": "frr",
+          "box": "debian/bookworm64",
+          "id": 1,
+          "role": "router",
+          "mtu": 1500,
+          "af": {
+            "ipv4": true
+          },
+          "mgmt": {
+            "ifname": "eth0",
+            "mac": "ca:fe:00:01:00:00",
+            "ipv4": "192.168.121.101"
+          },
+          "loopback": {
+            "type": "loopback",
+            "neighbors": [],
+            "virtual_interface": true,
+            "ifindex": 0,
+            "ifname": "lo",
+            "ipv4": "10.0.0.1/32"
+          }
+        },
+        "r2": {
+          "name": "r2",
+          "interfaces": [
+            {
+              "ipv4": "10.10.0.2/30",
+              "linkindex": 1,
+              "type": "p2p",
+              "name": "r2 -> r1",
+              "ifindex": 1,
+              "ifname": "eth1",
+              "mtu": 1500,
+              "neighbors": [
+                {
+                  "ipv4": "10.10.0.1/30",
+                  "ifname": "eth1",
+                  "node": "r1"
+                }
+              ]
+            },
+            {
+              "ipv4": "172.16.0.2/24",
+              "linkindex": 2,
+              "type": "lan",
+              "bridge": "yangvalida_2",
+              "name": "r2 -> [r1,r3]",
+              "ifindex": 2,
+              "ifname": "eth2",
+              "mtu": 1500,
+              "neighbors": [
+                {
+                  "ipv4": "172.16.0.1/24",
+                  "ifname": "eth2",
+                  "node": "r1"
+                },
+                {
+                  "ipv4": "172.16.0.3/24",
+                  "ifname": "eth1",
+                  "node": "r3"
+                }
+              ]
+            },
+            {
+              "ipv4": "192.168.1.1/24",
+              "linkindex": 7,
+              "type": "p2p",
+              "name": "r2 -> r5",
+              "ifindex": 3,
+              "ifname": "eth3",
+              "mtu": 1500,
+              "neighbors": [
+                {
+                  "ipv4": "192.168.1.2/24",
+                  "ifname": "eth2",
+                  "node": "r5"
+                }
+              ]
+            },
+            {
+              "ipv4": "10.10.0.22/30",
+              "bandwidth": 1000,
+              "mtu": 1500,
+              "linkindex": 14,
+              "type": "p2p",
+              "name": "r2 -> r11",
+              "ifindex": 4,
+              "ifname": "eth4",
+              "neighbors": [
+                {
+                  "ipv4": "10.10.0.21/30",
+                  "ifname": "eth2",
+                  "node": "r11"
+                }
+              ]
+            }
+          ],
+          "device": "frr",
+          "box": "debian/bookworm64",
+          "id": 2,
+          "role": "router",
+          "mtu": 1500,
+          "af": {
+            "ipv4": true
+          },
+          "mgmt": {
+            "ifname": "eth0",
+            "mac": "ca:fe:00:02:00:00",
+            "ipv4": "192.168.121.102"
+          },
+          "loopback": {
+            "type": "loopback",
+            "neighbors": [],
+            "virtual_interface": true,
+            "ifindex": 0,
+            "ifname": "lo",
+            "ipv4": "10.0.0.2/32"
+          }
+        },
+        "r3": {
+          "name": "r3",
+          "interfaces": [
+            {
+              "ipv4": "172.16.0.3/24",
+              "linkindex": 2,
+              "type": "lan",
+              "bridge": "yangvalida_2",
+              "name": "r3 -> [r1,r2]",
+              "ifindex": 1,
+              "ifname": "eth1",
+              "mtu": 1500,
+              "neighbors": [
+                {
+                  "ipv4": "172.16.0.1/24",
+                  "ifname": "eth2",
+                  "node": "r1"
+                },
+                {
+                  "ipv4": "172.16.0.2/24",
+                  "ifname": "eth2",
+                  "node": "r2"
+                }
+              ]
+            },
+            {
+              "ipv4": "192.168.2.1/24",
+              "ipv6": "2001:db8:1::1/64",
+              "linkindex": 8,
+              "type": "p2p",
+              "name": "r3 -> r6",
+              "ifindex": 2,
+              "ifname": "eth2",
+              "mtu": 1500,
+              "neighbors": [
+                {
+                  "ipv4": "192.168.2.2/24",
+                  "ipv6": "2001:db8:1::2/64",
+                  "ifname": "eth2",
+                  "node": "r6"
+                }
+              ]
+            },
+            {
+              "ifindex": 10,
+              "ipv4": "10.10.0.26/30",
+              "name": "Custom ifindex link",
+              "linkindex": 15,
+              "type": "p2p",
+              "ifname": "eth10",
+              "mtu": 1500,
+              "neighbors": [
+                {
+                  "ipv4": "10.10.0.25/30",
+                  "ifname": "eth20",
+                  "node": "r11"
+                }
+              ]
+            }
+          ],
+          "device": "frr",
+          "box": "debian/bookworm64",
+          "id": 3,
+          "role": "router",
+          "mtu": 1500,
+          "af": {
+            "ipv4": true,
+            "ipv6": true
+          },
+          "mgmt": {
+            "ifname": "eth0",
+            "mac": "ca:fe:00:03:00:00",
+            "ipv4": "192.168.121.103"
+          },
+          "loopback": {
+            "type": "loopback",
+            "neighbors": [],
+            "virtual_interface": true,
+            "ifindex": 0,
+            "ifname": "lo",
+            "ipv4": "10.0.0.3/32"
+          }
+        },
+        "r4": {
+          "device": "frr",
+          "name": "r4",
+          "interfaces": [
+            {
+              "ipv4": "10.10.0.5/30",
+              "linkindex": 3,
+              "type": "p2p",
+              "name": "r4 -> r5",
+              "ifindex": 1,
+              "ifname": "eth1",
+              "mtu": 1500,
+              "neighbors": [
+                {
+                  "ipv4": "10.10.0.6/30",
+                  "ifname": "eth1",
+                  "node": "r5"
+                }
+              ]
+            },
+            {
+              "ipv4": "10.10.0.14/30",
+              "name": "Core link",
+              "type": "p2p",
+              "linkindex": 6,
+              "ifindex": 2,
+              "ifname": "eth2",
+              "mtu": 1500,
+              "neighbors": [
+                {
+                  "ipv4": "10.10.0.13/30",
+                  "ifname": "eth3",
+                  "node": "r1"
+                }
+              ]
+            },
+            {
+              "ipv4": "172.16.2.4/24",
+              "linkindex": 16,
+              "role": "stub",
+              "type": "stub",
+              "bridge": "yangvalida_16",
+              "name": "r4 -> stub",
+              "ifindex": 3,
+              "ifname": "eth3",
+              "mtu": 1500,
+              "neighbors": []
+            }
+          ],
+          "box": "debian/bookworm64",
+          "id": 4,
+          "role": "router",
+          "mtu": 1500,
+          "af": {
+            "ipv4": true
+          },
+          "mgmt": {
+            "ifname": "eth0",
+            "mac": "ca:fe:00:04:00:00",
+            "ipv4": "192.168.121.104"
+          },
+          "loopback": {
+            "type": "loopback",
+            "neighbors": [],
+            "virtual_interface": true,
+            "ifindex": 0,
+            "ifname": "lo",
+            "ipv4": "10.0.0.4/32"
+          }
+        },
+        "r5": {
+          "id": 10,
+          "name": "r5",
+          "interfaces": [
+            {
+              "ipv4": "10.10.0.6/30",
+              "linkindex": 3,
+              "type": "p2p",
+              "name": "r5 -> r4",
+              "ifindex": 1,
+              "ifname": "eth1",
+              "mtu": 1500,
+              "neighbors": [
+                {
+                  "ipv4": "10.10.0.5/30",
+                  "ifname": "eth1",
+                  "node": "r4"
+                }
+              ]
+            },
+            {
+              "ipv4": "192.168.1.2/24",
+              "linkindex": 7,
+              "type": "p2p",
+              "name": "r5 -> r2",
+              "ifindex": 2,
+              "ifname": "eth2",
+              "mtu": 1500,
+              "neighbors": [
+                {
+                  "ipv4": "192.168.1.1/24",
+                  "ifname": "eth3",
+                  "node": "r2"
+                }
+              ]
+            },
+            {
+              "ipv4": "192.168.10.10/24",
+              "name": "Stub link",
+              "linkindex": 17,
+              "role": "stub",
+              "type": "stub",
+              "bridge": "yangvalida_17",
+              "ifindex": 3,
+              "ifname": "eth3",
+              "mtu": 1500,
+              "neighbors": []
+            }
+          ],
+          "device": "frr",
+          "box": "debian/bookworm64",
+          "role": "router",
+          "mtu": 1500,
+          "af": {
+            "ipv4": true
+          },
+          "mgmt": {
+            "ifname": "eth0",
+            "mac": "ca:fe:00:0a:00:00",
+            "ipv4": "192.168.121.110"
+          },
+          "loopback": {
+            "type": "loopback",
+            "neighbors": [],
+            "virtual_interface": true,
+            "ifindex": 0,
+            "ifname": "lo",
+            "ipv4": "10.0.0.10/32"
+          }
+        },
+        "r6": {
+          "role": "router",
+          "name": "r6",
+          "interfaces": [
+            {
+              "ipv4": "172.16.1.5/24",
+              "linkindex": 4,
+              "type": "lan",
+              "bridge": "yangvalida_4",
+              "name": "r6 -> [r7,r8]",
+              "ifindex": 1,
+              "ifname": "eth1",
+              "mtu": 1500,
+              "neighbors": [
+                {
+                  "ipv4": "172.16.1.6/24",
+                  "ifname": "eth1",
+                  "node": "r7"
+                },
+                {
+                  "ipv4": "172.16.1.7/24",
+                  "ifname": "eth1",
+                  "node": "r8"
+                }
+              ]
+            },
+            {
+              "ipv4": "192.168.2.2/24",
+              "ipv6": "2001:db8:1::2/64",
+              "linkindex": 8,
+              "type": "p2p",
+              "name": "r6 -> r3",
+              "ifindex": 2,
+              "ifname": "eth2",
+              "mtu": 1500,
+              "neighbors": [
+                {
+                  "ipv4": "192.168.2.1/24",
+                  "ipv6": "2001:db8:1::1/64",
+                  "ifname": "eth2",
+                  "node": "r3"
+                }
+              ]
+            },
+            {
+              "ipv4": "172.16.3.5/24",
+              "type": "lan",
+              "name": "LAN link",
+              "linkindex": 18,
+              "bridge": "yangvalida_18",
+              "ifindex": 3,
+              "ifname": "eth3",
+              "mtu": 1500,
+              "neighbors": [
+                {
+                  "ipv4": "172.16.3.6/24",
+                  "ifname": "eth3",
+                  "node": "r7"
+                },
+                {
+                  "ipv4": "172.16.3.7/24",
+                  "ifname": "eth3",
+                  "node": "r8"
+                }
+              ]
+            }
+          ],
+          "device": "frr",
+          "box": "debian/bookworm64",
+          "id": 5,
+          "mtu": 1500,
+          "af": {
+            "ipv4": true,
+            "ipv6": true
+          },
+          "mgmt": {
+            "ifname": "eth0",
+            "mac": "ca:fe:00:05:00:00",
+            "ipv4": "192.168.121.105"
+          },
+          "loopback": {
+            "type": "loopback",
+            "neighbors": [],
+            "virtual_interface": true,
+            "ifindex": 0,
+            "ifname": "lo",
+            "ipv4": "10.0.0.5/32"
+          }
+        },
+        "r7": {
+          "mtu": 9000,
+          "name": "r7",
+          "interfaces": [
+            {
+              "ipv4": "172.16.1.6/24",
+              "linkindex": 4,
+              "type": "lan",
+              "bridge": "yangvalida_4",
+              "name": "r7 -> [r6,r8]",
+              "ifindex": 1,
+              "ifname": "eth1",
+              "mtu": 9000,
+              "neighbors": [
+                {
+                  "ipv4": "172.16.1.5/24",
+                  "ifname": "eth1",
+                  "node": "r6"
+                },
+                {
+                  "ipv4": "172.16.1.7/24",
+                  "ifname": "eth1",
+                  "node": "r8"
+                }
+              ]
+            },
+            {
+              "ipv4": "192.168.100.1/26",
+              "ipv6": "2001:db8:100::1/64",
+              "pool": "dual_stack",
+              "linkindex": 9,
+              "type": "p2p",
+              "name": "r7 -> r8",
+              "ifindex": 2,
+              "ifname": "eth2",
+              "mtu": 9000,
+              "neighbors": [
+                {
+                  "ipv4": "192.168.100.2/26",
+                  "ipv6": "2001:db8:100::2/64",
+                  "ifname": "eth2",
+                  "node": "r8"
+                }
+              ]
+            },
+            {
+              "ipv4": "172.16.3.6/24",
+              "type": "lan",
+              "name": "LAN link",
+              "linkindex": 18,
+              "bridge": "yangvalida_18",
+              "ifindex": 3,
+              "ifname": "eth3",
+              "mtu": 9000,
+              "neighbors": [
+                {
+                  "ipv4": "172.16.3.5/24",
+                  "ifname": "eth3",
+                  "node": "r6"
+                },
+                {
+                  "ipv4": "172.16.3.7/24",
+                  "ifname": "eth3",
+                  "node": "r8"
+                }
+              ]
+            }
+          ],
+          "device": "frr",
+          "box": "debian/bookworm64",
+          "id": 6,
+          "role": "router",
+          "af": {
+            "ipv4": true,
+            "ipv6": true
+          },
+          "mgmt": {
+            "ifname": "eth0",
+            "mac": "ca:fe:00:06:00:00",
+            "ipv4": "192.168.121.106"
+          },
+          "loopback": {
+            "type": "loopback",
+            "neighbors": [],
+            "virtual_interface": true,
+            "ifindex": 0,
+            "ifname": "lo",
+            "ipv4": "10.0.0.6/32"
+          }
+        },
+        "r8": {
+          "loopback": {
+            "ipv4": "10.0.0.100/32",
+            "type": "loopback",
+            "neighbors": [],
+            "virtual_interface": true,
+            "ifindex": 0,
+            "ifname": "lo"
+          },
+          "name": "r8",
+          "interfaces": [
+            {
+              "ipv4": "172.16.1.7/24",
+              "linkindex": 4,
+              "type": "lan",
+              "bridge": "yangvalida_4",
+              "name": "r8 -> [r6,r7]",
+              "ifindex": 1,
+              "ifname": "eth1",
+              "mtu": 1500,
+              "neighbors": [
+                {
+                  "ipv4": "172.16.1.5/24",
+                  "ifname": "eth1",
+                  "node": "r6"
+                },
+                {
+                  "ipv4": "172.16.1.6/24",
+                  "ifname": "eth1",
+                  "node": "r7"
+                }
+              ]
+            },
+            {
+              "ipv4": "192.168.100.2/26",
+              "ipv6": "2001:db8:100::2/64",
+              "pool": "dual_stack",
+              "linkindex": 9,
+              "type": "p2p",
+              "name": "r8 -> r7",
+              "ifindex": 2,
+              "ifname": "eth2",
+              "mtu": 1500,
+              "neighbors": [
+                {
+                  "ipv4": "192.168.100.1/26",
+                  "ipv6": "2001:db8:100::1/64",
+                  "ifname": "eth2",
+                  "node": "r7"
+                }
+              ]
+            },
+            {
+              "ipv4": "172.16.3.7/24",
+              "type": "lan",
+              "name": "LAN link",
+              "linkindex": 18,
+              "bridge": "yangvalida_18",
+              "ifindex": 3,
+              "ifname": "eth3",
+              "mtu": 1500,
+              "neighbors": [
+                {
+                  "ipv4": "172.16.3.5/24",
+                  "ifname": "eth3",
+                  "node": "r6"
+                },
+                {
+                  "ipv4": "172.16.3.6/24",
+                  "ifname": "eth3",
+                  "node": "r7"
+                }
+              ]
+            }
+          ],
+          "device": "frr",
+          "box": "debian/bookworm64",
+          "id": 7,
+          "role": "router",
+          "mtu": 1500,
+          "af": {
+            "ipv4": true,
+            "ipv6": true
+          },
+          "mgmt": {
+            "ifname": "eth0",
+            "mac": "ca:fe:00:07:00:00",
+            "ipv4": "192.168.121.107"
+          }
+        },
+        "r9": {
+          "mgmt": {
+            "ipv4": "192.168.121.200",
+            "ifname": "eth0",
+            "mac": "ca:fe:00:08:00:00"
+          },
+          "name": "r9",
+          "interfaces": [
+            {
+              "ipv4": "10.10.0.10/30",
+              "linkindex": 5,
+              "type": "p2p",
+              "name": "r9 -> r10",
+              "ifindex": 1,
+              "ifname": "eth1",
+              "mtu": 1500,
+              "neighbors": [
+                {
+                  "ipv4": "10.10.0.9/30",
+                  "ifname": "eth1",
+                  "node": "r10"
+                }
+              ]
+            },
+            {
+              "ipv4": true,
+              "pool": "unnumbered_p2p",
+              "linkindex": 10,
+              "type": "p2p",
+              "name": "r9 -> r10",
+              "ifindex": 2,
+              "ifname": "eth2",
+              "mtu": 1500,
+              "neighbors": [
+                {
+                  "ipv4": true,
+                  "ifname": "eth2",
+                  "node": "r10"
+                }
+              ]
+            },
+            {
+              "ipv4": "172.16.4.8/24",
+              "type": "stub",
+              "name": "Stub link explicit",
+              "linkindex": 19,
+              "role": "stub",
+              "bridge": "yangvalida_19",
+              "ifindex": 3,
+              "ifname": "eth3",
+              "mtu": 1500,
+              "neighbors": []
+            }
+          ],
+          "device": "frr",
+          "box": "debian/bookworm64",
+          "id": 8,
+          "role": "router",
+          "mtu": 1500,
+          "af": {
+            "ipv4": true
+          },
+          "loopback": {
+            "type": "loopback",
+            "neighbors": [],
+            "virtual_interface": true,
+            "ifindex": 0,
+            "ifname": "lo",
+            "ipv4": "10.0.0.8/32"
+          }
+        },
+        "r10": {
+          "name": "r10",
+          "interfaces": [
+            {
+              "ipv4": "10.10.0.9/30",
+              "linkindex": 5,
+              "type": "p2p",
+              "name": "r10 -> r9",
+              "ifindex": 1,
+              "ifname": "eth1",
+              "mtu": 1500,
+              "neighbors": [
+                {
+                  "ipv4": "10.10.0.10/30",
+                  "ifname": "eth1",
+                  "node": "r9"
+                }
+              ]
+            },
+            {
+              "ipv4": true,
+              "pool": "unnumbered_p2p",
+              "linkindex": 10,
+              "type": "p2p",
+              "name": "r10 -> r9",
+              "ifindex": 2,
+              "ifname": "eth2",
+              "mtu": 1500,
+              "neighbors": [
+                {
+                  "ipv4": true,
+                  "ifname": "eth2",
+                  "node": "r9"
+                }
+              ]
+            },
+            {
+              "ipv4": "10.20.0.1/24",
+              "linkindex": 20,
+              "type": "p2p",
+              "name": "r10 -> r11",
+              "ifindex": 3,
+              "ifname": "eth3",
+              "mtu": 1500,
+              "neighbors": [
+                {
+                  "ipv4": "10.20.0.2/24",
+                  "ifname": "eth3",
+                  "node": "r11"
+                }
+              ]
+            }
+          ],
+          "device": "frr",
+          "box": "debian/bookworm64",
+          "id": 9,
+          "role": "router",
+          "mtu": 1500,
+          "af": {
+            "ipv4": true
+          },
+          "mgmt": {
+            "ifname": "eth0",
+            "mac": "ca:fe:00:09:00:00",
+            "ipv4": "192.168.121.109"
+          },
+          "loopback": {
+            "type": "loopback",
+            "neighbors": [],
+            "virtual_interface": true,
+            "ifindex": 0,
+            "ifname": "lo",
+            "ipv4": "10.0.0.9/32"
+          }
+        },
+        "r11": {
+          "box": "debian/bookworm64",
+          "name": "r11",
+          "interfaces": [
+            {
+              "ipv4": "10.10.0.18/30",
+              "name": "Interface list link",
+              "linkindex": 13,
+              "type": "p2p",
+              "ifindex": 1,
+              "ifname": "eth1",
+              "mtu": 1500,
+              "neighbors": [
+                {
+                  "ipv4": "10.10.0.17/30",
+                  "ifname": "eth4",
+                  "node": "r1"
+                }
+              ]
+            },
+            {
+              "ipv4": "10.10.0.21/30",
+              "bandwidth": 1000,
+              "mtu": 1500,
+              "linkindex": 14,
+              "type": "p2p",
+              "name": "r11 -> r2",
+              "ifindex": 2,
+              "ifname": "eth2",
+              "neighbors": [
+                {
+                  "ipv4": "10.10.0.22/30",
+                  "ifname": "eth4",
+                  "node": "r2"
+                }
+              ]
+            },
+            {
+              "ifindex": 20,
+              "ipv4": "10.10.0.25/30",
+              "name": "Custom ifindex link",
+              "linkindex": 15,
+              "type": "p2p",
+              "ifname": "eth20",
+              "mtu": 1500,
+              "neighbors": [
+                {
+                  "ipv4": "10.10.0.26/30",
+                  "ifname": "eth10",
+                  "node": "r3"
+                }
+              ]
+            },
+            {
+              "ipv4": "10.20.0.2/24",
+              "linkindex": 20,
+              "type": "p2p",
+              "name": "r11 -> r10",
+              "ifindex": 3,
+              "ifname": "eth3",
+              "mtu": 1500,
+              "neighbors": [
+                {
+                  "ipv4": "10.20.0.1/24",
+                  "ifname": "eth3",
+                  "node": "r10"
+                }
+              ]
+            }
+          ],
+          "device": "frr",
+          "id": 11,
+          "role": "router",
+          "mtu": 1500,
+          "af": {
+            "ipv4": true
+          },
+          "mgmt": {
+            "ifname": "eth0",
+            "mac": "ca:fe:00:0b:00:00",
+            "ipv4": "192.168.121.111"
+          },
+          "loopback": {
+            "type": "loopback",
+            "neighbors": [],
+            "virtual_interface": true,
+            "ifindex": 0,
+            "ifname": "lo",
+            "ipv4": "10.0.0.11/32"
+          }
+        },
+        "h1": {
+          "role": "host",
+          "group": [
+            "hosts"
+          ],
+          "name": "h1",
+          "interfaces": [],
+          "device": "frr",
+          "box": "debian/bookworm64",
+          "id": 12,
+          "mtu": 1500,
+          "af": {},
+          "mgmt": {
+            "ifname": "eth0",
+            "mac": "ca:fe:00:0c:00:00",
+            "ipv4": "192.168.121.112"
+          }
+        },
+        "h2": {
+          "role": "host",
+          "group": [
+            "hosts"
+          ],
+          "name": "h2",
+          "interfaces": [],
+          "device": "frr",
+          "box": "debian/bookworm64",
+          "id": 13,
+          "mtu": 1500,
+          "af": {},
+          "mgmt": {
+            "ifname": "eth0",
+            "mac": "ca:fe:00:0d:00:00",
+            "ipv4": "192.168.121.113"
+          }
+        },
+        "s1": {
+          "group": [
+            "switches"
+          ],
+          "name": "s1",
+          "interfaces": [
+            {
+              "pool": "l2only_custom",
+              "linkindex": 11,
+              "type": "p2p",
+              "name": "s1 -> s2",
+              "ifindex": 1,
+              "ifname": "eth1",
+              "mtu": 1500,
+              "neighbors": [
+                {
+                  "ifname": "eth1",
+                  "node": "s2"
+                }
+              ]
+            },
+            {
+              "linkindex": 12,
+              "type": "p2p",
+              "name": "s1 -> s2",
+              "ifindex": 2,
+              "ifname": "eth2",
+              "mtu": 1500,
+              "neighbors": [
+                {
+                  "ifname": "eth2",
+                  "node": "s2"
+                }
+              ]
+            }
+          ],
+          "device": "frr",
+          "box": "debian/bookworm64",
+          "id": 14,
+          "role": "router",
+          "mtu": 1500,
+          "af": {
+            "ipv4": true
+          },
+          "mgmt": {
+            "ifname": "eth0",
+            "mac": "ca:fe:00:0e:00:00",
+            "ipv4": "192.168.121.114"
+          },
+          "loopback": {
+            "type": "loopback",
+            "neighbors": [],
+            "virtual_interface": true,
+            "ifindex": 0,
+            "ifname": "lo",
+            "ipv4": "10.0.0.14/32"
+          }
+        },
+        "s2": {
+          "group": [
+            "switches"
+          ],
+          "name": "s2",
+          "interfaces": [
+            {
+              "pool": "l2only_custom",
+              "linkindex": 11,
+              "type": "p2p",
+              "name": "s2 -> s1",
+              "ifindex": 1,
+              "ifname": "eth1",
+              "mtu": 1500,
+              "neighbors": [
+                {
+                  "ifname": "eth1",
+                  "node": "s1"
+                }
+              ]
+            },
+            {
+              "linkindex": 12,
+              "type": "p2p",
+              "name": "s2 -> s1",
+              "ifindex": 2,
+              "ifname": "eth2",
+              "mtu": 1500,
+              "neighbors": [
+                {
+                  "ifname": "eth2",
+                  "node": "s1"
+                }
+              ]
+            }
+          ],
+          "device": "frr",
+          "box": "debian/bookworm64",
+          "id": 15,
+          "role": "router",
+          "mtu": 1500,
+          "af": {
+            "ipv4": true
+          },
+          "mgmt": {
+            "ifname": "eth0",
+            "mac": "ca:fe:00:0f:00:00",
+            "ipv4": "192.168.121.115"
+          },
+          "loopback": {
+            "type": "loopback",
+            "neighbors": [],
+            "virtual_interface": true,
+            "ifindex": 0,
+            "ifname": "lo",
+            "ipv4": "10.0.0.15/32"
+          }
+        }
+      }
+    },
+    "links": [
+      {
+        "interfaces": [
+          {
+            "node": "r1",
+            "ipv4": "10.10.0.1/30",
+            "ifindex": 1,
+            "ifname": "eth1"
+          },
+          {
+            "node": "r2",
+            "ipv4": "10.10.0.2/30",
+            "ifindex": 1,
+            "ifname": "eth1"
+          }
+        ],
+        "linkindex": 1,
+        "node_count": 2,
+        "type": "p2p",
+        "prefix": {
+          "ipv4": "10.10.0.0/30"
+        }
+      },
+      {
+        "interfaces": [
+          {
+            "node": "r1",
+            "ipv4": "172.16.0.1/24",
+            "ifindex": 2,
+            "ifname": "eth2"
+          },
+          {
+            "node": "r2",
+            "ipv4": "172.16.0.2/24",
+            "ifindex": 2,
+            "ifname": "eth2"
+          },
+          {
+            "node": "r3",
+            "ipv4": "172.16.0.3/24",
+            "ifindex": 1,
+            "ifname": "eth1"
+          }
+        ],
+        "linkindex": 2,
+        "node_count": 3,
+        "type": "lan",
+        "bridge": "yangvalida_2",
+        "prefix": {
+          "ipv4": "172.16.0.0/24"
+        }
+      },
+      {
+        "interfaces": [
+          {
+            "node": "r4",
+            "ipv4": "10.10.0.5/30",
+            "ifindex": 1,
+            "ifname": "eth1"
+          },
+          {
+            "node": "r5",
+            "ipv4": "10.10.0.6/30",
+            "ifindex": 1,
+            "ifname": "eth1"
+          }
+        ],
+        "linkindex": 3,
+        "node_count": 2,
+        "type": "p2p",
+        "prefix": {
+          "ipv4": "10.10.0.4/30"
+        }
+      },
+      {
+        "interfaces": [
+          {
+            "node": "r6",
+            "ipv4": "172.16.1.5/24",
+            "ifindex": 1,
+            "ifname": "eth1"
+          },
+          {
+            "node": "r7",
+            "ipv4": "172.16.1.6/24",
+            "ifindex": 1,
+            "ifname": "eth1"
+          },
+          {
+            "node": "r8",
+            "ipv4": "172.16.1.7/24",
+            "ifindex": 1,
+            "ifname": "eth1"
+          }
+        ],
+        "linkindex": 4,
+        "node_count": 3,
+        "type": "lan",
+        "bridge": "yangvalida_4",
+        "prefix": {
+          "ipv4": "172.16.1.0/24"
+        }
+      },
+      {
+        "interfaces": [
+          {
+            "node": "r9",
+            "ipv4": "10.10.0.10/30",
+            "ifindex": 1,
+            "ifname": "eth1"
+          },
+          {
+            "node": "r10",
+            "ipv4": "10.10.0.9/30",
+            "ifindex": 1,
+            "ifname": "eth1"
+          }
+        ],
+        "linkindex": 5,
+        "node_count": 2,
+        "type": "p2p",
+        "prefix": {
+          "ipv4": "10.10.0.8/30"
+        }
+      },
+      {
+        "name": "Core link",
+        "type": "p2p",
+        "interfaces": [
+          {
+            "node": "r1",
+            "ipv4": "10.10.0.13/30",
+            "ifindex": 3,
+            "ifname": "eth3"
+          },
+          {
+            "node": "r4",
+            "ipv4": "10.10.0.14/30",
+            "ifindex": 2,
+            "ifname": "eth2"
+          }
+        ],
+        "linkindex": 6,
+        "node_count": 2,
+        "prefix": {
+          "ipv4": "10.10.0.12/30"
+        }
+      },
+      {
+        "prefix": {
+          "ipv4": "192.168.1.0/24"
+        },
+        "interfaces": [
+          {
+            "node": "r2",
+            "ipv4": "192.168.1.1/24",
+            "ifindex": 3,
+            "ifname": "eth3"
+          },
+          {
+            "node": "r5",
+            "ipv4": "192.168.1.2/24",
+            "ifindex": 2,
+            "ifname": "eth2"
+          }
+        ],
+        "linkindex": 7,
+        "node_count": 2,
+        "type": "p2p"
+      },
+      {
+        "prefix": {
+          "ipv4": "192.168.2.0/24",
+          "ipv6": "2001:db8:1::/64"
+        },
+        "interfaces": [
+          {
+            "node": "r3",
+            "ipv4": "192.168.2.1/24",
+            "ipv6": "2001:db8:1::1/64",
+            "ifindex": 2,
+            "ifname": "eth2"
+          },
+          {
+            "node": "r6",
+            "ipv4": "192.168.2.2/24",
+            "ipv6": "2001:db8:1::2/64",
+            "ifindex": 2,
+            "ifname": "eth2"
+          }
+        ],
+        "linkindex": 8,
+        "node_count": 2,
+        "type": "p2p"
+      },
+      {
+        "pool": "dual_stack",
+        "interfaces": [
+          {
+            "node": "r7",
+            "ipv4": "192.168.100.1/26",
+            "ipv6": "2001:db8:100::1/64",
+            "ifindex": 2,
+            "ifname": "eth2"
+          },
+          {
+            "node": "r8",
+            "ipv4": "192.168.100.2/26",
+            "ipv6": "2001:db8:100::2/64",
+            "ifindex": 2,
+            "ifname": "eth2"
+          }
+        ],
+        "linkindex": 9,
+        "node_count": 2,
+        "type": "p2p",
+        "prefix": {
+          "ipv4": "192.168.100.0/26",
+          "ipv6": "2001:db8:100::/64"
+        }
+      },
+      {
+        "pool": "unnumbered_p2p",
+        "interfaces": [
+          {
+            "node": "r9",
+            "ipv4": true,
+            "ifindex": 2,
+            "ifname": "eth2"
+          },
+          {
+            "node": "r10",
+            "ipv4": true,
+            "ifindex": 2,
+            "ifname": "eth2"
+          }
+        ],
+        "linkindex": 10,
+        "node_count": 2,
+        "type": "p2p"
+      },
+      {
+        "pool": "l2only_custom",
+        "interfaces": [
+          {
+            "node": "s1",
+            "ifindex": 1,
+            "ifname": "eth1"
+          },
+          {
+            "node": "s2",
+            "ifindex": 1,
+            "ifname": "eth1"
+          }
+        ],
+        "linkindex": 11,
+        "node_count": 2,
+        "type": "p2p"
+      },
+      {
+        "prefix": false,
+        "interfaces": [
+          {
+            "node": "s1",
+            "ifindex": 2,
+            "ifname": "eth2"
+          },
+          {
+            "node": "s2",
+            "ifindex": 2,
+            "ifname": "eth2"
+          }
+        ],
+        "linkindex": 12,
+        "node_count": 2,
+        "type": "p2p"
+      },
+      {
+        "interfaces": [
+          {
+            "node": "r1",
+            "ipv4": "10.10.0.17/30",
+            "ifindex": 4,
+            "ifname": "eth4"
+          },
+          {
+            "node": "r11",
+            "ipv4": "10.10.0.18/30",
+            "ifindex": 1,
+            "ifname": "eth1"
+          }
+        ],
+        "name": "Interface list link",
+        "linkindex": 13,
+        "node_count": 2,
+        "type": "p2p",
+        "prefix": {
+          "ipv4": "10.10.0.16/30"
+        }
+      },
+      {
+        "interfaces": [
+          {
+            "node": "r2",
+            "ipv4": "10.10.0.22/30",
+            "ifindex": 4,
+            "ifname": "eth4"
+          },
+          {
+            "node": "r11",
+            "ipv4": "10.10.0.21/30",
+            "ifindex": 2,
+            "ifname": "eth2"
+          }
+        ],
+        "bandwidth": 1000,
+        "mtu": 1500,
+        "linkindex": 14,
+        "node_count": 2,
+        "type": "p2p",
+        "prefix": {
+          "ipv4": "10.10.0.20/30"
+        }
+      },
+      {
+        "name": "Custom ifindex link",
+        "interfaces": [
+          {
+            "ifindex": 10,
+            "node": "r3",
+            "ipv4": "10.10.0.26/30",
+            "ifname": "eth10"
+          },
+          {
+            "ifindex": 20,
+            "node": "r11",
+            "ipv4": "10.10.0.25/30",
+            "ifname": "eth20"
+          }
+        ],
+        "linkindex": 15,
+        "node_count": 2,
+        "type": "p2p",
+        "prefix": {
+          "ipv4": "10.10.0.24/30"
+        }
+      },
+      {
+        "interfaces": [
+          {
+            "node": "r4",
+            "ipv4": "172.16.2.4/24",
+            "ifindex": 3,
+            "ifname": "eth3"
+          }
+        ],
+        "linkindex": 16,
+        "node_count": 1,
+        "role": "stub",
+        "type": "stub",
+        "bridge": "yangvalida_16",
+        "prefix": {
+          "ipv4": "172.16.2.0/24"
+        }
+      },
+      {
+        "name": "Stub link",
+        "prefix": {
+          "ipv4": "192.168.10.0/24"
+        },
+        "interfaces": [
+          {
+            "node": "r5",
+            "ipv4": "192.168.10.10/24",
+            "ifindex": 3,
+            "ifname": "eth3"
+          }
+        ],
+        "linkindex": 17,
+        "node_count": 1,
+        "role": "stub",
+        "type": "stub",
+        "bridge": "yangvalida_17"
+      },
+      {
+        "type": "lan",
+        "name": "LAN link",
+        "interfaces": [
+          {
+            "node": "r6",
+            "ipv4": "172.16.3.5/24",
+            "ifindex": 3,
+            "ifname": "eth3"
+          },
+          {
+            "node": "r7",
+            "ipv4": "172.16.3.6/24",
+            "ifindex": 3,
+            "ifname": "eth3"
+          },
+          {
+            "node": "r8",
+            "ipv4": "172.16.3.7/24",
+            "ifindex": 3,
+            "ifname": "eth3"
+          }
+        ],
+        "linkindex": 18,
+        "node_count": 3,
+        "bridge": "yangvalida_18",
+        "prefix": {
+          "ipv4": "172.16.3.0/24"
+        }
+      },
+      {
+        "type": "stub",
+        "name": "Stub link explicit",
+        "interfaces": [
+          {
+            "node": "r9",
+            "ipv4": "172.16.4.8/24",
+            "ifindex": 3,
+            "ifname": "eth3"
+          }
+        ],
+        "linkindex": 19,
+        "node_count": 1,
+        "role": "stub",
+        "bridge": "yangvalida_19",
+        "prefix": {
+          "ipv4": "172.16.4.0/24"
+        }
+      },
+      {
+        "prefix": {
+          "ipv4": "10.20.0.0/24",
+          "allocation": "sequential"
+        },
+        "interfaces": [
+          {
+            "node": "r10",
+            "ipv4": "10.20.0.1/24",
+            "ifindex": 3,
+            "ifname": "eth3"
+          },
+          {
+            "node": "r11",
+            "ipv4": "10.20.0.2/24",
+            "ifindex": 3,
+            "ifname": "eth3"
+          }
+        ],
+        "linkindex": 20,
+        "node_count": 2,
+        "type": "p2p"
+      }
+    ],
+    "input": [
+      "/home/jeroen/Projects/netlab/tests/integration/yang_validation/02-full-initial.yml",
+      "/home/jeroen/.netlab.yml",
+      "package:topology-defaults.yml"
+    ],
+    "Plugin": [
+      "<module 'netlab.plugin.yang_validation' from '/home/jeroen/Projects/netlab/netsim/extra/yang_validation/plugin.py'>",
+      "<module 'netsim.roles.host' from '/home/jeroen/Projects/netlab/netsim/roles/host.py'>",
+      "<module 'netsim.roles.router' from '/home/jeroen/Projects/netlab/netsim/roles/router.py'>",
+      "<module 'netsim.roles.bridge' from '/home/jeroen/Projects/netlab/netsim/roles/bridge.py'>"
+    ],
+    "name": "yangvalidati",
+    "provider": "libvirt",
     "pools": {
       "lan": {
-        "ipv4": "<generator object _BaseNetwork.subnets at 0x7cf01259cd00>"
+        "ipv4": "<generator object _BaseNetwork.subnets at 0x7105f810fde0>"
       },
       "loopback": {
-        "ipv4": "<generator object _BaseNetwork.subnets at 0x7cf01259c7b0>",
+        "ipv4": "<generator object _BaseNetwork.subnets at 0x7105f810cbf0>",
         "cache_ipv4": [
           "10.0.0.1/32",
-          "10.0.0.2/32"
+          "10.0.0.2/32",
+          "10.0.0.3/32",
+          "10.0.0.4/32",
+          "10.0.0.5/32",
+          "10.0.0.6/32",
+          "10.0.0.7/32",
+          "10.0.0.8/32",
+          "10.0.0.9/32",
+          "10.0.0.10/32",
+          "10.0.0.11/32",
+          "10.0.0.12/32",
+          "10.0.0.13/32",
+          "10.0.0.14/32",
+          "10.0.0.15/32"
         ]
       },
       "p2p": {
-        "ipv4": "<generator object _BaseNetwork.subnets at 0x7cf01259c480>"
+        "ipv4": "<generator object _BaseNetwork.subnets at 0x7105f810ece0>"
       },
       "router_id": {
-        "ipv4": "<generator object _BaseNetwork.subnets at 0x7cf01259cbf0>"
+        "ipv4": "<generator object _BaseNetwork.subnets at 0x7105f810f120>"
       },
       "mgmt": {
-        "ipv4": "<generator object _BaseNetwork.subnets at 0x7cf01259cf20>",
+        "ipv4": "<generator object _BaseNetwork.subnets at 0x7105f826c150>",
         "mac_eui": "CA-FE-00-00-00-00"
       },
       "l2only": {},
       "vrf_loopback": {
-        "ipv4": "<generator object _BaseNetwork.subnets at 0x7cf01259f890>"
+        "ipv4": "<generator object _BaseNetwork.subnets at 0x7105f7a669b0>"
+      },
+      "unnumbered_p2p": {
+        "unnumbered": true
+      },
+      "l2only_custom": {},
+      "dual_stack": {
+        "ipv4": "<generator object _BaseNetwork.subnets at 0x7105f7a67010>",
+        "ipv6": "<generator object _BaseNetwork.subnets at 0x7105f7a67120>"
       }
     }
   }

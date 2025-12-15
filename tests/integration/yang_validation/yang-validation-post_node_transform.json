@@ -39,11 +39,11 @@
                 "post_link_transform",
                 "post_transform"
               ],
-              "description": "List of transformation phases to validate at. Valid phases: init, setup, pre_transform, post_node_transform, post_link_transform, post_transform"
+              "description": "List of transformation phases to validate at. Valid phases: init, setup, pre_transform,\npost_node_transform, post_link_transform, post_transform\n"
             },
             "dump_model": {
               "type": "bool",
-              "description": "Dump the model being validated to JSON files (for debugging). Files are saved as yang-validation-{phase}.json in the current directory."
+              "description": "Dump the model being validated to JSON files (for debugging). Files are saved as\nyang-validation-{phase}.json in the current directory.\n"
             }
           },
           "addressing": {
@@ -1772,7 +1772,35 @@
               "-c",
               "show $@"
             ],
-            "netlab_initial": "always"
+            "netlab_initial": "always",
+            "netlab_frr_daemons": {
+              "bfd": [
+                "bfdd"
+              ],
+              "bgp": [
+                "bgpd"
+              ],
+              "ospf": [
+                "ospfd",
+                "ospf6d"
+              ],
+              "ripv2": [
+                "ripd",
+                "ripngd"
+              ],
+              "isis": [
+                "isisd"
+              ],
+              "vrf": [
+                "bgpd"
+              ],
+              "gateway": [
+                "vrrpd"
+              ],
+              "mpls": [
+                "ldpd"
+              ]
+            }
           },
           "evpn": {},
           "features": {
@@ -7139,7 +7167,6 @@
           "/home/jeroen/Projects/netlab/netsim/validate"
         ],
         "plugin": [
-          "/home/jeroen/Projects/netlab",
           "/home/jeroen/Projects/netlab/tests/integration/yang_validation",
           "/home/jeroen/.netlab",
           "/home/jeroen/Projects/netlab/netsim/extra"
@@ -7147,7 +7174,6 @@
         "custom": {
           "dirs": [
             "/home/jeroen/Projects/netlab/tests/integration/yang_validation",
-            "/home/jeroen/Projects/netlab",
             "/home/jeroen/.netlab",
             "/home/jeroen/Projects/netlab/netsim/extra"
           ],
@@ -9607,375 +9633,377 @@
         "device": "frr"
       }
     },
-    "nodes": [
-      {
-        "name": "r1",
-        "interfaces": [],
-        "device": "frr",
-        "box": "debian/bookworm64",
-        "id": 1,
-        "role": "router",
-        "mtu": 1500,
-        "af": {
-          "ipv4": true
+    "nodes": {
+      "node_dict": {
+        "r1": {
+          "name": "r1",
+          "interfaces": [],
+          "device": "frr",
+          "box": "debian/bookworm64",
+          "id": 1,
+          "role": "router",
+          "mtu": 1500,
+          "af": {
+            "ipv4": true
+          },
+          "mgmt": {
+            "ifname": "eth0",
+            "mac": "ca:fe:00:01:00:00",
+            "ipv4": "192.168.121.101"
+          },
+          "loopback": {
+            "type": "loopback",
+            "neighbors": [],
+            "virtual_interface": true,
+            "ifindex": 0,
+            "ifname": "lo",
+            "ipv4": "10.0.0.1/32"
+          }
         },
-        "mgmt": {
-          "ifname": "eth0",
-          "mac": "ca:fe:00:01:00:00",
-          "ipv4": "192.168.121.101"
+        "r2": {
+          "name": "r2",
+          "interfaces": [],
+          "device": "frr",
+          "box": "debian/bookworm64",
+          "id": 2,
+          "role": "router",
+          "mtu": 1500,
+          "af": {
+            "ipv4": true
+          },
+          "mgmt": {
+            "ifname": "eth0",
+            "mac": "ca:fe:00:02:00:00",
+            "ipv4": "192.168.121.102"
+          },
+          "loopback": {
+            "type": "loopback",
+            "neighbors": [],
+            "virtual_interface": true,
+            "ifindex": 0,
+            "ifname": "lo",
+            "ipv4": "10.0.0.2/32"
+          }
         },
-        "loopback": {
-          "type": "loopback",
-          "neighbors": [],
-          "virtual_interface": true,
-          "ifindex": 0,
-          "ifname": "lo",
-          "ipv4": "10.0.0.1/32"
-        }
-      },
-      {
-        "name": "r2",
-        "interfaces": [],
-        "device": "frr",
-        "box": "debian/bookworm64",
-        "id": 2,
-        "role": "router",
-        "mtu": 1500,
-        "af": {
-          "ipv4": true
+        "r3": {
+          "name": "r3",
+          "interfaces": [],
+          "device": "frr",
+          "box": "debian/bookworm64",
+          "id": 3,
+          "role": "router",
+          "mtu": 1500,
+          "af": {
+            "ipv4": true
+          },
+          "mgmt": {
+            "ifname": "eth0",
+            "mac": "ca:fe:00:03:00:00",
+            "ipv4": "192.168.121.103"
+          },
+          "loopback": {
+            "type": "loopback",
+            "neighbors": [],
+            "virtual_interface": true,
+            "ifindex": 0,
+            "ifname": "lo",
+            "ipv4": "10.0.0.3/32"
+          }
         },
-        "mgmt": {
-          "ifname": "eth0",
-          "mac": "ca:fe:00:02:00:00",
-          "ipv4": "192.168.121.102"
+        "r4": {
+          "device": "frr",
+          "name": "r4",
+          "interfaces": [],
+          "box": "debian/bookworm64",
+          "id": 4,
+          "role": "router",
+          "mtu": 1500,
+          "af": {
+            "ipv4": true
+          },
+          "mgmt": {
+            "ifname": "eth0",
+            "mac": "ca:fe:00:04:00:00",
+            "ipv4": "192.168.121.104"
+          },
+          "loopback": {
+            "type": "loopback",
+            "neighbors": [],
+            "virtual_interface": true,
+            "ifindex": 0,
+            "ifname": "lo",
+            "ipv4": "10.0.0.4/32"
+          }
         },
-        "loopback": {
-          "type": "loopback",
-          "neighbors": [],
-          "virtual_interface": true,
-          "ifindex": 0,
-          "ifname": "lo",
-          "ipv4": "10.0.0.2/32"
-        }
-      },
-      {
-        "name": "r3",
-        "interfaces": [],
-        "device": "frr",
-        "box": "debian/bookworm64",
-        "id": 3,
-        "role": "router",
-        "mtu": 1500,
-        "af": {
-          "ipv4": true
+        "r5": {
+          "id": 10,
+          "name": "r5",
+          "interfaces": [],
+          "device": "frr",
+          "box": "debian/bookworm64",
+          "role": "router",
+          "mtu": 1500,
+          "af": {
+            "ipv4": true
+          },
+          "mgmt": {
+            "ifname": "eth0",
+            "mac": "ca:fe:00:0a:00:00",
+            "ipv4": "192.168.121.110"
+          },
+          "loopback": {
+            "type": "loopback",
+            "neighbors": [],
+            "virtual_interface": true,
+            "ifindex": 0,
+            "ifname": "lo",
+            "ipv4": "10.0.0.10/32"
+          }
         },
-        "mgmt": {
-          "ifname": "eth0",
-          "mac": "ca:fe:00:03:00:00",
-          "ipv4": "192.168.121.103"
+        "r6": {
+          "role": "router",
+          "name": "r6",
+          "interfaces": [],
+          "device": "frr",
+          "box": "debian/bookworm64",
+          "id": 5,
+          "mtu": 1500,
+          "af": {
+            "ipv4": true
+          },
+          "mgmt": {
+            "ifname": "eth0",
+            "mac": "ca:fe:00:05:00:00",
+            "ipv4": "192.168.121.105"
+          },
+          "loopback": {
+            "type": "loopback",
+            "neighbors": [],
+            "virtual_interface": true,
+            "ifindex": 0,
+            "ifname": "lo",
+            "ipv4": "10.0.0.5/32"
+          }
         },
-        "loopback": {
-          "type": "loopback",
-          "neighbors": [],
-          "virtual_interface": true,
-          "ifindex": 0,
-          "ifname": "lo",
-          "ipv4": "10.0.0.3/32"
-        }
-      },
-      {
-        "device": "frr",
-        "name": "r4",
-        "interfaces": [],
-        "box": "debian/bookworm64",
-        "id": 4,
-        "role": "router",
-        "mtu": 1500,
-        "af": {
-          "ipv4": true
+        "r7": {
+          "mtu": 9000,
+          "name": "r7",
+          "interfaces": [],
+          "device": "frr",
+          "box": "debian/bookworm64",
+          "id": 6,
+          "role": "router",
+          "af": {
+            "ipv4": true
+          },
+          "mgmt": {
+            "ifname": "eth0",
+            "mac": "ca:fe:00:06:00:00",
+            "ipv4": "192.168.121.106"
+          },
+          "loopback": {
+            "type": "loopback",
+            "neighbors": [],
+            "virtual_interface": true,
+            "ifindex": 0,
+            "ifname": "lo",
+            "ipv4": "10.0.0.6/32"
+          }
         },
-        "mgmt": {
-          "ifname": "eth0",
-          "mac": "ca:fe:00:04:00:00",
-          "ipv4": "192.168.121.104"
+        "r8": {
+          "loopback": {
+            "ipv4": "10.0.0.100/32",
+            "type": "loopback",
+            "neighbors": [],
+            "virtual_interface": true,
+            "ifindex": 0,
+            "ifname": "lo"
+          },
+          "name": "r8",
+          "interfaces": [],
+          "device": "frr",
+          "box": "debian/bookworm64",
+          "id": 7,
+          "role": "router",
+          "mtu": 1500,
+          "af": {
+            "ipv4": true
+          },
+          "mgmt": {
+            "ifname": "eth0",
+            "mac": "ca:fe:00:07:00:00",
+            "ipv4": "192.168.121.107"
+          }
         },
-        "loopback": {
-          "type": "loopback",
-          "neighbors": [],
-          "virtual_interface": true,
-          "ifindex": 0,
-          "ifname": "lo",
-          "ipv4": "10.0.0.4/32"
-        }
-      },
-      {
-        "id": 10,
-        "name": "r5",
-        "interfaces": [],
-        "device": "frr",
-        "box": "debian/bookworm64",
-        "role": "router",
-        "mtu": 1500,
-        "af": {
-          "ipv4": true
+        "r9": {
+          "mgmt": {
+            "ipv4": "192.168.121.200",
+            "ifname": "eth0",
+            "mac": "ca:fe:00:08:00:00"
+          },
+          "name": "r9",
+          "interfaces": [],
+          "device": "frr",
+          "box": "debian/bookworm64",
+          "id": 8,
+          "role": "router",
+          "mtu": 1500,
+          "af": {
+            "ipv4": true
+          },
+          "loopback": {
+            "type": "loopback",
+            "neighbors": [],
+            "virtual_interface": true,
+            "ifindex": 0,
+            "ifname": "lo",
+            "ipv4": "10.0.0.8/32"
+          }
         },
-        "mgmt": {
-          "ifname": "eth0",
-          "mac": "ca:fe:00:0a:00:00",
-          "ipv4": "192.168.121.110"
+        "r10": {
+          "name": "r10",
+          "interfaces": [],
+          "device": "frr",
+          "box": "debian/bookworm64",
+          "id": 9,
+          "role": "router",
+          "mtu": 1500,
+          "af": {
+            "ipv4": true
+          },
+          "mgmt": {
+            "ifname": "eth0",
+            "mac": "ca:fe:00:09:00:00",
+            "ipv4": "192.168.121.109"
+          },
+          "loopback": {
+            "type": "loopback",
+            "neighbors": [],
+            "virtual_interface": true,
+            "ifindex": 0,
+            "ifname": "lo",
+            "ipv4": "10.0.0.9/32"
+          }
         },
-        "loopback": {
-          "type": "loopback",
-          "neighbors": [],
-          "virtual_interface": true,
-          "ifindex": 0,
-          "ifname": "lo",
-          "ipv4": "10.0.0.10/32"
-        }
-      },
-      {
-        "role": "router",
-        "name": "r6",
-        "interfaces": [],
-        "device": "frr",
-        "box": "debian/bookworm64",
-        "id": 5,
-        "mtu": 1500,
-        "af": {
-          "ipv4": true
+        "r11": {
+          "box": "debian/bookworm64",
+          "name": "r11",
+          "interfaces": [],
+          "device": "frr",
+          "id": 11,
+          "role": "router",
+          "mtu": 1500,
+          "af": {
+            "ipv4": true
+          },
+          "mgmt": {
+            "ifname": "eth0",
+            "mac": "ca:fe:00:0b:00:00",
+            "ipv4": "192.168.121.111"
+          },
+          "loopback": {
+            "type": "loopback",
+            "neighbors": [],
+            "virtual_interface": true,
+            "ifindex": 0,
+            "ifname": "lo",
+            "ipv4": "10.0.0.11/32"
+          }
         },
-        "mgmt": {
-          "ifname": "eth0",
-          "mac": "ca:fe:00:05:00:00",
-          "ipv4": "192.168.121.105"
+        "h1": {
+          "role": "host",
+          "group": [
+            "hosts"
+          ],
+          "name": "h1",
+          "interfaces": [],
+          "device": "frr",
+          "box": "debian/bookworm64",
+          "id": 12,
+          "mtu": 1500,
+          "af": {},
+          "mgmt": {
+            "ifname": "eth0",
+            "mac": "ca:fe:00:0c:00:00",
+            "ipv4": "192.168.121.112"
+          }
         },
-        "loopback": {
-          "type": "loopback",
-          "neighbors": [],
-          "virtual_interface": true,
-          "ifindex": 0,
-          "ifname": "lo",
-          "ipv4": "10.0.0.5/32"
-        }
-      },
-      {
-        "mtu": 9000,
-        "name": "r7",
-        "interfaces": [],
-        "device": "frr",
-        "box": "debian/bookworm64",
-        "id": 6,
-        "role": "router",
-        "af": {
-          "ipv4": true
+        "h2": {
+          "role": "host",
+          "group": [
+            "hosts"
+          ],
+          "name": "h2",
+          "interfaces": [],
+          "device": "frr",
+          "box": "debian/bookworm64",
+          "id": 13,
+          "mtu": 1500,
+          "af": {},
+          "mgmt": {
+            "ifname": "eth0",
+            "mac": "ca:fe:00:0d:00:00",
+            "ipv4": "192.168.121.113"
+          }
         },
-        "mgmt": {
-          "ifname": "eth0",
-          "mac": "ca:fe:00:06:00:00",
-          "ipv4": "192.168.121.106"
+        "s1": {
+          "group": [
+            "switches"
+          ],
+          "name": "s1",
+          "interfaces": [],
+          "device": "frr",
+          "box": "debian/bookworm64",
+          "id": 14,
+          "role": "router",
+          "mtu": 1500,
+          "af": {
+            "ipv4": true
+          },
+          "mgmt": {
+            "ifname": "eth0",
+            "mac": "ca:fe:00:0e:00:00",
+            "ipv4": "192.168.121.114"
+          },
+          "loopback": {
+            "type": "loopback",
+            "neighbors": [],
+            "virtual_interface": true,
+            "ifindex": 0,
+            "ifname": "lo",
+            "ipv4": "10.0.0.14/32"
+          }
         },
-        "loopback": {
-          "type": "loopback",
-          "neighbors": [],
-          "virtual_interface": true,
-          "ifindex": 0,
-          "ifname": "lo",
-          "ipv4": "10.0.0.6/32"
-        }
-      },
-      {
-        "loopback": {
-          "ipv4": "10.0.0.100/32",
-          "type": "loopback",
-          "neighbors": [],
-          "virtual_interface": true,
-          "ifindex": 0,
-          "ifname": "lo"
-        },
-        "name": "r8",
-        "interfaces": [],
-        "device": "frr",
-        "box": "debian/bookworm64",
-        "id": 7,
-        "role": "router",
-        "mtu": 1500,
-        "af": {
-          "ipv4": true
-        },
-        "mgmt": {
-          "ifname": "eth0",
-          "mac": "ca:fe:00:07:00:00",
-          "ipv4": "192.168.121.107"
-        }
-      },
-      {
-        "mgmt": {
-          "ipv4": "192.168.121.200",
-          "ifname": "eth0",
-          "mac": "ca:fe:00:08:00:00"
-        },
-        "name": "r9",
-        "interfaces": [],
-        "device": "frr",
-        "box": "debian/bookworm64",
-        "id": 8,
-        "role": "router",
-        "mtu": 1500,
-        "af": {
-          "ipv4": true
-        },
-        "loopback": {
-          "type": "loopback",
-          "neighbors": [],
-          "virtual_interface": true,
-          "ifindex": 0,
-          "ifname": "lo",
-          "ipv4": "10.0.0.8/32"
-        }
-      },
-      {
-        "name": "r10",
-        "interfaces": [],
-        "device": "frr",
-        "box": "debian/bookworm64",
-        "id": 9,
-        "role": "router",
-        "mtu": 1500,
-        "af": {
-          "ipv4": true
-        },
-        "mgmt": {
-          "ifname": "eth0",
-          "mac": "ca:fe:00:09:00:00",
-          "ipv4": "192.168.121.109"
-        },
-        "loopback": {
-          "type": "loopback",
-          "neighbors": [],
-          "virtual_interface": true,
-          "ifindex": 0,
-          "ifname": "lo",
-          "ipv4": "10.0.0.9/32"
-        }
-      },
-      {
-        "box": "debian/bookworm64",
-        "name": "r11",
-        "interfaces": [],
-        "device": "frr",
-        "id": 11,
-        "role": "router",
-        "mtu": 1500,
-        "af": {
-          "ipv4": true
-        },
-        "mgmt": {
-          "ifname": "eth0",
-          "mac": "ca:fe:00:0b:00:00",
-          "ipv4": "192.168.121.111"
-        },
-        "loopback": {
-          "type": "loopback",
-          "neighbors": [],
-          "virtual_interface": true,
-          "ifindex": 0,
-          "ifname": "lo",
-          "ipv4": "10.0.0.11/32"
-        }
-      },
-      {
-        "role": "host",
-        "group": [
-          "hosts"
-        ],
-        "name": "h1",
-        "interfaces": [],
-        "device": "frr",
-        "box": "debian/bookworm64",
-        "id": 12,
-        "mtu": 1500,
-        "af": {},
-        "mgmt": {
-          "ifname": "eth0",
-          "mac": "ca:fe:00:0c:00:00",
-          "ipv4": "192.168.121.112"
-        }
-      },
-      {
-        "role": "host",
-        "group": [
-          "hosts"
-        ],
-        "name": "h2",
-        "interfaces": [],
-        "device": "frr",
-        "box": "debian/bookworm64",
-        "id": 13,
-        "mtu": 1500,
-        "af": {},
-        "mgmt": {
-          "ifname": "eth0",
-          "mac": "ca:fe:00:0d:00:00",
-          "ipv4": "192.168.121.113"
-        }
-      },
-      {
-        "group": [
-          "switches"
-        ],
-        "name": "s1",
-        "interfaces": [],
-        "device": "frr",
-        "box": "debian/bookworm64",
-        "id": 14,
-        "role": "router",
-        "mtu": 1500,
-        "af": {
-          "ipv4": true
-        },
-        "mgmt": {
-          "ifname": "eth0",
-          "mac": "ca:fe:00:0e:00:00",
-          "ipv4": "192.168.121.114"
-        },
-        "loopback": {
-          "type": "loopback",
-          "neighbors": [],
-          "virtual_interface": true,
-          "ifindex": 0,
-          "ifname": "lo",
-          "ipv4": "10.0.0.14/32"
-        }
-      },
-      {
-        "group": [
-          "switches"
-        ],
-        "name": "s2",
-        "interfaces": [],
-        "device": "frr",
-        "box": "debian/bookworm64",
-        "id": 15,
-        "role": "router",
-        "mtu": 1500,
-        "af": {
-          "ipv4": true
-        },
-        "mgmt": {
-          "ifname": "eth0",
-          "mac": "ca:fe:00:0f:00:00",
-          "ipv4": "192.168.121.115"
-        },
-        "loopback": {
-          "type": "loopback",
-          "neighbors": [],
-          "virtual_interface": true,
-          "ifindex": 0,
-          "ifname": "lo",
-          "ipv4": "10.0.0.15/32"
+        "s2": {
+          "group": [
+            "switches"
+          ],
+          "name": "s2",
+          "interfaces": [],
+          "device": "frr",
+          "box": "debian/bookworm64",
+          "id": 15,
+          "role": "router",
+          "mtu": 1500,
+          "af": {
+            "ipv4": true
+          },
+          "mgmt": {
+            "ifname": "eth0",
+            "mac": "ca:fe:00:0f:00:00",
+            "ipv4": "192.168.121.115"
+          },
+          "loopback": {
+            "type": "loopback",
+            "neighbors": [],
+            "virtual_interface": true,
+            "ifindex": 0,
+            "ifname": "lo",
+            "ipv4": "10.0.0.15/32"
+          }
         }
       }
-    ],
+    },
     "links": [
       {
         "interfaces": [
@@ -10240,10 +10268,10 @@
     "provider": "libvirt",
     "pools": {
       "lan": {
-        "ipv4": "<generator object _BaseNetwork.subnets at 0x73d67ec8f780>"
+        "ipv4": "<generator object _BaseNetwork.subnets at 0x7105f810fde0>"
       },
       "loopback": {
-        "ipv4": "<generator object _BaseNetwork.subnets at 0x73d67e8e4040>",
+        "ipv4": "<generator object _BaseNetwork.subnets at 0x7105f810cbf0>",
         "cache_ipv4": [
           "10.0.0.1/32",
           "10.0.0.2/32",
@@ -10263,26 +10291,26 @@
         ]
       },
       "p2p": {
-        "ipv4": "<generator object _BaseNetwork.subnets at 0x73d67e8e7120>"
+        "ipv4": "<generator object _BaseNetwork.subnets at 0x7105f810ece0>"
       },
       "router_id": {
-        "ipv4": "<generator object _BaseNetwork.subnets at 0x73d67e8e7450>"
+        "ipv4": "<generator object _BaseNetwork.subnets at 0x7105f810f120>"
       },
       "mgmt": {
-        "ipv4": "<generator object _BaseNetwork.subnets at 0x73d67e8e7560>",
+        "ipv4": "<generator object _BaseNetwork.subnets at 0x7105f826c150>",
         "mac_eui": "CA-FE-00-00-00-00"
       },
       "l2only": {},
       "vrf_loopback": {
-        "ipv4": "<generator object _BaseNetwork.subnets at 0x73d67e8e68a0>"
+        "ipv4": "<generator object _BaseNetwork.subnets at 0x7105f7a669b0>"
       },
       "unnumbered_p2p": {
         "unnumbered": true
       },
       "l2only_custom": {},
       "dual_stack": {
-        "ipv4": "<generator object _BaseNetwork.subnets at 0x73d67e8e58b0>",
-        "ipv6": "<generator object _BaseNetwork.subnets at 0x73d67e8e5690>"
+        "ipv4": "<generator object _BaseNetwork.subnets at 0x7105f7a67010>",
+        "ipv6": "<generator object _BaseNetwork.subnets at 0x7105f7a67120>"
       }
     }
   }
