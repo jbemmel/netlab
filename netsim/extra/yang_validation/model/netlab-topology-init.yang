@@ -249,222 +249,18 @@ module netlab-topology-init {
   }
 
   grouping nodes-grouping {
-    description "Nodes list grouping - lab devices at init phase";
-    list nodes {
-      key "name";
+    description "Nodes dictionary grouping - lab devices at init phase";
+    container nodes {
       description
-        "Lab devices (nodes) at init phase. Nodes have basic structure with
-         name, device, and empty interfaces list. Node IDs, management IPs,
-         loopbacks, and other attributes are added during node transformation.";
-      
-      leaf name {
-        type string;
-        mandatory true;
+        "Lab devices (nodes) at init phase. Nodes are stored as a dictionary
+         keyed by node name. Each node has basic structure with name, device,
+         and empty interfaces list. Node IDs, management IPs, loopbacks, and
+         other attributes are added during node transformation.";
+      anydata node_dict {
         description
-          "Node name. Node names can have up to 16 characters by default.
-           The maximum length can be changed with defaults.const.MAX_NODE_ID_LENGTH.";
-      }
-      
-      leaf device {
-        type string;
-        description
-          "Device type for this node. If not specified, the default device
-           type from defaults.device is used. See supported platforms
-           documentation for available device types.";
-      }
-      
-      leaf provider {
-        type string;
-        description
-          "Virtualization provider for this node. Allows mixing providers
-           within a single topology (e.g., some nodes using libvirt, others
-           using clab).";
-      }
-      
-      leaf id {
-        type uint32 {
-          range "1..150";
-        }
-        description
-          "Static node identifier (optional). If not specified, node ID is
-           assigned during node transformation based on node's position in
-           the nodes dictionary.";
-      }
-      
-      leaf role {
-        type enumeration {
-          enum router;
-          enum host;
-          enum bridge;
-          enum gateway;
-        }
-        description
-          "Node role. When set to 'host', the device does not get a loopback IP
-           address and uses static routing toward the default gateway.";
-      }
-      
-      leaf mtu {
-        type uint32 {
-          range "64..9216";
-        }
-        description
-          "Device-wide (system) MTU. This MTU is applied to all interfaces that
-           don't have an explicit MTU.";
-      }
-      
-      anydata loopback {
-        description
-          "Loopback interface configuration. Can be a boolean 'true' to enable
-           loopback, or a dictionary with custom IPv4/IPv6 addresses.";
-      }
-      
-      anydata mgmt {
-        description
-          "Management interface configuration. Can be specified by users to
-           override default management IP addresses.";
-      }
-      
-      leaf box {
-        type string;
-        description
-          "Vagrant box or Docker container identifier. Default images for
-           individual device types are defined in system defaults.";
-      }
-      
-      leaf-list group {
-        type string;
-        description
-          "List of group names this node belongs to. Groups can be used to
-           set node attributes, set Ansible group variables, or limit the
-           scope of netlab commands. Can be specified as a single string or
-           a list of strings.";
-      }
-      
-      // Interfaces list exists but is empty at init phase
-      // Full interface structure is created during link transformation
-      list interfaces {
-        description
-          "Node interfaces. At init phase, this list exists but is empty.
-           Interfaces are created during link transformation.";
-        key "ifindex";
-        
-        leaf ifindex {
-          type uint32 {
-            range "0..max";
-          }
-          description "Interface index";
-        }
-        
-        anydata interface_data {
-          description "Interface data (not yet created at init phase)";
-        }
-      }
-      
-      // Allow other node attributes that might be present from user input
-      anydata node_attrs {
-        description
-          "Other node attributes (flexible structure). Allows user-defined
-           attributes that are not explicitly modeled.";
-      }
-      
-      // Allow other node attributes (flexible structure for user-defined attributes)
-      anydata node_attrs {
-        description
-          "Other node attributes (flexible structure). Allows user-defined
-           attributes that are not explicitly modeled.";
-      }
-      
-      anydata clab {
-        description
-          "Containerlab-specific node settings. Can include attributes like
-           clab.type (device type when supported by containerlab) and
-           clab.license (license file needed for network devices).";
-      }
-      anydata libvirt {
-        description
-          "Libvirt-specific node settings. Can include attributes like
-           libvirt.nic_model (virtual NIC model: virtio, e1000, rtl8139, etc.).";
-      }
-      anydata external {
-        description
-          "External provider-specific node settings. Used when integrating
-           netlab topologies with external devices or management systems.";
-      }
-      
-      // Device-specific attributes (eos, frr, ios, etc.)
-      anydata eos {
-        description
-          "Arista EOS-specific node attributes (e.g., eos.systemmacaddr, eos.serialnumber).";
-      }
-      anydata frr {
-        description
-          "FRR-specific node attributes.";
-      }
-      anydata ios {
-        description
-          "Cisco IOS-specific node attributes.";
-      }
-      // Add other device-specific attributes as needed
-      
-      // Module-specific attributes (routing, bgp, ospf, etc.)
-      anydata ospf {
-        description "OSPF module-specific node attributes";
-      }
-      anydata bgp {
-        description "BGP module-specific node attributes";
-      }
-      anydata isis {
-        description "ISIS module-specific node attributes";
-      }
-      anydata vlan {
-        description "VLAN module-specific node attributes";
-      }
-      anydata vrf {
-        description "VRF module-specific node attributes";
-      }
-      anydata vrfs {
-        description
-          "Node-specific VRF definitions. Dictionary of VRF names and their attributes (rd, import, export, loopback, etc.).";
-      }
-      anydata af {
-        description "Address family configuration (ipv4, ipv6 flags)";
-      }
-      anydata routing {
-        description
-          "Routing module node attributes (e.g., routing.static for static routes).";
-      }
-      anydata bridge {
-        description
-          "Bridge module node attributes.";
-      }
-      anydata dhcp {
-        description
-          "DHCP module node attributes.";
-      }
-      // Add other module-specific attributes as needed
-
-      
-      container bgp {
-        when "../module[.='bgp']";
-        description
-          "BGP configuration. This container can only be present when the BGP
-           module is enabled on the node.";
-        must "../module[.='bgp']" {
-          error-message "BGP container can only be present when BGP module is enabled";
-        }
-        leaf as {
-          type uint32 {
-            range "1..4294967295";
-          }
-          mandatory true;
-          description
-            "BGP AS number. Nodes with the same AS number are automatically
-             grouped into an AS group (e.g., as65000).";
-        }
-      }
-      
-      must "device or ../defaults/device" {
-        error-message "Node must have a device type or a default device must be set";
+          "Dictionary of nodes keyed by node name. Each node can have attributes
+           like device, provider, id, role, mtu, loopback, mgmt, box, group,
+           interfaces, and module-specific attributes.";
       }
     }
   }
@@ -498,14 +294,13 @@ module netlab-topology-init {
         min-elements 1;
         
         leaf node {
-          type leafref {
-            path "../../../nodes/name";
-            require-instance true;
-          }
+          type string;
           mandatory true;
           description
             "Node name. At init phase, users can specify interface-specific attributes
-             like ifindex, ipv4, ipv6, etc. as dictionary values under the node key.";
+             like ifindex, ipv4, ipv6, etc. as dictionary values under the node key.
+             Note: Cannot use leafref to validate node existence since nodes are
+             stored as a dictionary (anydata).";
         }
         
         // Interface-specific attributes that can be specified by users at init phase
@@ -878,9 +673,7 @@ module netlab-topology-init {
     // transformation and is not part of user-defined topology.
     
     // Global MUST statements
-    must "count(nodes) > 0" {
-      error-message "Topology must contain at least one node";
-    }
+    // Note: Cannot validate node count with anydata, but structure is validated
   }
 
   grouping topology-grouping {

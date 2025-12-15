@@ -58,8 +58,8 @@ def _dump_model_to_file(topology: Box, topo_json: dict, phase: str) -> None:
     dump_filename = dump_dir / f"yang-validation-{phase}.json"
     with open(dump_filename, "w") as f:
       json.dump(topo_json, f, indent=2, default=str)
-    if log.debug_active("yang_validation") or log.VERBOSE:
-      log.info(f"Dumped {phase} phase model to {dump_filename}", module="yang_validation")
+    # Always log the dump (not just in verbose mode) so users know where to find it
+    log.info(f"Dumped {phase} phase model to {dump_filename}", module="yang_validation")
   except Exception as ex:
     log.warning(f"Failed to dump model for {phase} phase: {ex}", module="yang_validation")
 
@@ -100,18 +100,12 @@ def topology_to_json(topology: Box, yang_model_path: typing.Optional[str] = None
 
   remove_underscore_keys(topo_dict)
 
-  # Transform nodes from dictionary to list format for YANG validation
-  # YANG lists must be arrays, but netlab uses dictionaries keyed by node name
+  # Transform nodes dictionary to match YANG model structure
+  # YANG model uses: container nodes { anydata node_dict; }
+  # So we need: nodes: { node_dict: { r1: {...}, r2: {...} } }
   if "nodes" in topo_dict and isinstance(topo_dict["nodes"], dict):
-    nodes_list = []
-    for node_name, node_data in topo_dict["nodes"].items():
-      if isinstance(node_data, dict):
-        node_data["name"] = node_name
-        nodes_list.append(node_data)
-      else:
-        # If node_data is not a dict, create a simple node entry
-        nodes_list.append({"name": node_name})
-    topo_dict["nodes"] = nodes_list
+    # Wrap the nodes dictionary in node_dict key to match YANG model
+    topo_dict["nodes"] = {"node_dict": topo_dict["nodes"]}
 
   # Extract namespace prefix from YANG model if path provided
   namespace_prefix = "netlab-topology"  # Default
@@ -211,6 +205,68 @@ def _create_yang_library(yang_content: str, yang_dir: str) -> str:
   return json.dumps(yang_library)
 
 
+def _instrument_yangson_tracing(dm: typing.Any, topo_json: dict, phase: str) -> None:
+  """
+  Instrument yangson library with debug tracing to capture internal behavior.
+  
+  This function adds tracing hooks to yangson's internal methods to help debug
+  validation issues, particularly with union types and complex structures.
+  """
+  try:
+    from yangson import schemanode
+    
+    # Store original methods
+    original_from_raw = schemanode.SchemaNode.from_raw
+    
+    def traced_from_raw(self, robj: typing.Any, jptr: typing.Any = None) -> typing.Any:
+      """Wrapper around from_raw with detailed tracing."""
+      if jptr is None:
+        jptr = ""
+      
+      # Get the schema node type and name
+      node_type = type(self).__name__
+      node_name = getattr(self, 'name', 'unknown')
+      
+      # Log entry
+      if isinstance(robj, dict):
+        keys = list(robj.keys())[:5]  # First 5 keys
+        log.print_verbose(f"[yangson_trace] from_raw: {node_type} '{node_name}' at {jptr}, keys: {keys}")
+      elif isinstance(robj, list):
+        log.print_verbose(f"[yangson_trace] from_raw: {node_type} '{node_name}' at {jptr}, list with {len(robj)} items")
+      else:
+        log.print_verbose(f"[yangson_trace] from_raw: {node_type} '{node_name}' at {jptr}, value: {repr(robj)[:100]}")
+      
+      try:
+        result = original_from_raw(self, robj, jptr)
+        log.print_verbose(f"[yangson_trace] from_raw: {node_type} '{node_name}' at {jptr} - SUCCESS")
+        return result
+      except Exception as e:
+        error_type = type(e).__name__
+        error_msg = str(e)
+        log.print_verbose(f"[yangson_trace] from_raw: {node_type} '{node_name}' at {jptr} - FAILED: {error_type}: {error_msg}")
+        
+        # If this is a union type, log more details
+        if hasattr(self, 'type_spec') and hasattr(self.type_spec, 'types'):
+          log.print_verbose(f"[yangson_trace] Union type detected with {len(self.type_spec.types)} member types")
+          for i, member_type in enumerate(self.type_spec.types):
+            log.print_verbose(f"[yangson_trace]   Member {i}: {member_type}")
+        
+        # Log the value that failed
+        if isinstance(robj, (str, int, float, bool)):
+          log.print_verbose(f"[yangson_trace] Failed value: {repr(robj)} (type: {type(robj).__name__})")
+        elif isinstance(robj, dict):
+          log.print_verbose(f"[yangson_trace] Failed dict keys: {list(robj.keys())}")
+        
+        raise
+    
+    # Monkey-patch the method
+    schemanode.SchemaNode.from_raw = traced_from_raw
+    log.print_verbose(f"[yang_validation] Instrumented yangson.from_raw with tracing")
+    
+  except Exception as ex:
+    log.print_verbose(f"[yang_validation] Failed to instrument yangson: {ex}")
+
+
 def validate_topology_yang(topology: Box, yang_model_path: str, phase: str) -> typing.List[str]:
   """
   Validate topology against YANG model using actual YANG MUST statements
@@ -231,7 +287,12 @@ def validate_topology_yang(topology: Box, yang_model_path: str, phase: str) -> t
   try:
     from yangson import DataModel  # type: ignore[import-untyped]
     from yangson.enumerations import ContentType, ValidationScope  # type: ignore[import-untyped]
-    from yangson.exceptions import SchemaError, SemanticError, YangTypeError  # type: ignore[import-untyped]
+    from yangson.exceptions import (  # type: ignore[import-untyped]
+      RawMemberError,
+      SchemaError,
+      SemanticError,
+      YangTypeError,
+    )
   except ImportError as ex:
     log.fatal(f"yangson library not found: {ex}. Install it with: pip install yangson", module="yang_validation")
     return errors
@@ -271,19 +332,103 @@ def validate_topology_yang(topology: Box, yang_model_path: str, phase: str) -> t
   # Convert topology to JSON format and validate
   try:
     topo_json = topology_to_json(topology, yang_model_path)
-    instance = dm.from_raw(topo_json)
-
-    # Dump model to file if dump_model is enabled (just before validation)
+    
+    # Dump model to file if dump_model is enabled (before validation, so we can inspect even if validation fails)
     _dump_model_to_file(topology, topo_json, phase)
-
+    
+    if log.debug_active("yang_validation") or log.VERBOSE:
+      log.print_verbose(f"[yang_validation] Starting YANG validation for {phase} phase")
+      log.print_verbose(f"[yang_validation] JSON structure keys: {list(topo_json.keys())}")
+    
+    # Enable yangson tracing
+    if log.debug_active("yang_validation") or log.VERBOSE:
+      import sys
+      sys._yangson_trace_enabled = True
+      log.print_verbose(f"[yang_validation] Enabled yangson internal tracing")
+    
+    instance = dm.from_raw(topo_json)
+    
+    if log.debug_active("yang_validation") or log.VERBOSE:
+      log.print_verbose(f"[yang_validation] Successfully parsed JSON into YANG instance for {phase} phase")
+    
     instance.validate(ValidationScope.all, ContentType.all)
+    
+    if log.debug_active("yang_validation") or log.VERBOSE:
+      log.print_verbose(f"[yang_validation] YANG validation passed for {phase} phase")
+      
+  except RawMemberError as ex:
+    # RawMemberError occurs during from_raw when JSON structure doesn't match YANG model
+    error_path = getattr(ex, 'path', str(ex))
+    errors.append(f"YANG validation failed: {error_path}")
+    
+    if log.debug_active("yang_validation") or log.VERBOSE:
+      # Try to extract the problematic value from the JSON
+      try:
+        import json
+        path_parts = error_path.split('/')
+        if len(path_parts) >= 2:
+          # Navigate to the problematic field
+          current = topo_json
+          for part in path_parts[1:]:  # Skip empty first part
+            if '=' in part:
+              # Handle list keys like "nodes=r1" or "interfaces=1"
+              key, value = part.split('=', 1)
+              if isinstance(current, dict):
+                if key in current:
+                  if isinstance(current[key], list):
+                    # Find the list item with matching key
+                    for item in current[key]:
+                      if isinstance(item, dict) and item.get('name') == value:
+                        current = item
+                        break
+                      elif isinstance(item, dict) and item.get('ifindex') == int(value):
+                        current = item
+                        break
+                    else:
+                      current = None
+                      break
+                  else:
+                    current = current[key]
+                else:
+                  current = None
+                  break
+              else:
+                current = None
+                break
+            else:
+              if isinstance(current, dict) and part in current:
+                current = current[part]
+              else:
+                current = None
+                break
+          
+          if current is not None:
+            log.print_verbose(f"[yang_validation] Problematic value at {error_path}: {repr(current)} (type: {type(current).__name__})")
+            log.print_verbose(f"[yang_validation] JSON representation: {json.dumps(current, default=str)}")
+      except Exception as path_ex:
+        if log.debug_active("yang_validation") or log.VERBOSE:
+          log.print_verbose(f"[yang_validation] Could not extract value from path: {path_ex}")
+      
+      if log.debug_active("yang_validation") or log.VERBOSE:
+        errors.append(f"Traceback: {traceback.format_exc()}")
+      
   except (SemanticError, YangTypeError) as ex:
     # These are expected validation errors - return them as error messages
     errors.append(f"YANG validation failed: {str(ex)}")
+    
+    if log.debug_active("yang_validation") or log.VERBOSE:
+      errors.append(f"Traceback: {traceback.format_exc()}")
+      log.print_verbose(f"[yang_validation] Exception type: {type(ex).__name__}")
+      if hasattr(ex, '__dict__'):
+        log.print_verbose(f"[yang_validation] Exception attributes: {ex.__dict__}")
+      
   except Exception as ex:
     errors.append(f"YANG validation failed: {str(ex)}")
-    if log.debug_active("yang"):
+    if log.debug_active("yang_validation") or log.VERBOSE:
       errors.append(f"Traceback: {traceback.format_exc()}")
+      log.print_verbose(f"[yang_validation] Exception type: {type(ex).__name__}")
+      if hasattr(ex, '__dict__'):
+        log.print_verbose(f"[yang_validation] Exception attributes: {ex.__dict__}")
 
   return errors
 

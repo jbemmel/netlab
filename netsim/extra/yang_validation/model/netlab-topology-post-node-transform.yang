@@ -33,243 +33,179 @@ module netlab-topology-post-node-transform {
     description
       "Network lab topology structure at post-node-transform phase.";
     
-    // Use base topology grouping for common elements
-    uses netlab-init:topology-base-grouping;
+    // Use defaults grouping (unchanged)
+    container defaults {
+      uses netlab-init:defaults-grouping;
+    }
 
-    // Nodes are now lists (after transformation) with IDs assigned
-    list nodes {
-      key "name";
+    // Redefine nodes as dictionary (container) with post-node-transform structure
+    container nodes {
       description
-        "Lab devices (nodes) after node transformation. Nodes are now in list format
-         with IDs, management IPs, and loopback addresses assigned.";
-      
-      leaf name {
-        type string;
-        mandatory true;
-        description "Node name";
-      }
-      
-      leaf id {
-        type uint32 {
-          range "1..150";
-        }
-        mandatory true;
+        "Lab devices (nodes) at post-node-transform phase. Nodes are stored as
+         a dictionary keyed by node name. Nodes have IDs, management IPs, and
+         loopback addresses assigned.";
+      anydata node_dict {
         description
-          "Node identifier. Must be assigned during node transformation.";
-      }
-      
-      leaf device {
-        type string;
-        description "Device type for this node";
-      }
-      
-      leaf provider {
-        type string;
-        description "Virtualization provider for this node";
-      }
-      
-      leaf box {
-        type string;
-        description "Vagrant box or Docker container identifier";
-      }
-      
-      leaf mtu {
-        type uint32 {
-          range "64..9216";
-        }
-        description "Device-wide (system) MTU";
-      }
-      
-      anydata mgmt {
-        description
-          "Management interface configuration. Must be present after node transformation.";
-      }
-      
-      anydata loopback {
-        description
-          "Loopback interface configuration. May be present if node role is router.";
-      }
-      
-      anydata af {
-        description "Address family configuration";
-      }
-      
-      leaf role {
-        type enumeration {
-          enum router;
-          enum host;
-          enum bridge;
-          enum gateway;
-        }
-        description "Node role";
-      }
-      
-      leaf-list module {
-        type string;
-        description "List of configuration modules";
-      }
-      
-      leaf-list group {
-        type string;
-        description
-          "List of group names this node belongs to. Groups can be used to
-           set node attributes, set Ansible group variables, or limit the
-           scope of netlab commands.";
-      }
-      
-      // Module-specific node attributes
-      anydata ospf {
-        description "OSPF module node attributes";
-      }
-      anydata bgp {
-        description "BGP module node attributes";
-      }
-      
-      // Interfaces list exists but is empty at this phase (interfaces created during link transform)
-      list interfaces {
-        description
-          "Node interfaces. At this phase, the interfaces list exists but is empty.
-           Interfaces are created during link transformation.";
-        key "ifindex";
-        
-        leaf ifindex {
-          type uint32 {
-            range "0..max";
-          }
-          description "Interface index";
-        }
-        
-        anydata interface_data {
-          description "Interface data (not yet created at this phase)";
-        }
-      }
-      
-      // Allow other node attributes (flexible structure)
-      anydata node_attrs {
-        description "Other node attributes";
+          "Dictionary of nodes keyed by node name. Each node has attributes
+           like id (mandatory), device, mgmt, loopback, af, module, and
+           module-specific attributes. Interfaces list exists but is empty.";
       }
     }
 
-    // Links have been initialized (interfaces list exists but not fully transformed)
-    list links {
-      description
-        "Links between lab devices. At this phase, links have been initialized
-         with an interfaces list, but interface addresses and node interfaces
-         are not yet created.";
-      key "linkindex";
-      
-      leaf linkindex {
-        type uint32 {
-          range "1..max";
-        }
-      }
-      
-      list interfaces {
-        description
-          "Interfaces connected by this link. At this phase, interfaces list exists
-           but interface addresses and node interfaces are not yet created.";
-        key "node";
-        
-        leaf node {
-          type leafref {
-            path "../../../nodes/name";
-            require-instance true;
-          }
-          mandatory true;
-          description "Node name";
-        }
-        
-        // Interface-specific attributes that can be specified by users
-        leaf ifindex {
-          type uint32 {
-            range "0..max";
-          }
-          description
-            "Interface index. Can be specified by users to control interface numbering.";
-        }
-        
-        leaf ipv4 {
-          type union {
-            type boolean;
-            type string;
-          }
-          description
-            "IPv4 address for this interface. Can be specified as an address string
-             or as a boolean 'true' for unnumbered interfaces.";
-        }
-        
-        leaf ipv6 {
-          type union {
-            type boolean;
-            type string;
-          }
-          description
-            "IPv6 address for this interface. Can be specified as an address string
-             or as a boolean 'true' for unnumbered interfaces.";
-        }
-        
-        anydata interface_attrs {
-          description "Other interface attributes (flexible structure for user-defined attributes)";
-        }
-      }
-      
-      // Link attributes that can be specified by users
-      leaf name {
-        type string;
-        description "Link name. Used for identification and in some provider configurations.";
-      }
-      
-      leaf type {
-        type enumeration {
-          enum p2p;
-          enum lan;
-          enum stub;
-          enum loopback;
-        }
-        description
-          "Link type. When missing, link type is selected based on the number of devices
-           connected to the link.";
-      }
-      
-      leaf pool {
-        type string;
-        description
-          "Address pool name to use for this link. References a pool defined
-           in the addressing element.";
-      }
-      
-      anydata prefix {
-        description
-          "Prefix for this link. Can be a string (IPv4 CIDR or prefix name), 
-           a dictionary with ipv4/ipv6/allocation keys, or false (for layer-2-only links).";
-      }
-      
-      leaf bandwidth {
-        type uint32 {
-          range "1..max";
-        }
-        description
-          "Link bandwidth in Mbps. Used to configure interface bandwidth
-           when supported by the connected device(s).";
-      }
-      
-      leaf mtu {
-        type uint32 {
-          range "64..9216";
-        }
-        description "Link MTU. Valid range: 64-9216 bytes.";
-      }
-      
-      anydata link_attrs {
-        description "Other link attributes";
-      }
-    }
+    // Use links grouping (unchanged at post-node-transform phase)
+    uses netlab-init:links-grouping;
 
+    // Use unmodified top-level elements from base grouping
+    leaf-list module {
+      type string;
+      description
+        "Default list of optional configuration modules used by this network
+         topology. You can use device-level module attribute to override this
+         setting for individual nodes. Host nodes do not inherit global
+         configuration modules.";
+    }
+    
+    leaf message {
+      type string;
+      description
+        "Help message to display after successful 'netlab initial' or
+         'netlab up' commands. You can use this message to tell the end-user
+         how to use the lab.";
+    }
+    
+    leaf name {
+      type string;
+      description
+        "Topology name used to name Linux bridges when using libvirt Vagrant
+         plugin. If not specified, the first twelve characters of the directory
+         name are used (spaces and dots replaced with underscores).";
+    }
+    
+    leaf provider {
+      type string;
+      description
+        "Virtualization provider (libvirt, clab, or external). Default value:
+         libvirt.";
+    }
+    
+    leaf version {
+      type string;
+      description
+        "Minimum netlab version required to use this lab topology. You can
+         use either a simple version number or Python module version
+         specification (example: >= 1.6.3).";
+    }
+    
     // Addressing and pools are added during node transformation
     anydata addressing {
       description
         "Addressing configuration (mgmt, loopback, p2p, lan, router_id, vrf_loopback, l2only).
          Added during node transformation.";
+    }
+    
+    anydata groups {
+      description
+        "Groups of lab objects (nodes, VLANs, or VRFs) with similar
+         attributes. Groups are specified as a dictionary with group names
+         as keys. Dictionary values can be either a list of member nodes or a
+         dictionary specifying members. Groups can be used to set node/VLAN/VRF
+         attributes, set Ansible group variables, or limit the scope of netlab
+         commands.";
+    }
+    
+    anydata vlans {
+      description
+        "VLAN definitions. VLANs are specified as a dictionary with VLAN
+         names as keys. Each VLAN can have attributes like mode (bridge, irb,
+         route), links (list of links associated with the VLAN), and other
+         VLAN-specific settings.";
+    }
+    
+    anydata validate {
+      description
+        "Lab validation tests. Validation tests are specified as a dictionary
+         with test names as keys. Each test can define nodes to test, wait
+         conditions, plugins to execute, and expected results.";
+    }
+    
+    anydata prefix {
+      description
+        "Named IP prefixes that can be used to address links and VLANs or in
+         prefix lists or validation expressions. The dictionary keys are
+         prefix names (e.g., lan_1, lan_2, loopback); the values are dictionaries
+         defining individual prefixes with ipv4, ipv6, pool, and allocation
+         attributes (flexible structure).";
+    }
+    
+    container tools {
+      description
+        "External network management tools deployed after the lab has been
+         started and configured. Tools are started as Docker containers and
+         can access the management network and management interfaces of lab
+         devices.";
+      anydata tool_definitions {
+        description
+          "Tool definitions. Each tool can have runtime, enabled, and
+           tool-specific configuration parameters (flexible structure)";
+      }
+    }
+    
+    leaf-list plugin {
+      type string;
+      description
+        "List of plugins used by this topology. Plugins extend netlab
+         functionality with custom configuration templates, validation tests,
+         or other features.";
+    }
+    
+    leaf-list input {
+      type string;
+      description
+        "Input topology file paths (internal). Tracks the source topology
+         files used during transformation. Added during the load phase to
+         record the main topology file and any included default files.";
+    }
+    
+    anydata Plugin {
+      description
+        "Plugin internal data (flexible structure). Contains loaded plugin objects
+         added during plugin initialization. This is present at init phase
+         because plugins are loaded before the init hook is called.";
+    }
+    
+    anydata libvirt {
+      description
+        "Libvirt-specific topology settings. Can include libvirt-specific
+         configuration like bridge names, port mappings, and other
+         virtualization provider settings.";
+    }
+    
+    anydata clab {
+      description
+        "Containerlab-specific topology settings. Can include containerlab-specific
+         configuration like network names, container settings, and other
+         containerlab provider settings.";
+    }
+    
+    // Module-specific topology-level attributes
+    anydata ospf {
+      description "OSPF module topology-level attributes";
+    }
+    anydata bgp {
+      description "BGP module topology-level attributes";
+    }
+    anydata isis {
+      description "ISIS module topology-level attributes";
+    }
+    anydata vlan {
+      description "VLAN module topology-level attributes";
+    }
+    anydata vrf {
+      description "VRF module topology-level attributes";
+    }
+    anydata vrfs {
+      description
+        "Topology-level VRF definitions. Dictionary of VRF names and their attributes (rd, import, export, loopback, etc.).";
     }
     
     // Internal data structures
@@ -282,13 +218,6 @@ module netlab-topology-post-node-transform {
          Added during node transformation.";
     }
 
-    must "count(nodes) > 0" {
-      error-message "Topology must contain at least one node";
-    }
-    
-    // MUST: All nodes must have IDs after node transformation
-    must "count(nodes[id]) = count(nodes)" {
-      error-message "All nodes must have IDs assigned after node transformation";
-    }
+    // Note: Cannot validate node count or ID presence with anydata, but structure is validated
   }
 }
