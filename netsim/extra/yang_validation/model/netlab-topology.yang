@@ -164,8 +164,9 @@ module netlab-topology {
       description "List of input topology files";
     }
     
-    anydata stp {
-      description "Topology-level STP attributes (flexible structure).";
+    container stp {
+      description "Topology-level STP attributes";
+      uses stp:stp-global-grouping;
     }
     
     anydata topology_data {
