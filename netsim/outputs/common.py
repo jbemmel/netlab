@@ -28,7 +28,7 @@ def provider_inventory_settings(node: Box, defaults: Box) -> None:
 def add_group_vars(
       host: Box,
       node: Box,
-      defaults: Box) -> typing.Optional[Box]:
+      defaults: Box) -> typing.Union[Box, dict, None]:
 
   group_vars = devices.get_device_attribute(node,'group_vars',defaults)
   if isinstance(group_vars,dict):

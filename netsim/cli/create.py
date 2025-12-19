@@ -11,7 +11,7 @@ import textwrap
 import typing
 from pathlib import Path
 
-import requests
+import requests  # type: ignore[import-untyped]
 from box import Box
 
 from .. import augment
