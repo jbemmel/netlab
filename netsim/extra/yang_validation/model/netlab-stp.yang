@@ -1,0 +1,131 @@
+module netlab-stp {
+  yang-version 1.1;
+  namespace "urn:netlab:stp";
+  prefix "netlab-stp";
+
+  description
+    "YANG model for netlab STP (Spanning Tree Protocol) module attributes.
+     
+     This module defines STP-related attributes that can be used in netlab topologies.
+     STP attributes require the STP module to be active when used.";
+
+  revision 2025-12-19 {
+    description "Initial version for STP module YANG validation";
+  }
+
+  // STP protocol type enumeration
+  typedef stp-protocol-type {
+    type enumeration {
+      enum stp {
+        description "IEEE 802.1D Spanning Tree Protocol";
+      }
+      enum rstp {
+        description "IEEE 802.1w Rapid Spanning Tree Protocol";
+      }
+      enum mstp {
+        description "IEEE 802.1s Multiple Spanning Tree Protocol";
+      }
+      enum pvrst {
+        description "Per-VLAN Rapid Spanning Tree";
+      }
+    }
+    description "STP protocol variant";
+  }
+
+  // STP port type enumeration
+  typedef stp-port-type {
+    type enumeration {
+      enum normal;
+      enum edge;
+      enum network;
+      enum auto;
+      enum none;
+    }
+    description "STP port type";
+  }
+
+  // STP global-level attributes grouping
+  grouping stp-global-grouping {
+    description "STP global-level attributes";
+    leaf enable {
+      type boolean;
+      description "Enable STP globally";
+    }
+    leaf protocol {
+      type stp-protocol-type;
+      description "STP protocol variant to use";
+    }
+    leaf stub_port_type {
+      type stp-port-type;
+      description "Port type to configure on ports with only hosts connected";
+    }
+    leaf port_type {
+      type stp-port-type;
+      description "STP port type for all interfaces";
+    }
+    anydata stp_global_attrs {
+      description "Other STP global attributes (flexible structure)";
+    }
+  }
+
+  // STP node-level attributes grouping
+  grouping stp-node-grouping {
+    description "STP node-level attributes. Note: STP protocol cannot be set at node level, only globally.";
+    uses stp-global-grouping {
+      // Refine protocol field to indicate it's not allowed at node level
+      // The MUST constraint in the topology model will enforce this restriction
+      refine protocol {
+        description "STP protocol cannot be set at node level. Set it globally in defaults.stp.protocol instead.";
+      }
+    }
+    leaf priority {
+      type uint32 {
+        range "0..61440";
+      }
+      description
+        "STP priority for root election (increments of 4096).
+         Lower value = higher priority. Default: 32768.";
+    }
+  }
+
+  // STP link-level attributes grouping
+  grouping stp-link-grouping {
+    description "STP link-level attributes";
+    leaf enable {
+      type boolean;
+      description "Enable STP on this link";
+    }
+    leaf port_type {
+      type stp-port-type;
+      description "STP port type for this link";
+    }
+    anydata stp_link_attrs {
+      description "Other STP link attributes (flexible structure)";
+    }
+  }
+
+  // STP interface-level attributes grouping
+  grouping stp-interface-grouping {
+    description "STP interface-level attributes";
+    leaf enable {
+      type boolean;
+      description "Enable STP on this interface";
+    }
+    leaf port_priority {
+      type uint8 {
+        range "0..15";
+      }
+      description
+        "STP port priority (4-bit value, default 8).
+         Lower value = higher priority.";
+    }
+    leaf port_type {
+      type stp-port-type;
+      description "STP port type for this interface";
+    }
+    anydata stp_interface_attrs {
+      description "Other STP interface attributes (flexible structure)";
+    }
+  }
+}
+

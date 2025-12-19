@@ -1,0 +1,178 @@
+module netlab-topology {
+  yang-version 1.1;
+  namespace "urn:netlab:topology";
+  prefix "netlab";
+
+  import netlab-stp {
+    prefix "stp";
+    revision-date 2025-12-19;
+  }
+
+  description
+    "YANG model for netlab lab topology validation.
+     
+     This model can validate the topology at either the initial phase (after
+     loading and defaults merging) or the transformed phase (after all
+     transformations are complete). The model is flexible enough to handle
+     both cases by using anydata for most structures.
+     
+     When validating at init phase:
+     * The topology file has been read and parsed
+     * System and user defaults have been merged
+     * Basic structure is present (nodes, links, defaults)
+     
+     When validating at post_transform phase:
+     * All node and link transformations are complete
+     * Interfaces have been created on nodes and links
+     * All internal attributes have been added";
+
+  revision 2025-12-19 {
+    description "Initial version for basic YANG validation plugin";
+  }
+
+  container topology {
+    description
+      "Network lab topology structure. Can be validated at init or post_transform phase.";
+    
+    leaf name {
+      type string;
+      description "Topology name";
+    }
+    
+    anydata defaults {
+      description
+        "Topology-wide defaults (flexible structure). May include:
+         bgp, stp, addressing, attributes, device, automation, and other default values.";
+    }
+
+    leaf-list module {
+      type string;
+      description
+        "List of active modules. Module-specific attributes (BGP, STP, etc.) require their respective modules to be in this list.";
+    }
+    
+    leaf-list plugin {
+      type string;
+      description "List of plugins enabled for this topology";
+    }
+    
+    leaf provider {
+      type string;
+      description "Virtualization provider (e.g., libvirt, clab, virtualbox)";
+    }
+
+    list nodes {
+      key "name";
+      description
+        "Lab devices (nodes). At init phase, nodes are user-defined.
+         At post_transform phase, nodes have IDs, interfaces, and transformed attributes.";
+      
+      leaf name {
+        type string;
+        mandatory true;
+        description "Node name (used as key)";
+      }
+      
+      container stp {
+        description "STP node-level attributes";
+        uses stp:stp-node-grouping;
+        must "../../module = 'stp' or ../../module[. = 'stp']" {
+          error-message "STP node attributes require the STP module to be active. Add 'stp' to the module list.";
+        }
+        must "not(protocol)" {
+          error-message "STP protocol cannot be set at node level. Set it globally in defaults.stp.protocol instead.";
+        }
+      }
+      
+      anydata node_data {
+        description
+          "Node attributes (flexible structure). May include:
+           device, id, interfaces, management IPs, bgp, and other node attributes.";
+      }
+    }
+
+    list links {
+      key "linkindex";
+      description
+        "Links between lab devices. Structure varies by phase:
+         - Init: Basic link structure with node names
+         - Post-transform: Includes interfaces with addressing, linkindex, etc.";
+      
+      leaf linkindex {
+        type uint32 {
+          range "1..max";
+        }
+        description
+          "Link sequence number (starting with one). Set during transformation.";
+      }
+      
+      anydata link_data {
+        description
+          "Link attributes (flexible structure). May include:
+           name, type, pool, prefix, bandwidth, mtu, node_count, bridge, bgp, stp, etc.";
+      }
+      
+      list interfaces {
+        key "node";
+        description
+          "Interfaces connected by this link. Structure varies by phase:
+           - Init: May contain only node names
+           - Post-transform: Includes ifindex, ifname, ipv4, ipv6, etc.";
+        min-elements 1;
+        
+        leaf node {
+          type string {
+            length "1..max";
+          }
+          mandatory true;
+          description "Node name (must be non-empty)";
+        }
+        
+        container stp {
+          description "STP interface-level attributes";
+          uses stp:stp-interface-grouping;
+          must "../../../module = 'stp' or ../../../module[. = 'stp']" {
+            error-message "STP interface attributes require the STP module to be active. Add 'stp' to the module list.";
+          }
+        }
+        
+        anydata interface_data {
+          description
+            "Other interface attributes (flexible structure). May include:
+             ifindex, ifname, ipv4, ipv6, linkindex, type, mtu, etc.";
+        }
+      }
+      
+      anydata link_data {
+        description
+          "Link attributes (flexible structure). May include:
+           name, type, pool, prefix, bandwidth, mtu, node_count, bridge, bgp, stp, etc.";
+      }
+      
+    }
+    
+    anydata addressing {
+      description
+        "Address pools for IPv4 and IPv6 addressing. Contains pools like:
+         mgmt, loopback, lan, p2p, router_id, l2only, vrf_loopback, etc.
+         Each pool may contain: ipv4, ipv6, prefix, prefix6, start, mac, allocation, etc.
+         Pools like l2only may be empty dictionaries.";
+    }
+    
+    leaf-list input {
+      type string;
+      description "List of input topology files";
+    }
+    
+    anydata stp {
+      description "Topology-level STP attributes (flexible structure).";
+    }
+    
+    anydata topology_data {
+      description
+        "Other topology-level elements (flexible structure). May include:
+         groups, vlans, validate, prefix, and other topology settings.";
+    }
+  }
+}
+

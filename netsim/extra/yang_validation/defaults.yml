@@ -1,0 +1,21 @@
+---
+yang_validation:
+  validate_phase: post_transform  # Phase to validate: 'init' or 'post_transform'
+  model: package:extra/yang_validation/model/netlab-topology.yang  # Path to YANG model file
+
+attributes:
+  global:
+    yang_validation:
+      validate_phase:
+        type: str
+        valid_values: [ init, post_transform ]
+        description: |
+          Phase at which to validate the topology. Options:
+          - init: Validate after loading and defaults merging (before transformation)
+          - post_transform: Validate after all transformations are complete (default)
+      model:
+        type: str
+        description: |
+          Path to the YANG model file. Can be:
+          - A package: path (e.g., package:extra/yang_validation/model/netlab-topology.yang)
+          - An absolute or relative file path

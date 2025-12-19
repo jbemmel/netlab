@@ -1,0 +1,18 @@
+---
+# Test topology with STP protocol set at node level (should be disallowed by YANG)
+# This demonstrates YANG validation catching node-level protocol settings
+
+plugin: [yang_validation]
+
+defaults:
+  device: dellos10
+
+module: [ stp, vlan ]  # STP module is active
+
+nodes:
+  s1:
+    stp.protocol: rstp  # ERROR: YANG model disallows protocol at node level (only allowed globally)
+  s2:
+
+links:
+- s1-s2
