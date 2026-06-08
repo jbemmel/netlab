@@ -115,13 +115,7 @@ features:
     timers: true
     _default_locpref: true
     aggregate: true
-    gr:
-      state: [ enable, disable, helper ]
-      restart_time: true
-      stalepath_time: true
-      update_delay: true
-      ipv4: true
-      ipv6: true
+    gr: true
     bandwidth:
       in: int
       out: int

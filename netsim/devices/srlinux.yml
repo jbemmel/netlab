@@ -97,13 +97,7 @@ features:
     bfd: true
     passive: true
     multihop.vrf: true
-    gr:
-      state: [ enable, disable, helper ]
-      restart_time: true
-      stalepath_time: true
-      update_delay: true
-      ipv4: true
-      ipv6: true
+    gr: true
   evpn:
     irb: True
     asymmetrical_irb: True
