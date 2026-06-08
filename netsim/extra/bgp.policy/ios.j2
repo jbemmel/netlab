@@ -1,4 +1,5 @@
 {% import '_route_map_ios.j2' as routemap with context %}
+{% import '_gr_ios.j2' as gr with context %}
 {% macro ebgp_neighbor(n,af) -%}
 {%   if 'weight' in n %}
     neighbor {{ n[af] }} weight {{ n.weight }}
@@ -7,6 +8,7 @@
     neighbor {{ n[af] }} dmzlink-bw
 {%   endif %}
 {{   routemap.apply_route_map(n,af,True) }}
+{{   gr.gr_neighbor(n,af) }}
 {%- endmacro %}
 !
 {% macro aggregate(bgp,af) %}
@@ -24,10 +26,16 @@ router bgp {{ bgp.as }}
 {% if 'locpref' in bgp %}
   bgp default local-preference {{ bgp.locpref }}
 {% endif %}
+{% if bgp.gr is defined %}
+{{   gr.gr_global(bgp.gr) }}
+{% endif %}
 !
 ! Global address families
 {% for af in ['ipv4','ipv6'] if af in bgp %}
   address-family {{ af }}
+{%   if bgp.gr is defined %}
+{{     gr.gr_af(bgp.gr,af) }}
+{%   endif %}
 {{   aggregate(bgp,af) }}
 {%   for n in bgp.neighbors if n[af] is defined %}
 {{     ebgp_neighbor(n,af) }}
@@ -40,6 +48,9 @@ router bgp {{ bgp.as }}
 {%       for n in vdata.bgp.neighbors if n[af] is defined %}
 {%         if loop.first %}
   address-family {{ af }} vrf {{ vname }}
+{%           if vdata.bgp.gr is defined %}
+{{             gr.gr_af(vdata.bgp.gr,af) }}
+{%           endif %}
 {{           aggregate(vdata.bgp,af) }}
 {%         endif %}
 {{         ebgp_neighbor(n,af) }}

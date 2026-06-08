@@ -98,7 +98,15 @@ def valid_bgp_neighbor_details(
   for k,v in kwargs.items():
     if not k in data:
       raise Exception(f'Neighbor data structure does not contain attribute {k}')
-    if data[k] != v:
+    if isinstance(v,dict):
+      if not isinstance(data[k],(dict,Box)):
+        raise Exception(f'{k} is not a dictionary')
+      for sk,sv in v.items():
+        if sk not in data[k]:
+          raise Exception(f'Neighbor data structure does not contain attribute {k}.{sk}')
+        if data[k][sk] != sv:
+          raise Exception(f'{k}.{sk} expected value {sv} actual {data[k][sk]}')
+    elif data[k] != v:
       raise Exception(f'{k} expected value {v} actual {data[k]}')
 
   return f'All specified BGP neighbor parameters have the expected values'

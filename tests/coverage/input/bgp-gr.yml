@@ -1,0 +1,33 @@
+---
+plugin: [ bgp.policy ]
+module: [ bgp ]
+
+defaults:
+  device: none
+  bgp.warnings.missing_igp: False
+
+bgp.as: 65000
+
+nodes:
+  enable:
+    bgp.gr: enable
+  helper:
+    bgp.gr: helper
+  full:
+    bgp.gr:
+      state: enable
+      restart_time: 120
+      stalepath_time: 360
+      update_delay: 120
+      ipv6: false
+  link_a:
+    bgp.as: 65000
+  link_b:
+    bgp.as: 65100
+
+links:
+- enable-helper
+- enable-full
+- link_a:
+    bgp.gr: helper
+  link_b:

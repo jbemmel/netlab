@@ -1,4 +1,5 @@
 {% import '_route_map_ios.j2' as routemap with context %}
+{% import '_gr_frr.j2' as gr with context %}
 {% macro ebgp_neighbor(n,af) -%}
 {%   set peer = n[af] if n[af] is string else n.local_if|default('?') %}
 {%   if 'weight' in n %}
@@ -8,6 +9,7 @@
     neighbor {{ peer }} send-community extended
 {%   endif %}
 {{   routemap.apply_route_map(n,af,True) }}
+{{   gr.gr_neighbor(n,af) }}
 {%- endmacro %}
 
 {% macro aggregate(bgp,af) %}
@@ -25,8 +27,14 @@ router bgp {{ bgp.as }}
 {% if 'locpref' in bgp %}
   bgp default local-preference {{ bgp.locpref }}
 {% endif %}
+{% if bgp.gr is defined %}
+{{   gr.gr_global(bgp.gr) }}
+{% endif %}
 {% for af in ['ipv4','ipv6'] if af in bgp %}
   address-family {{ af }}
+{%   if bgp.gr is defined %}
+{{     gr.gr_af(bgp.gr,af) }}
+{%   endif %}
 {{   aggregate(bgp,af) }}
 {%   for n in bgp.neighbors if n[af] is defined %}
 {{     ebgp_neighbor(n,af) }}
@@ -48,8 +56,14 @@ router bgp {{ bgp.as }} vrf {{ vname }}
 {% if 'locpref' in bgp %}
   bgp default local-preference {{ bgp.locpref }}
 {% endif %}
+{% if vdata.bgp.gr is defined %}
+{{   gr.gr_global(vdata.bgp.gr) }}
+{% endif %}
 {%     for af in ['ipv4','ipv6'] if af in vdata.af|default({}) %}
   address-family {{ af }}
+{%       if vdata.bgp.gr is defined %}
+{{         gr.gr_af(vdata.bgp.gr,af) }}
+{%       endif %}
 {{       aggregate(vdata.bgp,af) }}
 {%       for n in vdata.bgp.neighbors if n[af] is defined %}
 {{         ebgp_neighbor(n,af) }}

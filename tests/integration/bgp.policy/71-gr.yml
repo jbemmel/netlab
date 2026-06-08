@@ -1,0 +1,68 @@
+---
+message: |
+  Test BGP graceful restart (bgp.gr). Validation runs on FRR probe nodes only:
+
+  * Node-level bgp.gr on DUT and X1 (global GR and helper mode)
+  * Link-level bgp.gr on the DUT-X2 EBGP session
+
+defaults.sources.extra: [ ../wait_times.yml, ../warnings.yml ]
+
+plugin: [ bgp.policy ]
+module: [ bgp, ospf ]
+
+groups:
+  probes:
+    device: frr
+    provider: clab
+    members: [ x1, x2 ]
+
+nodes:
+  dut:
+    bgp.as: 65000
+    bgp.gr:
+      state: enable
+      restart_time: 120
+      stalepath_time: 360
+  x1:
+    bgp.as: 65100
+    bgp.gr: helper
+  x2:
+    bgp.as: 65200
+
+ospf.timers.hello: 1
+ospf.timers.dead: 3
+
+links:
+- dut-x1
+- dut:
+    bgp.gr: enable
+  x2:
+
+validate:
+  session_x1:
+    description: Check IPv4 EBGP session with X1
+    wait: ebgp_session
+    nodes: [ x1 ]
+    plugin: bgp_neighbor(node.bgp.neighbors,'dut')
+
+  session_x2:
+    description: Check IPv4 EBGP session with X2
+    wait: ebgp_session
+    nodes: [ x2 ]
+    plugin: bgp_neighbor(node.bgp.neighbors,'dut')
+
+  gr_global:
+    description: Check node-level bgp.gr on DUT-X1 session
+    nodes: [ x1 ]
+    plugin: |-
+      bgp_neighbor_details(
+        node.bgp.neighbors,'dut',
+        gracefulRestartInfo={'remoteGrMode': 'Restart'})
+
+  gr_neighbor:
+    description: Check link-level bgp.gr on DUT-X2 session
+    nodes: [ x2 ]
+    plugin: |-
+      bgp_neighbor_details(
+        node.bgp.neighbors,'dut',
+        gracefulRestartInfo={'remoteGrMode': 'Restart'})

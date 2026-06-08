@@ -2,7 +2,7 @@ import typing
 
 from box import Box
 
-from netsim import api, data
+from netsim import api, data, modules
 from netsim.augment import devices
 from netsim.data import types
 from netsim.modules.routing.policy import check_routing_policy, import_routing_policy
@@ -266,6 +266,56 @@ def apply_bgp_routing_policy(ndata: Box,ngb: Box,intf: Box,topology: Box) -> Non
     ngb.policy[direction] = intf.bgp.policy[direction]      # Copy interface BGP routing policy into a neighbor
     apply_config(ndata,ngb)                                 # Remember that we have to do extra configuration
 
+def normalize_bgp_gr(gr: Box) -> None:
+  if 'ipv4' not in gr:
+    gr.ipv4 = True
+  if 'ipv6' not in gr:
+    gr.ipv6 = True
+
+def process_bgp_gr(ndata: Box, topology: Box) -> None:
+  global _config_name
+  for (bdata,_,vname) in _bgp.rp_data(ndata,'bgp'):
+    if 'gr' not in bdata:
+      continue
+
+    normalize_bgp_gr(bdata.gr)
+    bpath = f'nodes.{ndata.name}' + (f'.vrfs.{vname}' if vname else '')
+    stat = devices.check_optional_features(
+              data=bdata.gr,
+              path=bpath+'.gr',
+              node=ndata,
+              topology=topology,
+              attribute='bgp.gr')
+    if stat == devices.FC_MODE.ERR_ATTR:
+      continue
+
+    api.node_config(ndata,_config_name)
+
+def apply_neighbor_gr(node: Box, ngb: Box, intf: Box, topology: Box) -> bool:
+  global _config_name
+
+  gr_value = modules.get_effective_module_attribute(path='bgp.gr',intf=intf,node=node)
+  if not gr_value:
+    return False
+
+  if not _bgp.check_device_attribute_support('gr',node,ngb,topology,_config_name):
+    return False
+
+  ngb.gr = data.get_box(gr_value)
+  normalize_bgp_gr(ngb.gr)
+  stat = devices.check_optional_features(
+            data=ngb.gr,
+            path=f'nodes.{node.name}.interfaces[{intf.ifindex}].bgp.gr',
+            node=node,
+            topology=topology,
+            attribute='bgp.gr')
+  if stat == devices.FC_MODE.ERR_ATTR:
+    ngb.pop('gr',None)
+    return False
+
+  apply_config(node,ngb)
+  return True
+
 '''
 Process routing aggregation requests:
 
@@ -312,8 +362,9 @@ def post_transform(topology: Box) -> None:
     if 'bgp' not in ndata.get('module',[]):                 # Skip nodes not running BGP
       continue
 
+    process_bgp_gr(ndata,topology)
     route_aggregation(ndata,topology)
-    _bgp.cleanup_neighbor_attributes(ndata,topology,_attr_list + [ 'policy' ])
+    _bgp.cleanup_neighbor_attributes(ndata,topology,_attr_list + [ 'policy', 'gr' ])
     policy_idx = 0
 
     # Get _default_locpref feature flag (could be None), then figure out if we need to copy
@@ -343,3 +394,4 @@ def post_transform(topology: Box) -> None:
       if apply_policy_attributes(ndata,ngb,intf,topology):  # If we applied at least some bgp.policy attribute to the neighbor
         p_name = bgp_policy_name(intf,ngb,policy_idx)       # Get the routing policy name
         create_routing_policy(ndata,ngb,p_name)             # and try to create the route map
+      apply_neighbor_gr(ndata,ngb,intf,topology)

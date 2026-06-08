@@ -1,0 +1,5 @@
+IncorrectValue in bgp: attribute 'nodes.r1.bgp.gr.restart_time' must be an integer between 0 and 4095
+... use 'netlab show attributes --module bgp node' to display valid attributes
+IncorrectValue in bgp: attribute nodes.r2.bgp.gr.state has invalid value(s): invalid
+... valid values are: enable, disable, helper
+Fatal error in netlab: Cannot proceed beyond this point due to errors, exiting

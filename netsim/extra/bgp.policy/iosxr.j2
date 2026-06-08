@@ -1,3 +1,4 @@
+{% import '_gr_iosxr.j2' as gr with context %}
 {% macro ebgp_neighbor(n,af) -%}
 neighbor {{ n[af] }}
   address-family {{ af }} unicast
@@ -9,6 +10,7 @@ neighbor {{ n[af] }}
     route-policy {{ n.policy[direction] }} {{ direction }}
 {%     endfor %}
 {%   endif %}
+{{     gr.gr_neighbor(n,af) }}
 {%- endmacro %}
 !
 {% macro aggregate(bgp,af) %}
@@ -24,6 +26,13 @@ address-family {{ af }} unicast
 !
 router bgp {{ bgp.as }}
 !
+{% if bgp.gr is defined %}
+{{   gr.gr_global(bgp.gr)|indent(width=2,first=True) }}
+{% endif %}
+{% for af in ['ipv4','ipv6'] if bgp.gr is defined and gr.selective_af(bgp.gr) %}
+ address-family {{ af }} unicast
+{{   gr.gr_af(bgp.gr,af)|indent(width=2,first=True) }}
+{% endfor %}
 {% for af in ['ipv4','ipv6'] if bgp.aggregate is defined %}
 {{   aggregate(bgp,af)|indent(width=2,first=True) }}
 {% endfor %}
@@ -36,6 +45,13 @@ router bgp {{ bgp.as }}
 {% for vname,vdata in vrfs.items() if vdata.bgp is defined %}
 !
   vrf {{ vname }}
+{%   if vdata.bgp.gr is defined %}
+{{     gr.gr_global(vdata.bgp.gr)|indent(width=4,first=True) }}
+{%   endif %}
+{%   for af in ['ipv4','ipv6'] if vdata.bgp.gr is defined and gr.selective_af(vdata.bgp.gr) %}
+ address-family {{ af }} unicast
+{{     gr.gr_af(vdata.bgp.gr,af)|indent(width=4,first=True) }}
+{%   endfor %}
 {%   for af in ['ipv4','ipv6'] %}
 {{     aggregate(vdata.bgp,af)|indent(width=4,first=True) }}
 {%   endfor %}

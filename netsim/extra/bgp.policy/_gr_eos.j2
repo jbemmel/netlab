@@ -1,0 +1,46 @@
+{# BGP graceful restart macros for Arista EOS #}
+{% macro selective_af(gr) -%}
+{{ gr.ipv4 != gr.ipv6 }}
+{%- endmacro %}
+
+{% macro gr_global(gr) -%}
+{% if gr.state == 'enable' %}
+ graceful-restart
+{%   if gr.restart_time is defined %}
+ graceful-restart restart-time {{ gr.restart_time }}
+{%   endif %}
+{%   if gr.stalepath_time is defined %}
+ graceful-restart stalepath-time {{ gr.stalepath_time }}
+{%   endif %}
+{% elif gr.state == 'disable' %}
+ no graceful-restart
+{% elif gr.state == 'helper' %}
+ graceful-restart-helper
+{%   if gr.stalepath_time is defined %}
+ graceful-restart stalepath-time {{ gr.stalepath_time }}
+{%   endif %}
+{% endif %}
+{%- endmacro %}
+
+{% macro gr_af(gr, af) -%}
+{% if selective_af(gr) and gr.state in ['enable','helper'] %}
+{%   if gr[af] %}
+    graceful-restart
+{%   else %}
+    no graceful-restart
+{%   endif %}
+{% endif %}
+{%- endmacro %}
+
+{% macro gr_neighbor(n, af) -%}
+{% if 'gr' in n and n.gr[af] %}
+{%   set eos_peer = 'ebgp_intf_' + n.local_if if n.local_if is defined else n[af] %}
+{%   if n.gr.state == 'enable' %}
+    neighbor {{ eos_peer }} graceful-restart
+{%   elif n.gr.state == 'helper' %}
+    neighbor {{ eos_peer }} graceful-restart-helper
+{%   elif n.gr.state == 'disable' %}
+    neighbor {{ eos_peer }} graceful-restart disabled
+{%   endif %}
+{% endif %}
+{%- endmacro %}

@@ -1,0 +1,25 @@
+{# BGP graceful restart macros for Cisco IOS-XR #}
+{% import '_gr_frr.j2' as gr_frr with context %}
+{% import '_gr_ios.j2' as gr_ios with context %}
+
+{% macro selective_af(gr) -%}
+{{ gr_frr.selective_af(gr) }}
+{%- endmacro %}
+
+{% macro gr_global(gr) -%}
+{{ gr_ios.gr_global(gr) }}
+{%- endmacro %}
+
+{% macro gr_af(gr, af) -%}
+{{ gr_frr.gr_af(gr,af) }}
+{%- endmacro %}
+
+{% macro gr_neighbor(n, af) -%}
+{% if 'gr' in n and n.gr[af] %}
+{%   if n.gr.state == 'enable' %}
+    graceful-restart
+{%   elif n.gr.state == 'disable' %}
+    graceful-restart disable
+{%   endif %}
+{% endif %}
+{%- endmacro %}

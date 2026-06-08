@@ -1,6 +1,28 @@
 # bgp.policy default settings -- mostly attributes
 #
 ---
+attributes:
+  bgp_gr:
+    state:
+      type: str
+      valid_values: [ enable, disable, helper ]
+    restart_time:
+      type: int
+      min_value: 0
+      max_value: 4095
+    stalepath_time:
+      type: int
+      min_value: 1
+      max_value: 4095
+    update_delay:
+      type: int
+      min_value: 1
+      max_value: 3600
+    ipv4: bool
+    ipv6: bool
+    _value_to_dict:
+      state: '{value}'
+
 #
 # The device settings are mostly inherited from the 'routing' module, the only
 # extra settings you can specify here are 'bandwidth' and '_default_locpref'
@@ -20,6 +42,7 @@ bgp:
         bandwidth: both
 
     interface:
+      gr: bgp_gr
       policy:
         in: str
         out: str
@@ -28,7 +51,11 @@ bgp:
         in: autobw
         out: autobw
 
+    link:
+      gr: bgp_gr
+
     node:
+      gr: bgp_gr
       aggregate:
         type: list
         _subtype:
@@ -39,5 +66,7 @@ bgp:
           attributes: str
           _alt_types: [ prefix_str ]
     vrf:
+      gr:
+        copy: node
       aggregate:
         copy: node

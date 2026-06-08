@@ -37,12 +37,14 @@ It also adds the following node attributes:
 
 * **bgp.locpref** sets the default (node-wide) local preference
 * **bgp.aggregate** configures [BGP address aggregation](plugin-bgp-policy-aggregate) (route summarization). This attribute can also be applied to a node VRF definition.
+* **bgp.gr** configures [BGP graceful restart](plugin-bgp-policy-gr). This attribute can also be applied to a node VRF definition.
 
 The following table describes where you could apply individual attributes:
 
-| BGP policy | Node | Interface | VRF |
-|------------|:----:|:---------:|:---:|
-| aggregate  |  ✅  |    ❌      |  ✅ |
+| BGP policy | Node | Link | Interface | VRF |
+|------------|:----:|:----:|:---------:|:---:|
+| aggregate  |  ✅  |  ❌  |    ❌      |  ✅ |
+| gr         |  ✅  |  ✅  |    ✅      |  ✅ |
 | bandwidth  |  ❌   |    ✅     |  ❌  |
 | locpref    |  ✅  |    ✅     |  ❌  |
 | med        |  ❌   |    ✅     |  ❌  |
@@ -54,19 +56,20 @@ The following table describes where you could apply individual attributes:
 
 The plugin implements BGP routing policies and individual BGP policy attributes on these devices:
 
-| Operating system    | Routing<br>policies | Local<br>preference | MED | Weight | AS-path<br>prepend | Link<br>bandwidth | Address<br>Aggregation |
-|---------------------|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
-| Arista EOS          |✅ |✅ |✅ |✅|✅ |✅| ✅|
-| Aruba AOS-CX        |✅ |✅ |✅ |✅|✅ | ❌ | ❌ |
-| Cisco IOS/IOS XE[^18v]  |✅ |✅ |✅ |✅|✅ |✅[❗](caveats-ios) |✅|
-| Cisco IOS XR[^XR]   |✅ |✅ |✅ |✅|✅ | ❌ |✅|
-| Cumulus Linux       |✅ |✅ |✅ |✅|✅ |✅| ❌ |
-| Dell OS10           |✅ |✅ |✅ |✅| ❌ | ❌ |✅|
-| FRR                 |✅ |✅ |✅ |✅|✅ |✅| ✅|
-| Junos               |✅ |✅ |✅ |✅|✅ | ❌ | ❌ |
-| Nokia SR Linux      |✅ |✅ |✅ | ❌ | ❌ | ❌ | ❌ |
-| Nokia SR OS         |✅ |✅ |✅ | ❌ | ❌ | ✅| ❌ |
-| VyOS                |✅ |✅ |✅ | ❌ | ✅ | ❌ | ❌ |
+| Operating system    | Routing<br>policies | Local<br>preference | MED | Weight | AS-path<br>prepend | Link<br>bandwidth | Address<br>Aggregation | Graceful<br>Restart |
+|---------------------|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
+| Arista EOS          |✅ |✅ |✅ |✅|✅ |✅| ✅| ✅|
+| Aruba AOS-CX        |✅ |✅ |✅ |✅|✅ | ❌ | ❌ | ❌ |
+| Cisco IOS/IOS XE[^18v]  |✅ |✅ |✅ |✅|✅ |✅[❗](caveats-ios) |✅| ✅|
+| Cisco IOS XR[^XR]   |✅ |✅ |✅ |✅|✅ | ❌ |✅| ✅|
+| Cumulus Linux       |✅ |✅ |✅ |✅|✅ |✅| ❌ | ✅|
+| Dell OS10           |✅ |✅ |✅ |✅| ❌ | ❌ |✅| ❌ |
+| FRR                 |✅ |✅ |✅ |✅|✅ |✅| ✅| ✅|
+| Junos               |✅ |✅ |✅ |✅|✅ | ❌ | ❌ | ❌ |
+| Nokia SR Linux      |✅ |✅ |✅ | ❌ | ❌ | ❌ | ❌ | ✅|
+| Nokia SR OS         |✅ |✅ |✅ | ❌ | ❌ | ✅| ❌ | ❌ |
+| VyOS                |✅ |✅ |✅ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| none (test device)  |✅ |✅ |✅ |✅|✅ |✅| ✅| ✅|
 
 [^18v]: Includes Cisco IOSv, Cisco IOSv Layer-2 image, Cisco CSR 1000v, Cisco Catalyst 8000v, Cisco IOS-on-Linux (IOL), and IOL Layer-2 image.
 
@@ -182,6 +185,52 @@ route-map bp-r1-2-out permit 10
 ```{warning}
 * You cannot combine **‌bgp.policy** routing policies with individual policy attributes that require a route map.
 * Some devices use route maps to implement the device-wide **‌bgp.locpref** attribute. When combined with **‌bgp.policy** routing policies, these auto-generated route maps generate errors.
+```
+
+(plugin-bgp-policy-gr)=
+## BGP Graceful Restart
+
+The **bgp.gr** node/VRF attribute configures BGP graceful restart (RFC 4724). You can also set **bgp.gr** on a link or interface to enable graceful restart on individual EBGP sessions. It can be specified as a string (**enable**, **disable**, or **helper**) or as a dictionary with these attributes:
+
+* **state** (mandatory in dict form): **enable** (restarting router and helper), **helper** (helper only), or **disable** (explicitly disable GR)
+* **restart_time** (0–4095): Restart time advertised to peers (RFC 4724 Restart Time field). Applies to node/VRF configuration only.
+* **stalepath_time** (1–4095): Maximum time to retain stale routes on the helper router. Applies to node/VRF configuration only.
+* **update_delay** (1–3600): Time the restarting router waits before selecting best paths and sending updates. Applies to node/VRF configuration only.
+* **ipv4** / **ipv6** (bool): Enable GR per address family (default: both enabled)
+
+String values are expanded to `{ state: <value> }`; the plugin then fills in missing **ipv4** and **ipv6** keys with **True**.
+
+Example:
+
+```
+nodes:
+  rr:
+    bgp.gr: enable
+  pe:
+    bgp.gr:
+      state: helper
+      stalepath_time: 360
+  ce:
+    bgp.gr:
+      state: enable
+      restart_time: 120
+      update_delay: 120
+      ipv6: false
+```
+
+Per-neighbor graceful restart (link or interface attribute, no node **bgp.gr** required):
+
+```
+nodes:
+  rr:
+    bgp.as: 65000
+  ce:
+    bgp.as: 65100
+
+links:
+- rr:
+    bgp.gr: helper
+  ce:
 ```
 
 (plugin-bgp-policy-aggregate)=

@@ -1,3 +1,27 @@
+{% macro gr_srl_neighbor(n, af, vrf) -%}
+{% if 'gr' in n and n.gr[af] %}
+{%   if n.type=='ebgp' and n[af] is true %}
+- path: /network-instance[name={{ vrf }}]/protocols/bgp/group[group-name=intf-{{ n.local_if }}]/afi-safi[afi-safi-name={{ af }}-unicast]/graceful-restart
+{%   else %}
+- path: /network-instance[name={{ vrf }}]/protocols/bgp/neighbor[peer-address={{ n[af]|ipaddr('address') }}]/graceful-restart
+{%   endif %}
+  value:
+    admin-state: {{ 'enable' if n.gr.state != 'disable' else 'disable' }}
+{% endif %}
+{%- endmacro %}
+
+{% macro gr_srl(gr, vrf) -%}
+- path: /network-instance[name={{ vrf }}]/protocols/bgp/graceful-restart
+  value:
+    admin-state: {{ 'enable' if gr.state != 'disable' else 'disable' }}
+{% if gr.state == 'enable' and gr.restart_time is defined %}
+    requested-restart-time: {{ gr.restart_time }}
+{% endif %}
+{% if gr.state in ['enable','helper'] and gr.stalepath_time is defined %}
+    stale-routes-time: {{ gr.stalepath_time }}
+{% endif %}
+{%- endmacro %}
+
 {% macro ebgp_neighbor(n,af,vrf) -%}
 {%   for direction in [ 'in','out' ] if direction in n.policy %}
 {%     set p_path = 'import-policy' if direction == 'in' else 'export-policy' %}
@@ -16,7 +40,13 @@
 {%- endmacro %}
 
 replace:
+{% if bgp.gr is defined %}
+{{   gr_srl(bgp.gr,'default') -}}
+{% endif %}
 {% for af in ['ipv4','ipv6'] %}
+{%   for n in bgp.neighbors if n[af] is defined and 'gr' in n %}
+{{     gr_srl_neighbor(n,af,'default') -}}
+{%   endfor %}
 {%   for n in bgp.neighbors if n[af] is defined and 'policy' in n %}
 {{     ebgp_neighbor(n,af,'default') -}}
 {%   endfor %}
@@ -24,7 +54,13 @@ replace:
 
 {% if vrfs is defined %}
 {%   for vname,vdata in vrfs.items() if vdata.bgp is defined %}
+{%     if vdata.bgp.gr is defined %}
+{{       gr_srl(vdata.bgp.gr,vname) -}}
+{%     endif %}
 {%     for af in ['ipv4','ipv6'] %}
+{%       for n in vdata.bgp.neighbors if n[af] is defined and 'gr' in n %}
+{{         gr_srl_neighbor(n,af,vname) -}}
+{%       endfor %}
 {%       for n in vdata.bgp.neighbors if n[af] is defined and 'policy' in n %}
 {{         ebgp_neighbor(n,af,vname) -}}
 {%       endfor %}

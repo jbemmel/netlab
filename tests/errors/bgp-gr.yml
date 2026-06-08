@@ -1,0 +1,23 @@
+---
+plugin: [ bgp.policy ]
+module: [ bgp ]
+
+nodes:
+  r1:
+    device: iosv
+    bgp.as: 65000
+    bgp.gr:
+      state: enable
+      restart_time: 5000
+  r2:
+    device: frr
+    bgp.as: 65001
+    bgp.gr: invalid
+  r3:
+    device: vyos
+    bgp.as: 65002
+    bgp.gr: enable
+
+links:
+- r1-r2
+- r2-r3

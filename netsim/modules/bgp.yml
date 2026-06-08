@@ -159,6 +159,7 @@ features:
     _default_locpref: Device-wide local preference
     aggregate: BGP route aggregation
     bandwidth: Support BGP DMZ bandwidth
+    gr: BGP graceful restart
 warnings:
   missing_igp: True
   igp_list: [ ospf, eigrp, isis, ripv2 ]

@@ -1,0 +1,39 @@
+{# BGP graceful restart macros for Cisco IOS #}
+{% import '_gr_frr.j2' as gr_frr with context %}
+
+{% macro gr_global(gr) -%}
+{% if gr.state == 'enable' %}
+ bgp graceful-restart
+{%   if gr.restart_time is defined %}
+ bgp graceful-restart restart-time {{ gr.restart_time }}
+{%   endif %}
+{%   if gr.stalepath_time is defined %}
+ bgp graceful-restart stalepath-time {{ gr.stalepath_time }}
+{%   endif %}
+{%   if gr.update_delay is defined %}
+ bgp update-delay {{ gr.update_delay }}
+{%   endif %}
+{% elif gr.state == 'disable' %}
+ no bgp graceful-restart
+{% elif gr.state == 'helper' %}
+{%   if gr.stalepath_time is defined %}
+ bgp graceful-restart stalepath-time {{ gr.stalepath_time }}
+{%   endif %}
+{% endif %}
+{%- endmacro %}
+
+{% macro gr_af(gr, af) -%}
+{{ gr_frr.gr_af(gr,af) }}
+{%- endmacro %}
+
+{% macro gr_neighbor(n, af) -%}
+{% if 'gr' in n and n.gr[af] %}
+{%   if n.gr.state == 'enable' %}
+    neighbor {{ n[af] }} ha-mode graceful-restart
+{%   elif n.gr.state == 'helper' %}
+    neighbor {{ n[af] }} ha-mode graceful-restart
+{%   elif n.gr.state == 'disable' %}
+    neighbor {{ n[af] }} ha-mode graceful-restart disable
+{%   endif %}
+{% endif %}
+{%- endmacro %}
