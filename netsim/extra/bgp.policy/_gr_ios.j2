@@ -27,13 +27,11 @@
 {%- endmacro %}
 
 {% macro gr_neighbor(n, af) -%}
-{% if 'gr' in n and n.gr[af] %}
-{%   if n.gr.state == 'enable' %}
-    neighbor {{ n[af] }} ha-mode graceful-restart
-{%   elif n.gr.state == 'helper' %}
-    neighbor {{ n[af] }} ha-mode graceful-restart
-{%   elif n.gr.state == 'disable' %}
+{% if 'gr' in n %}
+{%   if n.gr.state == 'disable' or not n.gr[af] %}
     neighbor {{ n[af] }} ha-mode graceful-restart disable
+{%   elif n.gr.state in ['enable','helper'] %}
+    neighbor {{ n[af] }} ha-mode graceful-restart
 {%   endif %}
 {% endif %}
 {%- endmacro %}

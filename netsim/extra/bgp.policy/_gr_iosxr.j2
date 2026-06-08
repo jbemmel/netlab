@@ -15,11 +15,11 @@
 {%- endmacro %}
 
 {% macro gr_neighbor(n, af) -%}
-{% if 'gr' in n and n.gr[af] %}
-{%   if n.gr.state == 'enable' %}
-    graceful-restart
-{%   elif n.gr.state == 'disable' %}
+{% if 'gr' in n %}
+{%   if n.gr.state == 'disable' or not n.gr[af] %}
     graceful-restart disable
+{%   elif n.gr.state == 'enable' %}
+    graceful-restart
 {%   endif %}
 {% endif %}
 {%- endmacro %}

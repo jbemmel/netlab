@@ -218,12 +218,13 @@ nodes:
       ipv6: false
 ```
 
-Per-neighbor graceful restart (link or interface attribute, no node **bgp.gr** required):
+Per-neighbor graceful restart on a link or interface overrides node/VRF **bgp.gr** for that EBGP session. Unspecified keys are inherited from the node/VRF setting:
 
 ```
 nodes:
   rr:
     bgp.as: 65000
+    bgp.gr: enable
   ce:
     bgp.as: 65100
 
@@ -231,6 +232,11 @@ links:
 - rr:
     bgp.gr: helper
   ce:
+- rr:
+    bgp.gr:
+      ipv4: false
+      ipv6: true
+  ce2:
 ```
 
 (plugin-bgp-policy-aggregate)=

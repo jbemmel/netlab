@@ -35,14 +35,14 @@
 {%- endmacro %}
 
 {% macro gr_neighbor(n, af) -%}
-{% if 'gr' in n and n.gr[af] %}
+{% if 'gr' in n %}
 {%   set peer = n[af] if n[af] is string else n.local_if|default('?') %}
-{%   if n.gr.state == 'enable' %}
+{%   if n.gr.state == 'disable' or not n.gr[af] %}
+    neighbor {{ peer }} graceful-restart-disable
+{%   elif n.gr.state == 'enable' %}
     neighbor {{ peer }} graceful-restart
 {%   elif n.gr.state == 'helper' %}
     neighbor {{ peer }} graceful-restart-helper
-{%   elif n.gr.state == 'disable' %}
-    neighbor {{ peer }} graceful-restart-disable
 {%   endif %}
 {% endif %}
 {%- endmacro %}

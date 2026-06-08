@@ -294,6 +294,9 @@ def process_bgp_gr(ndata: Box, topology: Box) -> None:
 def apply_neighbor_gr(node: Box, ngb: Box, intf: Box, topology: Box) -> bool:
   global _config_name
 
+  if 'gr' not in intf.get('bgp',{}):                      # Link/interface override only
+    return False
+
   gr_value = modules.get_effective_module_attribute(path='bgp.gr',intf=intf,node=node)
   if not gr_value:
     return False

@@ -33,14 +33,14 @@
 {%- endmacro %}
 
 {% macro gr_neighbor(n, af) -%}
-{% if 'gr' in n and n.gr[af] %}
+{% if 'gr' in n %}
 {%   set eos_peer = 'ebgp_intf_' + n.local_if if n.local_if is defined else n[af] %}
-{%   if n.gr.state == 'enable' %}
+{%   if n.gr.state == 'disable' or not n.gr[af] %}
+    neighbor {{ eos_peer }} graceful-restart disabled
+{%   elif n.gr.state == 'enable' %}
     neighbor {{ eos_peer }} graceful-restart
 {%   elif n.gr.state == 'helper' %}
     neighbor {{ eos_peer }} graceful-restart-helper
-{%   elif n.gr.state == 'disable' %}
-    neighbor {{ eos_peer }} graceful-restart disabled
 {%   endif %}
 {% endif %}
 {%- endmacro %}
