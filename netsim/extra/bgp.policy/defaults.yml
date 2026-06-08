@@ -6,6 +6,7 @@ attributes:
     state:
       type: str
       valid_values: [ enable, disable, helper ]
+      _required: True
     restart_time:
       type: int
       min_value: 0

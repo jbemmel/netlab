@@ -37,6 +37,7 @@ links:
 - dut-x1
 - dut:
     bgp.gr:
+      state: enable
       ipv4: false
       ipv6: true
   x2:

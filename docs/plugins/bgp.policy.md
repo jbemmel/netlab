@@ -234,6 +234,7 @@ links:
   ce:
 - rr:
     bgp.gr:
+      state: enable
       ipv4: false
       ipv6: true
   ce2:
