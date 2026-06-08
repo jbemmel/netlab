@@ -58,6 +58,8 @@ links:
   interfaces:
   - bgp:
       gr:
+        ipv4: true
+        ipv6: true
         state: helper
     ifindex: 1
     ifname: eth1
@@ -472,6 +474,8 @@ nodes:
     interfaces:
     - bgp:
         gr:
+          ipv4: true
+          ipv6: true
           state: helper
       ifindex: 1
       ifname: eth1
@@ -540,6 +544,8 @@ nodes:
       neighbors:
       - bgp:
           gr:
+            ipv4: true
+            ipv6: true
             state: helper
         ifname: eth1
         ipv4: 10.1.0.9/30

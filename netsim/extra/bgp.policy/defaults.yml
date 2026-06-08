@@ -19,8 +19,8 @@ attributes:
       type: int
       min_value: 1
       max_value: 3600
-    ipv4: bool
-    ipv6: bool
+    ipv4: { type: bool, _default: True }
+    ipv6: { type: bool, _default: True }
     _value_to_dict:
       state: '{value}'
 
