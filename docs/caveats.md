@@ -96,6 +96,7 @@ nodes:
 
 ### BGP Caveats
 
+* IPv6 LLA and unnumbered IPv4 EBGP sessions use automatic peering based on RAdv router discovery (BIRD 2.19 or later). This requires a recent container image such as **netlab/bird.v2_from_src:latest** (see PR #3470); the default **netlab/bird:latest** image (BIRD 2.14) does not support this feature.
 * You must run OSPF on the BIRD daemon for the IBGP sessions to work.
 * BIRD will not advertise (reflect) an IBGP route if it has an equivalent OSPF route.
 

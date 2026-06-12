@@ -83,7 +83,7 @@ These devices support EBGP sessions between IPv6 LLA or IPv4 AF on IPv6 EBGP ses
 |   Operating system       | IPv6 LLA<br />EBGP<br />sessions | Unnumbered<br />IPv4 EBGP<br />sessions[^INTv4] | RFC 8950<br>IPv4<br />next hops[^RFC8950] |
 | ------------------------ | :-: | :-: | :-: |
 | Arista EOS               |  ✅ |  ✅ |  ❌  |
-| BIRD                     |  ❌  |  ❌  |  ✅ |
+| BIRD                     |  ✅ [^BIRD_LLA] |  ✅ [^BIRD_LLA] |  ✅ |
 | Cumulus Linux 4.x        |  ✅ |  ✅ |  ✅ |
 | Cumulus Linux 5.x (NVUE) |  ✅ |  ✅ |  ✅ |
 | Dell OS10                |  ✅ |  ✅ |  ❌  |
@@ -93,6 +93,8 @@ These devices support EBGP sessions between IPv6 LLA or IPv4 AF on IPv6 EBGP ses
 | VyOS                     |  ✅ |  ✅ |  ❌  |
 
 [^RFC8950]: IPv6 next hops for IPv4 prefixes advertised over a regular (non-LLA) IPv6 EBGP session. RFC 8950-style next hops over IPv6 LLA sessions used to implement interface EBGP sessions are documented in the *Unnumbered IPv4 EBGP sessions* column.
+
+[^BIRD_LLA]: Requires BIRD 2.19 or later with automatic peering based on RAdv router discovery. Use a recent container image such as **netlab/bird.v2_from_src:latest** (see PR #3470). The default **netlab/bird:latest** image ships BIRD 2.14 and does not support this feature.
 
 These devices support BGP local-AS functionality to build EBGP or IBGP sessions:
 
