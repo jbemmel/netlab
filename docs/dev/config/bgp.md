@@ -26,7 +26,7 @@ You can use the following **features.bgp** [device features](dev-device-features
 * **advertise** -- device supports advertisement of generic prefixes (should be set for all new implementations)
 * **community** -- Granular control of BGP community propagation see `netsim/devices/frr.yml` or `netsim/devices/eos.yml` for an example.
 * **confederation** -- device supports BGP confederations
-* **ipv6_lla** -- device supports unnumbered (interface) EBGP sessions. The BIRD daemon uses dynamic BGP with RAdv router discovery to establish these sessions automatically.
+* **ipv6_lla** -- device supports unnumbered (interface) EBGP sessions
 * **local_as** -- device supports **local_as** feature
 * **local_as_ibgp** -- the **local_as** feature can be used to convert an EBGP session into an IBGP session
 * **rfc8950** -- device supports **extended next hop** functionality that can be used to implement RFC8950-style IPv6 next hops for IPv4 AF
