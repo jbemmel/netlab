@@ -1,10 +1,21 @@
 # Configure IPv6 Router Advertisements
+{% set lla_ifs = bgp.neighbors|default([])|selectattr('local_if', 'defined')|map(attribute='local_if')|unique|list if bgp is defined else [] %}
+{% if lla_ifs %}
+neighbor table peers;
+
+{% endif %}
 {% for intf in interfaces|default([]) if 'ipv6' in intf %}
 {%   if loop.first %}
 protocol radv {
+{%     if lla_ifs %}
+  neighbors { table peers; };
+{%     endif %}
 {%   endif %}
   interface "{{ intf.ifname }}" {
     max ra interval 5;  # Maximum interval between RA messages, in seconds
+{%   if intf.ifname in lla_ifs %}
+    router discovery yes;
+{%   endif %}
 {%   if intf.mtu is defined %}
     link mtu {{ intf.mtu }};
 {%   endif %}

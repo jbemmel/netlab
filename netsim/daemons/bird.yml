@@ -37,7 +37,7 @@ features:
   bgp:
     activate_af: true
     advertise: true
-    ipv6_lla: false             # Bird supports dynamic neighbors using 'range', but not active discovery based on RAs
+    ipv6_lla: true              # Bird 2.19+ supports automatic peering via RAdv router discovery
     rfc8950: true
     local_as: true
     local_as_ibgp: true

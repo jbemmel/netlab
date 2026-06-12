@@ -3,7 +3,8 @@ log "/var/log/bird" all;
 
 {% include 'protocols.j2' %}
 
-{% if role != 'host' and 'ipv6' in af %}
+{% set lla_bgp = bgp.neighbors|default([])|selectattr('local_if', 'defined')|list if bgp is defined else [] %}
+{% if lla_bgp or ('ipv6' in af and role != 'host') %}
 {%   include 'radv.j2' %}
 {% endif %}
 
