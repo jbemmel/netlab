@@ -15,13 +15,18 @@ attributes:                   # User-defined data types (see dev/validate.md#val
       type: int
       min_value: 3
       max_value: 3600
+  bgp_gr_state:
+    type: str
+    valid_values: [ enable, disable, helper ]
+    _required: True
 
 bgp:
   attributes:
     session:                  # All bgp.session attributes
       attr: [
         as_override, allowas_in, default_originate, password, passive,
-        gtsm, timers, tcp_ao, bfd, remove_private_as, rs, description ]
+        gr, gtsm, timers, tcp_ao, bfd, remove_private_as, rs, description ]
+      no_propagate: [ gr ]
     global:
       bfd:
         type: bool
@@ -58,6 +63,14 @@ bgp:
       rs: bool
       tcp_ao:
         copy: global
+      gr:
+        type: dict
+        _keys:
+          state: bgp_gr_state
+          restart_time: { type: int, min_value: 0, max_value: 3600 }
+          stalepath_time: { type: int, min_value: 1, max_value: 3600 }
+        _value_to_dict:
+          state: '{value}'
       gtsm:
         copy: global
       timers: exbs_timers
@@ -92,6 +105,7 @@ bgp:
 
     link:
       password: str
+      gr: bgp_gr_state
       tcp_ao:
         copy: global
       gtsm:
@@ -101,3 +115,7 @@ bgp:
       bfd:
         copy: global
       rs: bool
+
+    vrf:
+      gr:
+        copy: node

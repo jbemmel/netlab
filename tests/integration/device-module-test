@@ -210,7 +210,10 @@ def execute(
 
 def extract_warning(test: str, args: argparse.Namespace, step: str = 'validate') -> list:
   log_name = f"{args.logdir}/{os.path.basename(test)}-{step}.log"
-  log_lines = pathlib.Path(log_name).read_text().split('\n')
+  log_path = pathlib.Path(log_name)
+  if not log_path.exists():
+    return []
+  log_lines = log_path.read_text().split('\n')
   w_prefixes = ['[WARNING]','Warning in ']
   return [ line.replace(w_pfx,'').strip() for w_pfx in w_prefixes for line in log_lines if line.startswith(w_pfx) ]
 

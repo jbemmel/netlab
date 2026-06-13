@@ -43,8 +43,29 @@
 {%   endif %}
 {%   if n.rs|default(False) %}
   neighbor {{ peer }} route-server-client
-{%   endif %} 
+{%   endif %}
+{%   if n.gr is defined %}
+  neighbor {{ peer }} graceful-restart{{ "-"+n.gr if n.gr != 'enable' else '' }}
+{%   endif %}
 {%- endmacro %}
+{#
+
+#}
+{% macro bgp_gr(bgp) %}
+{%   if bgp.gr.restart_time is defined %}
+  bgp graceful-restart restart-time {{ bgp.gr.restart_time }}
+{%   endif %}
+{%   if bgp.gr.stalepath_time is defined %}
+  bgp graceful-restart stalepath-time {{ bgp.gr.stalepath_time }}
+{%   endif %}
+{%   set gr_state = bgp.gr.state %}
+{%   if gr_state == 'disable' %}
+  bgp graceful-restart-disable
+{%   endif %}
+{%   if gr_state == 'enable' %}
+  bgp graceful-restart
+{%   endif %}
+{% endmacro %}
 {#
 
 #}
@@ -52,6 +73,9 @@ set -e
 cat >/tmp/config <<CONFIG
 !
 router bgp {{ bgp.as }}
+{% if bgp.gr is defined %}
+{{   bgp_gr(bgp) }}
+{% endif %}
 {% for n in bgp.neighbors %}
 {%   for af in ['ipv4','ipv6'] if n[af] is defined %}
 {%   set peer = n[af] if n[af] is string else n.local_if|default('?') %}
@@ -81,6 +105,9 @@ router bgp {{ bgp.as }}
 {% if vrfs is defined %}
 {%   for vname,vdata in vrfs.items() if vdata.bgp is defined and vdata.bgp.neighbors is defined %}
 router bgp {{ bgp.as }} vrf {{ vname }}
+{%     if vdata.bgp.gr is defined %}
+{{       bgp_gr(vdata.bgp) }}
+{%     endif %}
 {%     for af in ['ipv4','ipv6'] if af in vdata.af|default({}) %}
 {%       for n in vdata.bgp.neighbors if n[af] is defined %}
 {%         set peer = n[af] if n[af] is string else n.local_if|default('?') %}

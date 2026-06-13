@@ -10,10 +10,10 @@ import tempfile
 import typing
 
 from box import Box
+from jinja2.exceptions import TemplateError
 
 from ...utils import files as _files
 from ...utils import log, strings, templates
-from ...utils import read as _read
 from .. import external_commands
 
 
@@ -31,6 +31,12 @@ def build_parser(parser: argparse.ArgumentParser) -> None:
     help='Specify a non-default tag for the container image')
 
   parser.add_argument(
+    '--sw-version',
+    dest='sw_version',
+    action='store',
+    help='Software version for source-build container images (for example, BIRD release for bird.v2_from_src)')
+
+  parser.add_argument(
     dest='image',
     action='store',
     nargs='?',
@@ -44,16 +50,17 @@ def get_dockerfiles() -> dict:
 
   for d_file in d_list:
     daemon = os.path.basename(os.path.dirname(d_file))
-    root, ext = os.path.splitext(d_file)
-    # If the Dockerfile has a .j2 extension, keep it in the key name
-    ext = ext.replace('.j2', '')
-    df_dict[daemon + ext] = d_file
+    basename = os.path.basename(d_file).replace('.j2', '')
+    if basename == 'Dockerfile':
+      df_dict[daemon] = d_file
+    else:
+      df_dict[daemon + basename[len('Dockerfile'):]] = d_file
 
   return df_dict
 
 def get_description(dfname: str) -> str:
   try:
-    df_lines = pathlib.Path(dfname).read_text().split('\n')
+    df_lines = pathlib.Path(dfname).read_text(encoding='utf-8').split('\n')
     for line in df_lines:
       if not line.startswith('LABEL'):
         continue
@@ -63,51 +70,76 @@ def get_description(dfname: str) -> str:
 
   except:
     return '-- failed --'
-  
+
   return '???'
 
-def render_j2_dockerfile(df_path: str, tmp_dir: str) -> str:
+def render_j2_dockerfile(
+  df_path: str,
+  tmp_dir: str,
+  defaults: Box,
+  sw_version: typing.Optional[str] = None,
+) -> str:
   """
   Render Dockerfile.j2 if needed, return path to use for build.
-  
+
   If the Dockerfile ends with .j2, it's a Jinja2 template and needs to be rendered
   with netlab device defaults before building.
   """
   if not df_path.endswith('.j2'):
     return df_path  # Regular Dockerfile, use as-is
-  
+
   strings.print_colored_text('[TEMPLATE] ','cyan',None)
   print(f"Rendering Jinja2 template from {os.path.basename(df_path)}")
-  
-  # Load topology defaults to get device credentials
-  try:
-    defaults = _read.system_defaults().defaults
-  except Exception as ex:
-    log.fatal(f'Could not load system defaults: {str(ex)}', module='build')
-  
+
+  template_data: dict = {'defaults': defaults}
+  if sw_version:
+    template_data['sw_version'] = sw_version
+
   # Render template (fail() is available as a standard Jinja2 global function)
   try:
-    templates.write_template(os.path.dirname(df_path), os.path.basename(df_path), {'defaults': defaults}, tmp_dir, 'Dockerfile')
-  except Exception as ex:
+    templates.write_template(
+      os.path.dirname(df_path),
+      os.path.basename(df_path),
+      template_data,
+      tmp_dir,
+      'Dockerfile')
+  except (TemplateError, ValueError) as ex:
     log.fatal(
       f'Failed to render Dockerfile template {os.path.basename(df_path)}: {str(ex)}',
       module='build')
-  
+
   strings.print_colored_text('[RENDERED] ','green',None)
-  print(f"Template rendered to temporary Dockerfile")
-  
+  print("Template rendered to temporary Dockerfile")
+
   return os.path.join(tmp_dir, 'Dockerfile')
 
-def build_image(image: str, tag: typing.Optional[str]) -> None:
-  if tag is None or not tag:
-    tag = f'netlab/{image}:latest'
-
+def build_image(
+  image: str,
+  tag: typing.Optional[str],
+  defaults: Box,
+  sw_version: typing.Optional[str] = None,
+) -> None:
   df_dict = get_dockerfiles()
   if not image in df_dict:
     log.fatal(f'Unknown daemon/image {image}, use "netlab clab build -l" to list available images')
 
+  df_path = df_dict[image]
+  device = os.path.basename(os.path.dirname(df_path))
+  if sw_version and 'sw_version' not in defaults.daemons[device].clab:
+    log.fatal(
+      f'--sw-version cannot be used with {image} (defaults.daemons.{device}.clab.sw_version is not defined)',
+      module='build')
+
+  resolved_sw_version = sw_version if sw_version else (
+    defaults.daemons[device].clab.get('sw_version',None) if image != device else None)
+
+  if not tag:
+    tag = f'netlab/{image}:{sw_version}' if sw_version else f'netlab/{image}:latest'
+
   strings.print_colored_text('[STARTING] ','green',None)
   print(f"Building container image {image} with tag {tag}")
+  if resolved_sw_version:
+    print(f"Software version: {resolved_sw_version}")
 
   strings.print_colored_text('[WORKING]  ','green',None)
   print(f"Trying to remove existing container image {tag}")
@@ -120,9 +152,9 @@ def build_image(image: str, tag: typing.Optional[str]) -> None:
     print(f"Cannot remove image {tag}, continuing")
 
   strings.print_colored_text('[WORKING]  ','green',None)
-  print(f"Prune docker layers and builder cache")
-  external_commands.run_command(f'docker image prune -f',ignore_errors=True)
-  external_commands.run_command(f'docker builder prune -f',ignore_errors=True)
+  print("Prune docker layers and builder cache")
+  external_commands.run_command('docker image prune -f',ignore_errors=True)
+  external_commands.run_command('docker builder prune -f',ignore_errors=True)
 
   workdir = os.getcwd()
   print()
@@ -131,10 +163,10 @@ def build_image(image: str, tag: typing.Optional[str]) -> None:
 
   with tempfile.TemporaryDirectory() as tmp:
     os.chdir(tmp)
-    
+
     # Render Dockerfile.j2 if needed, otherwise use original path
-    dockerfile_to_use = render_j2_dockerfile(df_dict[image], tmp)
-    
+    dockerfile_to_use = render_j2_dockerfile(df_dict[image], tmp, defaults, sw_version)
+
     status = external_commands.run_command(
       f'docker build -t {tag} -f {dockerfile_to_use} .',
       ignore_errors=True,
@@ -167,9 +199,9 @@ def clab_build(args: argparse.Namespace, settings: Box) -> None:
   if args.list:
     list_dockerfiles()
     return
-  
+
   if args.image:
-    build_image(args.image,args.tag)
+    build_image(args.image,args.tag,settings,args.sw_version)
     return
-  
+
   log.fatal('Specify image to build or "--list". Use "--help" to get help')
