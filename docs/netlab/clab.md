@@ -44,7 +44,7 @@ _netlab_ package includes *Dockerfiles* for several well-known routing daemons. 
 
 ```
 $ netlab clab build -h
-usage: netlab clab build [-h] [-l] [-t TAG] [--sw-version SW_VERSION] [image]
+usage: netlab clab build [-h] [-l] [-t TAG] [--sw-version SW_VERSION] [--debug] [image]
 
 Build a routing daemon Docker container
 
@@ -58,6 +58,8 @@ options:
   --sw-version SW_VERSION
                         Software version for source-build container images
                         (for example, BIRD release for bird.v2_from_src)
+  --debug               Enable full debug build for source-build images
+                        (debug symbols, backtraces, internal checks)
 ```
 
 For example, use `netlab clab build bird` to build the **netlab/bird:latest** container:

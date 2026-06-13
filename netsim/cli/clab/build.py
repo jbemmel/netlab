@@ -37,6 +37,12 @@ def build_parser(parser: argparse.ArgumentParser) -> None:
     help='Software version for source-build container images (for example, BIRD release for bird.v2_from_src)')
 
   parser.add_argument(
+    '--debug',
+    dest='debug',
+    action='store_true',
+    help='Enable full debug build for source-build images (debug symbols, backtraces, internal checks)')
+
+  parser.add_argument(
     dest='image',
     action='store',
     nargs='?',
@@ -78,6 +84,7 @@ def render_j2_dockerfile(
   tmp_dir: str,
   defaults: Box,
   sw_version: typing.Optional[str] = None,
+  debug: bool = False,
 ) -> str:
   """
   Render Dockerfile.j2 if needed, return path to use for build.
@@ -91,7 +98,7 @@ def render_j2_dockerfile(
   strings.print_colored_text('[TEMPLATE] ','cyan',None)
   print(f"Rendering Jinja2 template from {os.path.basename(df_path)}")
 
-  template_data: dict = {'defaults': defaults}
+  template_data: dict = {'defaults': defaults, 'debug': debug}
   if sw_version:
     template_data['sw_version'] = sw_version
 
@@ -118,12 +125,18 @@ def build_image(
   tag: typing.Optional[str],
   defaults: Box,
   sw_version: typing.Optional[str] = None,
+  debug: bool = False,
 ) -> None:
   df_dict = get_dockerfiles()
   if not image in df_dict:
     log.fatal(f'Unknown daemon/image {image}, use "netlab clab build -l" to list available images')
 
   df_path = df_dict[image]
+  if debug and not df_path.endswith('.j2'):
+    log.fatal(
+      f'--debug is only supported for source-build container images (for example, bird.v2_from_src), not {image}',
+      module='build')
+
   device = os.path.basename(os.path.dirname(df_path))
   if sw_version and 'sw_version' not in defaults.daemons[device].clab:
     log.fatal(
@@ -134,12 +147,17 @@ def build_image(
     defaults.daemons[device].clab.get('sw_version',None) if image != device else None)
 
   if not tag:
-    tag = f'netlab/{image}:{sw_version}' if sw_version else f'netlab/{image}:latest'
+    if sw_version:
+      tag = f'netlab/{image}:{sw_version}{"-debug" if debug else ""}'
+    else:
+      tag = f'netlab/{image}:{"debug" if debug else "latest"}'
 
   strings.print_colored_text('[STARTING] ','green',None)
   print(f"Building container image {image} with tag {tag}")
   if resolved_sw_version:
     print(f"Software version: {resolved_sw_version}")
+  if debug:
+    print("Debug build: compile with internal checks, full debug symbols, and backtrace support")
 
   strings.print_colored_text('[WORKING]  ','green',None)
   print(f"Trying to remove existing container image {tag}")
@@ -165,7 +183,7 @@ def build_image(
     os.chdir(tmp)
 
     # Render Dockerfile.j2 if needed, otherwise use original path
-    dockerfile_to_use = render_j2_dockerfile(df_dict[image], tmp, defaults, sw_version)
+    dockerfile_to_use = render_j2_dockerfile(df_dict[image], tmp, defaults, sw_version, debug)
 
     status = external_commands.run_command(
       f'docker build -t {tag} -f {dockerfile_to_use} .',
@@ -201,7 +219,7 @@ def clab_build(args: argparse.Namespace, settings: Box) -> None:
     return
 
   if args.image:
-    build_image(args.image,args.tag,settings,args.sw_version)
+    build_image(args.image,args.tag,settings,args.sw_version,args.debug)
     return
 
   log.fatal('Specify image to build or "--list". Use "--help" to get help')

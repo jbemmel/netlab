@@ -34,7 +34,8 @@ RUN set -e; \
 WORKDIR /bird-{{ _sw_version }}
 
 # Configure, compile, and install
-RUN ./configure --prefix=/usr --sysconfdir=/etc/bird --localstatedir=/var \
+# --enable-debug: -O0 -ggdb -g3 -gdwarf-4, -rdynamic, internal consistency checks, backtraces
+RUN ./configure --prefix=/usr --sysconfdir=/etc/bird --localstatedir=/var{% if debug is defined and debug %} --enable-debug{% endif %} \
     && make -j$(nproc) \
     && make install
 
@@ -42,7 +43,7 @@ RUN ./configure --prefix=/usr --sysconfdir=/etc/bird --localstatedir=/var \
 FROM debian:bookworm-slim
 
 LABEL maintainer="Netlab project <netlab.tools>"
-LABEL description="BIRD Internet Routing Daemon v2 built from source ({{ _sw_version }})"
+LABEL description="BIRD Internet Routing Daemon v2 built from source ({{ _sw_version }}){% if debug is defined and debug %} with debug support{% endif %}"
 
 # Install runtime dependencies
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
@@ -50,6 +51,9 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get update && apt-get install -y \
     libreadline8 \
     libssh-4 \
+{% if debug is defined and debug %}
+    gdb \
+{% endif %}
     && rm -rf /var/lib/apt/lists/*
 
 # Copy binaries and built directories from the builder stage

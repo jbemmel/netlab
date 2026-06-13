@@ -67,6 +67,23 @@ netlab clab build bird.v2_from_src --tag netlab/bird:latest
 
 Invalid or unavailable versions fail during the Docker build when the source tarball cannot be downloaded. See [BIRD releases](https://bird.nic.cz/download/) for valid version numbers.
 
+### Debug Build
+
+Use **--debug** with **bird.v2_from_src** to compile BIRD with the upstream **--enable-debug** configure option. This enables:
+
+* Full debug symbols (`-O0 -ggdb -g3 -gdwarf-4`) for source-level debugging with **gdb**
+* Backtrace support (`-rdynamic` and `execinfo`) for runtime stack traces
+* Internal consistency checks (`DEBUGGING`)
+
+The debug build also installs **gdb** in the runtime container. When **--tag** is omitted, the default tag becomes `netlab/bird.v2_from_src:debug` or `netlab/bird.v2_from_src:_version_-debug` when **--sw-version** is specified.
+
+```
+netlab clab build bird.v2_from_src --debug
+netlab clab build bird.v2_from_src --sw-version 2.17.4 --debug
+```
+
+For protocol-level tracing at runtime, use BIRD configuration options such as `debug protocols all` and `log { trace, ... } to stderr`. See the [BIRD configuration guide](https://bird.network.cz/doc/bird-3.html) for details.
+
 ## Using a Custom Image in a Lab Topology
 
 You can select a non-default container image with the **image** [node parameter](node-attributes) or change the system default with **defaults.daemons.bird.clab.image** ([more details](topo-defaults)).
