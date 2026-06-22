@@ -1,0 +1,13 @@
+{% if n.evpn|default(false) and n[n.evpn] is string and n.evpn == af %}
+  evpn {
+    table evpntab;
+    import all;
+    export all;
+{%   if n.type == 'ebgp' %}
+    gateway recursive;
+{%     if bgp_data.rr|default('') %}
+    next hop keep;
+{%     endif %}
+{%   endif %}
+  };
+{% endif %}

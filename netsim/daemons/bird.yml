@@ -11,6 +11,7 @@ packages:
 daemon_config:
   bird: /etc/bird/bird.conf
   bfd: /etc/bird/bfd.conf
+  evpn: /etc/bird/evpn.mod.conf
   bgp: /etc/bird/bgp.mod.conf
   bgp@session: /etc/bird/bgp.session.conf
   bgp@policy: /etc/bird/bgp.policy.conf
@@ -73,6 +74,8 @@ features:
     areas: true
   routing:
     static.discard: true
+  evpn:
+    transport: [ vxlan ]
   dhcp: false
   gateway:
     protocol: [ anycast ]
