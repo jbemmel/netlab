@@ -5,6 +5,7 @@ This configuration module configures the BGP EVPN address family to implement L2
 
 * VXLAN-based transport over IPv4 and IPv6
 * MPLS-based transport using LDP- or SR-MPLS-assigned labels
+* IP-based transport for EVPN type-5 route exchange on platforms that support it
 * VLAN-Based Service (bridging of a single VLAN within an EVPN Instance)
 * VLAN-Aware Bundle Service (bridging of multiple related VLANs inside a single EVPN Instance)
 * Symmetric and asymmetric IRB
@@ -133,9 +134,9 @@ Most EVPN/VXLAN implementations support only IPv4 VXLAN transport; some can run 
 
 EVPN module supports these default/global/node parameters:
 
-* **evpn.transport** (global): Transport to use, `vxlan` (default), `mpls` (MPLS with LDP-assigned labels), or `sr` (MPLS with SR-MPLS-assigned labels)
-* **evpn.vrfs** (global or node parameter): A list of EVPN-enabled VRFs. The default value with VXLAN transport: all global VRFs with **evpn.transit_vni** parameter. There is no default value with MPLS transport.
-* **evpn.vlans** (global or node parameter): A list of EVPN-enabled VLANs. The default value with VXLAN transport: all global VLANs with the **vni** parameter. There is no default value with MPLS transport.
+* **evpn.transport** (global): Transport to use, `vxlan` (default), `mpls` (MPLS with LDP-assigned labels), `sr` (MPLS with SR-MPLS-assigned labels), or `ip` (EVPN type-5 route exchange over plain IP transport)
+* **evpn.vrfs** (global or node parameter): A list of EVPN-enabled VRFs. The default value with VXLAN transport: all global VRFs with **evpn.transit_vni** parameter. There is no default value with MPLS or IP transport.
+* **evpn.vlans** (global or node parameter): A list of EVPN-enabled VLANs. The default value with VXLAN transport: all global VLANs with the **vni** parameter. There is no default value with MPLS or IP transport.
 * **evpn.session** (global or node parameter): A list of BGP session types on which the EVPN address family is enabled (default: `ibgp`)
 * **evpn.as** (global parameter): Autonomous system number for VLAN and VRF route targets. Default value: **bgp.as** (when set globally) or **vrf.as**.
 * **evpn.start_transit_vni** (system default parameter) -- the first symmetric IRB transit VNI, range 4096..16777215
@@ -186,6 +187,13 @@ The **evpn.transit_vni** parameter must specify a globally unique VNI value. It 
 * *True*: EVPN configuration module auto-assigns a unique VNI to the VRF.
 * An *integer value*: static VNI assignment, checked for uniqueness
 * Name of *another VRF*: the **evpn.transit_vni** value is copied from that VRF. Use this setting for complex topologies where VRFs with different connectivity requirements have to share the transit VXLAN segment.
+
+(evpn-ip-transport)=
+### IP Transport
+
+Use `evpn.transport: ip` when you want to exchange VRF routes as EVPN type-5 prefixes over existing IPv4 BGP reachability without enabling VXLAN, MPLS, or SR-MPLS data-plane modules. This mode does not create L2 VNIs, L3 transit VNIs, or stretched VLAN services.
+
+With IP transport, list the EVPN-enabled VRFs explicitly with **evpn.vrfs**. Do not set VLAN **vni** attributes or VRF **evpn.transit_vni** values; those attributes belong to VXLAN transport.
 
 (evpn-asymmetric-irb)=
 ## Asymmetric IRB

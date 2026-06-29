@@ -1,0 +1,296 @@
+---
+message: |
+  This lab validates a hub-and-spoke WireGuard overlay using FRR-based Linux
+  routers. The ISP routers are redundant hubs, the customer edge router is the
+  spoke, and IBGP carries the EVPN address family across the WireGuard tunnels.
+
+  Linux hosts behind the customer edge and on the underlay Internet segment
+  provide routed traffic endpoints.
+
+defaults.sources.extra: [ ../integration/wait_times.yml, ../integration/warnings.yml ]
+plugin: [ files, bgp.session ]
+# plugin: [ tunnel ]
+
+provider: clab
+module: [ bgp, evpn, routing ]
+
+defaults:
+  devices:
+    frr:
+      group_vars:
+        netlab_linux_packages:
+          wireguard-tools: wg
+
+addressing:
+  loopback:
+    ipv4: 10.42.0.0/24
+  lan:
+    ipv4: 172.31.0.0/16
+  p2p:
+    ipv4: 10.43.0.0/24
+
+bgp.as: 65000
+evpn.transport: vxlan
+evpn.vrfs: [ customer ]
+gateway.protocol: anycast
+isis.type: level-2
+isis.area: "49.0001"
+
+vrfs:
+  customer:
+    evpn.transit_vni: true
+
+vlans:
+  edge:
+    mode: irb
+    prefix:
+      ipv4: 172.16.10.0/24
+    links:
+    - interfaces: [ ce, h-edge ]
+    vrf: customer
+    gateway: True
+
+groups:
+  _auto_create: True
+  wg_edges:
+    members: [ isp1, isp2, ce ]
+    device: frr
+    provider: clab
+    module: [ bgp, evpn, routing, bfd ]
+    bgp.bfd: True
+    bgp.session.apply: [ ibgp ]
+    clab.exec:
+    - sh -c "command -v wg >/dev/null || apk add --no-cache wireguard-tools"
+    config: [ wireguard ]
+  hosts:
+    members: [ h-edge, h-inet ]
+    device: linux
+    provider: clab
+    module: [ routing ]
+
+nodes:
+  isp1:
+    module: [ bgp, evpn, routing, isis, bfd ]
+    bgp.rr: True
+    routing.static:
+    - ipv4: 10.42.0.3/32
+      nexthop.ipv4: 10.44.0.1
+  isp2:
+    module: [ bgp, evpn, routing, isis, bfd ]
+    bgp.rr: True
+    routing.static:
+    - ipv4: 10.42.0.3/32
+      nexthop.ipv4: 10.44.0.5
+  ce:
+    module: [ bgp, evpn, routing, vrf, vlan, vxlan, gateway, bfd ]
+    vrfs:
+      customer: {}
+    routing.static:
+    - ipv4: 10.42.0.1/32
+      nexthop.node: isp1
+      nexthop.link: WireGuard CE to ISP1
+    - ipv4: 10.42.0.2/32
+      nexthop.node: isp2
+      nexthop.link: WireGuard CE to ISP2
+  h-edge:
+    routing.static:
+    - ipv4: 0.0.0.0/0
+      nexthop.node: ce
+  h-inet:
+    routing.static:
+    - ipv4: 0.0.0.0/0
+      nexthop.node: isp1
+
+links:
+- name: Internet underlay
+  pool: lan
+  bgp: false
+  interfaces:
+  - node: isp1
+    ipv4: 172.31.0.1/24
+  - node: isp2
+    ipv4: 172.31.0.2/24
+  - node: ce
+    ipv4: 172.31.0.10/24
+  - node: h-inet
+    ipv4: 172.31.0.100/24
+
+- name: ISP core
+  interfaces: [ isp1, isp2 ]
+
+- name: WireGuard CE to ISP1
+  type: tunnel
+  # tunnel.mode: wireguard
+  # tunnel.port: 51821
+  prefix:
+    ipv4: 10.44.0.0/30
+  # interfaces:
+  # - node: ce
+  #   tunnel.endpoint.ipv4: 172.31.0.10
+  # - node: isp1
+  #   tunnel.endpoint.ipv4: 172.31.0.1
+  interfaces:
+  - node: ce
+  - node: isp1
+
+- name: WireGuard CE to ISP2
+  type: tunnel
+  # tunnel.mode: wireguard
+  # tunnel.port: 51822
+  prefix:
+    ipv4: 10.44.0.4/30
+  # interfaces:
+  # - node: ce
+  #   tunnel.endpoint.ipv4: 172.31.0.10
+  # - node: isp2
+  #   tunnel.endpoint.ipv4: 172.31.0.2
+  interfaces:
+  - node: ce
+  - node: isp2
+
+configlets:
+  wireguard:
+    frr: |
+      #!/bin/bash
+      set -e
+
+      if ! command -v wg >/dev/null; then
+        echo "wireguard-tools package is not installed" >&2
+        exit 1
+      fi
+
+      {% set wg_addr = {} %}
+      {% for intf in interfaces if intf.type|default('') == 'tunnel' %}
+      {%   set _ = wg_addr.update({ intf.ifname: intf.ipv4 }) %}
+      {% endfor %}
+      {% set underlay_addr = {} %}
+      {% for hname,hdata in hostvars.items() %}
+      {%   for intf in hdata.interfaces|default([]) if intf.name|default('') == 'Internet underlay' %}
+      {%     set _ = underlay_addr.update({ hname: intf.ipv4|ansible.utils.ipaddr('address') }) %}
+      {%   endfor %}
+      {% endfor %}
+
+      create_wg() {
+        local ifname="$1"
+        local addr="$2"
+        local private_key="$3"
+        local listen_port="$4"
+        local peer_key="$5"
+        local peer_endpoint="$6"
+        local peer_allowed="$7"
+
+        if ! ip link show dev "${ifname}" >/dev/null 2>&1; then
+          ip link add dev "${ifname}" type wireguard
+        fi
+
+        wg set "${ifname}" \
+          private-key <(printf '%s\n' "${private_key}") \
+          listen-port "${listen_port}" \
+          peer "${peer_key}" \
+          allowed-ips "${peer_allowed}" \
+          endpoint "${peer_endpoint}" \
+          persistent-keepalive 25
+
+        ip address replace "${addr}" dev "${ifname}"
+        ip link set dev "${ifname}" mtu 1420 up
+      }
+
+      {% if inventory_hostname == 'ce' %}
+      create_wg \
+        tun0 \
+        {{ wg_addr.tun0 }} \
+        qIsxBSCUXDmS3Cw/Pt0AJpQ78lnvxByw0tbQsg3JyEM= \
+        51821 \
+        rr6bt5NJli4KZU04XS1M680ya0mzNcHub3dPkS8Zmkc= \
+        {{ underlay_addr.isp1 }}:51821 \
+        0.0.0.0/0
+      create_wg \
+        tun1 \
+        {{ wg_addr.tun1 }} \
+        GLXv8447tHNMrOentzyDMu+o8+PVKEBQ6g8oTt/Cx2c= \
+        51822 \
+        K0kozOVleY7CP3n2P1GR3MVO3HYfL9Ev+bgMJQyujiM= \
+        {{ underlay_addr.isp2 }}:51822 \
+        0.0.0.0/0
+      {% elif inventory_hostname == 'isp1' %}
+      create_wg \
+        tun0 \
+        {{ wg_addr.tun0 }} \
+        0HCgL/y7ySJk8ZyQ1ePYX7C52MHU6xYN0OLOKOV4nnw= \
+        51821 \
+        +aMRHfO15LnNyJw7w5aVsd8JRW703kFaiGh8E7lbjTo= \
+        {{ underlay_addr.ce }}:51821 \
+        0.0.0.0/0
+      {% elif inventory_hostname == 'isp2' %}
+      create_wg \
+        tun0 \
+        {{ wg_addr.tun0 }} \
+        wOqweDScckGxG7dyhjce3URGn7wgUFW94xKUfkUCtXs= \
+        51822 \
+        z9sw+cR6v2LyMaqvtNHoXghYt1ntVhpa7WdliPW2/mE= \
+        {{ underlay_addr.ce }}:51822 \
+        0.0.0.0/0
+      {% endif %}
+
+validate:
+  isis_isp:
+    description: Check IS-IS adjacency between ISP routers
+    wait: 20
+    wait_msg: Waiting for IS-IS adjacency
+    nodes: [ isp1 ]
+    plugin: isis_neighbor('isp2',level='L2',area='49.0001')
+    stop_on_error: true
+
+  wg_ce_isp1:
+    description: Check WireGuard tunnel reachability to ISP1
+    wait: 5
+    wait_msg: Waiting for WireGuard tunnel to ISP1
+    nodes: [ ce ]
+    plugin: ping(nodes.isp1.interfaces[2].ipv4,src=node.interfaces[2].ipv4)
+    stop_on_error: true
+
+  wg_ce_isp2:
+    description: Check WireGuard tunnel reachability to ISP2
+    wait: 5
+    wait_msg: Waiting for WireGuard tunnel to ISP2
+    nodes: [ ce ]
+    plugin: ping(nodes.isp2.interfaces[2].ipv4,src=node.interfaces[3].ipv4)
+    stop_on_error: true
+
+  ibgp_isp1:
+    description: Check IBGP session from CE to ISP1
+    wait: 30
+    wait_msg: Waiting for CE-to-ISP1 IBGP session
+    nodes: [ ce ]
+    plugin: bgp_neighbor(node.bgp.neighbors,'isp1')
+    stop_on_error: true
+
+  ibgp_isp2:
+    description: Check IBGP session from CE to ISP2
+    wait: 30
+    wait_msg: Waiting for CE-to-ISP2 IBGP session
+    nodes: [ ce ]
+    plugin: bgp_neighbor(node.bgp.neighbors,'isp2')
+    stop_on_error: true
+
+  evpn_isp1:
+    description: Check EVPN AF on CE-to-ISP1 IBGP session
+    nodes: [ ce ]
+    plugin: bgp_neighbor(node.bgp.neighbors,'isp1',activate='evpn')
+
+  evpn_isp2:
+    description: Check EVPN AF on CE-to-ISP2 IBGP session
+    nodes: [ ce ]
+    plugin: bgp_neighbor(node.bgp.neighbors,'isp2',activate='evpn')
+
+  edge_to_ce:
+    description: Check routed traffic from edge host to CE
+    wait: 5
+    nodes: [ h-edge ]
+    plugin: ping('ce')
+
+  inet_to_isp:
+    description: Check routed traffic from Internet host to ISP1
+    wait: 5
+    nodes: [ h-inet ]
+    plugin: ping('isp1')

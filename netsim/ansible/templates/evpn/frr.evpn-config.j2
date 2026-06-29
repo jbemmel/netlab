@@ -1,11 +1,25 @@
+{% set evpn_transport = evpn.transport|default('vxlan') %}
+{% set evpn_vrfs = evpn.vrfs|default([]) %}
 router bgp {{ bgp.as }}
  address-family l2vpn evpn
+{% if evpn_transport in ['vxlan','ip'] %}
   advertise-all-vni
+{% endif %}
+{% if evpn_transport == 'vxlan' %}
   advertise-svi-ip
+{% endif %}
+{% if evpn_transport != 'ip' or not evpn_vrfs %}
 {% for af in ['ipv4','ipv6'] if af in bgp %}
   advertise {{ af }} unicast
 {% endfor %}
+{% endif %}
+{% if evpn_transport == 'ip' and not evpn_vrfs %}
+  rd {{ bgp.router_id }}:1
+  route-target export {{ bgp.as }}:1
+  route-target import {{ bgp.as }}:1
+{% endif %}
 
+{% if evpn_transport == 'vxlan' %}
 ! Configure explicit Route Targets and RD per L2 VNI; auto-derived differs
 {% for vlan in (vlans|default({})).values() if 'vni' in vlan and 'evpn' in vlan %}
   vni {{ vlan.vni }}
@@ -17,6 +31,7 @@ router bgp {{ bgp.as }}
 {%   endfor %}
   exit-vni
 {% endfor %}
+{% endif %}
 
 {% for n in bgp.neighbors if n.evpn|default(False) %}
 {%   set peer = n.local_if|default(n[n.evpn]) %}
@@ -35,15 +50,15 @@ exit
 {% if vrfs is defined %}
 {% for vname,vdata in vrfs.items() if 'evpn' in vdata %}
 vrf {{ vname }}
-{% if vdata.evpn.transit_vni is defined %}
- vni {{ vdata.evpn.transit_vni }}
+{% if vdata.evpn.transit_vni is defined or evpn_transport == 'ip' %}
+ vni {{ vdata.evpn.transit_vni|default(vdata.evpn.evi) }}
 {% endif %}
  exit-vrf
 
 router bgp {{ bgp.as }} vrf {{ vname }}
  address-family l2vpn evpn
-{% if vdata.evpn.transit_vni is defined %}
-  ! This sets the L3 VNI RD/RT for this VRF
+{% if vdata.evpn.transit_vni is defined or evpn_transport == 'ip' %}
+  ! This sets the EVPN RD/RT for this VRF
   rd {{ vdata.rd }}
   route-target export {{ vdata.export[0] }}
   route-target import {{ vdata.import[0] }}

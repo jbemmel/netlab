@@ -1,0 +1,472 @@
+bgp:
+  activate:
+    ipv4: []
+  advertise_loopback: true
+  as: 65000
+  community:
+    ebgp:
+    - standard
+    ibgp:
+    - standard
+    - extended
+  next_hop_self: true
+evpn:
+  session:
+  - ibgp
+  transport: ip
+  vrfs:
+  - red
+groups:
+  as65000:
+    members:
+    - r1
+    - r2
+input:
+- topology/input/evpn-ip-l3vpn.yml
+- package:topology-defaults.yml
+links:
+- _linkname: links[1]
+  interfaces:
+  - ifindex: 1
+    ifname: eth1
+    ipv4: 10.1.0.1/30
+    node: r1
+  - ifindex: 1
+    ifname: eth1
+    ipv4: 10.1.0.2/30
+    node: r2
+  linkindex: 1
+  node_count: 2
+  prefix:
+    ipv4: 10.1.0.0/30
+  type: p2p
+- _linkname: vrfs.red.links[1]
+  bridge: input_2
+  interfaces:
+  - ifindex: 2
+    ifname: eth2
+    ipv4: 172.16.0.1/24
+    node: r1
+  linkindex: 2
+  node_count: 1
+  prefix:
+    ipv4: 172.16.0.0/24
+  role: stub
+  type: stub
+  vrf: red
+- _linkname: vrfs.red.links[2]
+  bridge: input_3
+  interfaces:
+  - ifindex: 2
+    ifname: eth2
+    ipv4: 172.16.1.2/24
+    node: r2
+  linkindex: 3
+  node_count: 1
+  prefix:
+    ipv4: 172.16.1.0/24
+  role: stub
+  type: stub
+  vrf: red
+module:
+- ospf
+- bgp
+- vrf
+- evpn
+name: input
+nodes:
+  r1:
+    _node_config:
+      bgp: /etc/config/03-bgp.sh:sh
+      evpn: /etc/config/05-evpn.sh:sh
+      initial: /etc/config/01-initial.sh:sh
+      ospf: /etc/config/02-ospf.sh:sh
+      vrf: /etc/config/04-vrf.sh:sh
+    af:
+      ipv4: true
+      vpnv4: true
+    bgp:
+      activate:
+        ipv4: []
+      advertise:
+      - ipv4: 10.0.0.1/32
+      advertise_loopback: true
+      as: 65000
+      community:
+        ebgp:
+        - standard
+        - large
+        ibgp:
+        - standard
+        - large
+        - extended
+        localas_ibgp:
+        - standard
+        - large
+        - extended
+      ipv4: true
+      neighbors:
+      - _source_intf:
+          ifindex: 0
+          ifname: lo
+          ipv4: 10.0.0.1/32
+          neighbors: []
+          type: loopback
+          virtual_interface: true
+        activate:
+          ipv4: false
+        as: 65000
+        evpn: ipv4
+        ipv4: 10.0.0.2
+        name: r2
+        next_hop_self: ebgp
+        type: ibgp
+      next_hop_self: true
+      router_id: 10.0.0.1
+    box: quay.io/frrouting/frr:10.6.1
+    clab:
+      binds:
+      - source: node_files/r1/initial
+        target: /etc/config/01-initial.sh
+      - source: node_files/r1/ospf
+        target: /etc/config/02-ospf.sh
+      - source: node_files/r1/bgp
+        target: /etc/config/03-bgp.sh
+      - source: node_files/r1/vrf
+        target: /etc/config/04-vrf.sh
+      - source: node_files/r1/evpn
+        target: /etc/config/05-evpn.sh
+      - source: node_files/r1/daemons
+        target: /etc/frr/daemons
+      - mode: ro
+        source: node_files/-shared-hosts
+        target: /etc/hosts
+      config_templates:
+      - mode: sh
+        source: initial
+        target: /etc/config/01-initial.sh
+      - mode: sh
+        source: ospf
+        target: /etc/config/02-ospf.sh
+      - mode: sh
+        source: bgp
+        target: /etc/config/03-bgp.sh
+      - mode: sh
+        source: vrf
+        target: /etc/config/04-vrf.sh
+      - mode: sh
+        source: evpn
+        target: /etc/config/05-evpn.sh
+      - source: daemons
+        target: /etc/frr/daemons
+      - mode: shared
+        source: hosts
+        target: /etc/hosts
+      exec:
+      - sleep 1
+      kind: linux
+    device: frr
+    evpn:
+      session:
+      - ibgp
+      transport: ip
+      vrfs:
+      - red
+    hostname: clab-input-r1
+    id: 1
+    interfaces:
+    - ifindex: 1
+      ifname: eth1
+      ipv4: 10.1.0.1/30
+      linkindex: 1
+      mtu: 1500
+      name: r1 -> r2
+      neighbors:
+      - ifname: eth1
+        ipv4: 10.1.0.2/30
+        node: r2
+      ospf:
+        area: 0.0.0.0
+        network_type: point-to-point
+        passive: false
+      type: p2p
+    - bgp:
+        advertise: true
+      bridge: input_2
+      ifindex: 2
+      ifname: eth2
+      ipv4: 172.16.0.1/24
+      linkindex: 2
+      mtu: 1500
+      name: r1 -> stub
+      neighbors: []
+      role: stub
+      type: stub
+      vrf: red
+    loopback:
+      bgp:
+        advertise: true
+      ifindex: 0
+      ifname: lo
+      ipv4: 10.0.0.1/32
+      neighbors: []
+      ospf:
+        area: 0.0.0.0
+        passive: false
+      type: loopback
+      virtual_interface: true
+    mgmt:
+      ifname: eth0
+      ipv4: 192.168.121.101
+      mac: ca:fe:00:01:00:00
+    module:
+    - ospf
+    - bgp
+    - vrf
+    - evpn
+    mtu: 1500
+    name: r1
+    netlab_ansible_skip_module:
+    - initial
+    - ospf
+    - bgp
+    - vrf
+    - evpn
+    ospf:
+      af:
+        ipv4: true
+      area: 0.0.0.0
+      areas:
+      - _area_int: 0
+        area: 0.0.0.0
+        kind: regular
+      router_id: 10.0.0.1
+    role: router
+    vrf:
+      as: 65000
+    vrfs:
+      red:
+        af:
+          ipv4: true
+        bgp:
+          advertise:
+          - ipv4: 172.16.0.0/24
+          import:
+            connected:
+              auto: true
+          neighbors: []
+        evpn:
+          evi: 5001
+          rd: 10.0.0.1:5001
+        export:
+        - '65000:1'
+        id: 1
+        import:
+        - '65000:1'
+        rd: '65000:1'
+        vrfidx: 100
+  r2:
+    _node_config:
+      bgp: /etc/config/03-bgp.sh:sh
+      evpn: /etc/config/05-evpn.sh:sh
+      initial: /etc/config/01-initial.sh:sh
+      ospf: /etc/config/02-ospf.sh:sh
+      vrf: /etc/config/04-vrf.sh:sh
+    af:
+      ipv4: true
+      vpnv4: true
+    bgp:
+      activate:
+        ipv4: []
+      advertise:
+      - ipv4: 10.0.0.2/32
+      advertise_loopback: true
+      as: 65000
+      community:
+        ebgp:
+        - standard
+        - large
+        ibgp:
+        - standard
+        - large
+        - extended
+        localas_ibgp:
+        - standard
+        - large
+        - extended
+      ipv4: true
+      neighbors:
+      - _source_intf:
+          ifindex: 0
+          ifname: lo
+          ipv4: 10.0.0.2/32
+          neighbors: []
+          type: loopback
+          virtual_interface: true
+        activate:
+          ipv4: false
+        as: 65000
+        evpn: ipv4
+        ipv4: 10.0.0.1
+        name: r1
+        next_hop_self: ebgp
+        type: ibgp
+      next_hop_self: true
+      router_id: 10.0.0.2
+    box: quay.io/frrouting/frr:10.6.1
+    clab:
+      binds:
+      - source: node_files/r2/initial
+        target: /etc/config/01-initial.sh
+      - source: node_files/r2/ospf
+        target: /etc/config/02-ospf.sh
+      - source: node_files/r2/bgp
+        target: /etc/config/03-bgp.sh
+      - source: node_files/r2/vrf
+        target: /etc/config/04-vrf.sh
+      - source: node_files/r2/evpn
+        target: /etc/config/05-evpn.sh
+      - source: node_files/r2/daemons
+        target: /etc/frr/daemons
+      - mode: ro
+        source: node_files/-shared-hosts
+        target: /etc/hosts
+      config_templates:
+      - mode: sh
+        source: initial
+        target: /etc/config/01-initial.sh
+      - mode: sh
+        source: ospf
+        target: /etc/config/02-ospf.sh
+      - mode: sh
+        source: bgp
+        target: /etc/config/03-bgp.sh
+      - mode: sh
+        source: vrf
+        target: /etc/config/04-vrf.sh
+      - mode: sh
+        source: evpn
+        target: /etc/config/05-evpn.sh
+      - source: daemons
+        target: /etc/frr/daemons
+      - mode: shared
+        source: hosts
+        target: /etc/hosts
+      exec:
+      - sleep 1
+      kind: linux
+    device: frr
+    evpn:
+      session:
+      - ibgp
+      transport: ip
+      vrfs:
+      - red
+    hostname: clab-input-r2
+    id: 2
+    interfaces:
+    - ifindex: 1
+      ifname: eth1
+      ipv4: 10.1.0.2/30
+      linkindex: 1
+      mtu: 1500
+      name: r2 -> r1
+      neighbors:
+      - ifname: eth1
+        ipv4: 10.1.0.1/30
+        node: r1
+      ospf:
+        area: 0.0.0.0
+        network_type: point-to-point
+        passive: false
+      type: p2p
+    - bgp:
+        advertise: true
+      bridge: input_3
+      ifindex: 2
+      ifname: eth2
+      ipv4: 172.16.1.2/24
+      linkindex: 3
+      mtu: 1500
+      name: r2 -> stub
+      neighbors: []
+      role: stub
+      type: stub
+      vrf: red
+    loopback:
+      bgp:
+        advertise: true
+      ifindex: 0
+      ifname: lo
+      ipv4: 10.0.0.2/32
+      neighbors: []
+      ospf:
+        area: 0.0.0.0
+        passive: false
+      type: loopback
+      virtual_interface: true
+    mgmt:
+      ifname: eth0
+      ipv4: 192.168.121.102
+      mac: ca:fe:00:02:00:00
+    module:
+    - ospf
+    - bgp
+    - vrf
+    - evpn
+    mtu: 1500
+    name: r2
+    netlab_ansible_skip_module:
+    - initial
+    - ospf
+    - bgp
+    - vrf
+    - evpn
+    ospf:
+      af:
+        ipv4: true
+      area: 0.0.0.0
+      areas:
+      - _area_int: 0
+        area: 0.0.0.0
+        kind: regular
+      router_id: 10.0.0.2
+    role: router
+    vrf:
+      as: 65000
+    vrfs:
+      red:
+        af:
+          ipv4: true
+        bgp:
+          advertise:
+          - ipv4: 172.16.1.0/24
+          import:
+            connected:
+              auto: true
+          neighbors: []
+        evpn:
+          evi: 5001
+          rd: 10.0.0.2:5001
+        export:
+        - '65000:1'
+        id: 1
+        import:
+        - '65000:1'
+        rd: '65000:1'
+        vrfidx: 100
+ospf:
+  area: 0.0.0.0
+provider: clab
+vrf:
+  as: 65000
+vrfs:
+  red:
+    evpn:
+      evi: 5001
+    export:
+    - '65000:1'
+    id: 1
+    import:
+    - '65000:1'
+    rd: '65000:1'

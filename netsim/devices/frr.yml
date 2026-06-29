@@ -117,7 +117,9 @@ features:
     irb: true
     asymmetrical_irb: True
     multi_rt: True
-    transport: [ vxlan ]
+    transport:
+      vxlan: [ ibgp, ebgp ]
+      ip: [ ibgp, ebgp ]
     ipv6: True
   gateway:
     protocol: [ vrrp, anycast ]

@@ -49,13 +49,13 @@ def validate_evpn_lists(toponode: Box, obj_path: str, topology: Box, create: boo
 """
 Get the transport AF used for EVPN on this node:
 
-* IPv4 for SR/MPLS transport
+* IPv4 for IP/SR/MPLS transport
 * vxlan.transport (IPv4 or IPv6) for VXLAN transport
 """
 def get_evpn_af(node: Box, topology: Box) -> typing.Optional[str]:
   evpn_transport = node.get('evpn.transport','vxlan')
   if evpn_transport != 'vxlan':                   # Are we using VXLAN transport?
-    return 'ipv4'                                 # No, assume IPv4 next hops for MPLS/LDP and SR-MPLS transport
+    return 'ipv4'                                 # No, assume IPv4 next hops for IP, MPLS/LDP and SR-MPLS transport
 
   if 'vxlan.transport' in node:                   # Data-plane node with VXLAN module?
     evpn_af = node.vxlan.transport
@@ -117,6 +117,10 @@ def enable_evpn_af(node: Box, topology: Box) -> None:
         continue
 
       bn.evpn = evpn_af
+      if node.evpn.transport == 'ip':
+        for bgp_af in ('ipv4','ipv6'):
+          if bgp_af in bn.activate:
+            bn.activate[bgp_af] = False
 
       # Now check if the user enabled extended BGP communities on the BGP session type
       # used for this BGP neighbor. Cache the per-node warning status to prevent multiple
@@ -284,7 +288,7 @@ def check_evpn_transport(topology: Box) -> str:
       module='evpn')
   if not setting:
     setting = VALID_TRANSPORTS[0]                 # Default to VXLAN
-  if setting not in topology.get('module',[]):    # Warn if user sets it without adding the module
+  if setting != 'ip' and setting not in topology.get('module',[]):  # Warn if user sets it without adding the module
     log.error(
       f"Selected EVPN transport module (evpn.transport='{setting}') not active in topology",
       log.MissingDependency,
@@ -292,14 +296,14 @@ def check_evpn_transport(topology: Box) -> str:
   return setting
 
 """
-Called when mpls transport is used; checks if user provided any global vlans with vni attribute set
+Called when non-VXLAN transport is used; checks if user provided any global vlans with vni attribute set
 """
-def check_no_vnis_for_mpls(topology:Box) -> None:
+def check_no_vnis_for_transport(topology: Box, transport: str) -> None:
 
   def check_vlan(vname: str, vdata:Box) -> None:
     if 'vni' in vdata:
       log.error(
-        f'VLAN VNIs cannot be used with mpls transport',
+        f'VLAN VNIs cannot be used with {transport} transport',
         log.IncorrectAttr,
         'evpn',
         more_data=f"{vname} VNI {vdata.vni}")
@@ -330,10 +334,10 @@ def vrf_transit_vni(topology: Box) -> None:
                                 VALID_TRANSPORTS[0])            # Default to first valid transport listed, may not be active
 
   for vrf_name,vrf_data in topology.vrfs.items():               # First pass: build a list of statically configured VNIs
-    vni = vrf_data.get('evpn.transit_vni',None)                 # transit_vni makes no sense with MPLS transport
+    vni = vrf_data.get('evpn.transit_vni',None)                 # transit_vni makes no sense with non-VXLAN transport
     if vni and evpn_transport != 'vxlan':
       log.error(
-        f'evpn.transit_vni in VRF {vrf_name} is not allowed with mpls evpn.transport',
+        f'evpn.transit_vni in VRF {vrf_name} is not allowed with {evpn_transport} evpn.transport',
         log.IncorrectValue,
         'evpn')
       vni_error = True
@@ -477,7 +481,7 @@ def check_node_vrf_irb(node: Box, topology: Box) -> None:
     if not vrf_data.get('af',None):                             # Cannot do IRB without L3 addresses ;)
       continue
 
-    symmetric_irb = vrf_data.get('evpn.transit_vni',False) or evpn_transport == 'mpls'
+    symmetric_irb = vrf_data.get('evpn.transit_vni',False) or evpn_transport in ['mpls','ip']
     if symmetric_irb:
       if not features.evpn.irb and evpn_transport == 'vxlan':   # ... does this device support IRB?
         log.error(
@@ -632,8 +636,9 @@ class EVPN(_Module):
 
   def module_pre_transform(self, topology: Box) -> None:
     register_static_transit_vni(topology)
-    if check_evpn_transport(topology) in ['sr','mpls']:
-      check_no_vnis_for_mpls(topology)
+    evpn_transport = check_evpn_transport(topology)
+    if evpn_transport != 'vxlan':
+      check_no_vnis_for_transport(topology,evpn_transport)
 
   def node_pre_transform(self, node: Box, topology: Box) -> None:
     validate_no_node_vrf_attributes(node,topology)

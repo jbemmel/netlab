@@ -18,17 +18,20 @@ router bgp {{ vdata.as|default(bgp.as) }} vrf {{ vname }}
 {%     endif %}
 {%   endfor %}
 {% endfor %}
+{% set evpn_transport = evpn.transport|default('') %}
 {% for af in ['ipv4','ipv6'] if vdata.af[af]|default(False) %}
  address-family {{ af }} unicast
 {%   if vdata.bgp.import is defined %}
 {{     redistribute.config(vdata.bgp,af=af)|indent(1,first=True) }}
 {%   endif %}
+{%   if evpn_transport != 'ip' %}
   label vpn export auto
   export vpn
   import vpn
   rd vpn export {{ vdata.rd }}
   rt vpn import {{ vdata.import|join(" ") }}
   rt vpn export {{ vdata.export|join(" ") }}
+{%   endif %}
 {%   for n in vdata.bgp.advertise|default([]) if af in n %}
   network {{ n[af]|ansible.utils.ipaddr('0') }}
 {%   endfor %}

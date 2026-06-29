@@ -1,6 +1,19 @@
 #!/bin/bash
 #
 set -e
+{% set evpn_transport = evpn.transport|default('vxlan') %}
+{% if evpn_transport == 'ip' and vrfs is defined %}
+# FRR originates VRF EVPN type-5 routes only when the VRF has a Linux L3VNI binding.
+{% for vname,vdata in vrfs.items() if 'evpn' in vdata %}
+{%   set l3vni = vdata.evpn.transit_vni|default(vdata.evpn.evi) %}
+ip link add br{{ l3vni }} type bridge 2>/dev/null || true
+ip link set br{{ l3vni }} master {{ vname }} 2>/dev/null || true
+ip link set br{{ l3vni }} up
+ip link add l3vni{{ l3vni }} type vxlan id {{ l3vni }} dstport 4789 local {{ loopback.ipv4|ansible.utils.ipaddr('address') }} nolearning 2>/dev/null || true
+ip link set l3vni{{ l3vni }} master br{{ l3vni }} 2>/dev/null || true
+ip link set l3vni{{ l3vni }} up
+{% endfor %}
+{% endif %}
 cat >/tmp/evpn_config <<CONFIG
 {% include "frr.evpn-config.j2" +%}
 CONFIG

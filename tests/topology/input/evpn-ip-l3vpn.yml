@@ -1,0 +1,18 @@
+defaults.device: frr
+provider: clab
+module: [ bgp, ospf, vrf, evpn ]
+
+bgp.as: 65000
+bgp.activate.ipv4: []
+evpn.transport: ip
+evpn.vrfs: [ red ]
+
+vrfs:
+  red:
+    links: [ r1, r2 ]
+
+nodes:
+  r1:
+  r2:
+
+links: [ r1-r2 ]

@@ -1,0 +1,102 @@
+message: |
+  The devices under test are layer-3 EVPN routers advertising customer VRF
+  routes as EVPN type-5 prefixes over plain IP transport.
+
+  This test checks EVPN control-plane setup without VXLAN, MPLS, SR transport,
+  or VPNv4. CE routers use EBGP/EVPN with the PE routers; the PE-to-PE BGP
+  session carries only EVPN.
+
+defaults.sources.extra: [ ../wait_times.yml, ../warnings.yml ]
+plugin: [ fix_mtu ]
+
+bgp.as: 65000
+bgp.activate.ipv4: []
+bgp.community.ebgp: [ standard, large, extended ]
+
+evpn.transport: ip
+evpn.session: [ ibgp, ebgp ]
+evpn.vrfs: [ customer ]
+
+vrfs:
+  customer:
+    links: [ ce1, dut, ce2, s2 ]
+
+groups:
+  _auto_create: True
+  ce:
+    members: [ ce1, ce2 ]
+    module: [ bgp, evpn, vrf ]
+  pe:
+    members: [ dut, s2 ]
+    module: [ isis, bgp, evpn, vrf ]
+  x_devices:
+    members: [ ce1, ce2 ]
+    device: frr
+    provider: clab
+
+nodes:
+  ce1.bgp.as: 65201
+  ce2.bgp.as: 65202
+
+links:
+- ce1-dut
+- dut-s2
+- ce2-s2
+
+validate:
+  evpn_ce1:
+    description: Check EVPN address family session with DUT
+    wait: ebgp_session
+    wait_msg: Waiting for EVPN BGP session to start
+    nodes: [ ce1 ]
+    plugin: bgp_neighbor(node.bgp.neighbors,'dut',activate='evpn')
+    stop_on_error: true
+  evpn_dut_ce1:
+    description: Check EVPN address family session with CE1
+    wait: ebgp_session
+    wait_msg: Waiting for EVPN BGP session to start
+    nodes: [ dut ]
+    plugin: bgp_neighbor(node.bgp.neighbors,'ce1',activate='evpn')
+    stop_on_error: true
+  evpn_ce2:
+    description: Check EVPN address family session with S2
+    wait: ebgp_session
+    wait_msg: Waiting for EVPN BGP session to start
+    nodes: [ ce2 ]
+    plugin: bgp_neighbor(node.bgp.neighbors,'s2',activate='evpn')
+    stop_on_error: true
+  evpn_s2_ce2:
+    description: Check EVPN address family session with CE2
+    wait: ebgp_session
+    wait_msg: Waiting for EVPN BGP session to start
+    nodes: [ s2 ]
+    plugin: bgp_neighbor(node.bgp.neighbors,'ce2',activate='evpn')
+    stop_on_error: true
+  evpn_dut:
+    description: Check EVPN address family session with S2
+    wait: ibgp_session
+    wait_msg: Waiting for EVPN BGP session to start
+    nodes: [ dut ]
+    plugin: bgp_neighbor(node.bgp.neighbors,'s2',activate='evpn')
+    stop_on_error: true
+  evpn_s2:
+    description: Check EVPN address family session with DUT
+    wait: ibgp_session
+    wait_msg: Waiting for EVPN BGP session to start
+    nodes: [ s2 ]
+    plugin: bgp_neighbor(node.bgp.neighbors,'dut',activate='evpn')
+    stop_on_error: true
+  isis_dut:
+    description: Check IS-IS sessions with S2
+    wait: isis_adj_p2p
+    wait_msg: Waiting for IS-IS sessions to start
+    nodes: [ dut ]
+    plugin: isis_neighbor('s2')
+    stop_on_error: true
+  isis_s2:
+    description: Check IS-IS sessions with DUT
+    wait: isis_adj_p2p
+    wait_msg: Waiting for IS-IS sessions to start
+    nodes: [ s2 ]
+    plugin: isis_neighbor('dut')
+    stop_on_error: true
