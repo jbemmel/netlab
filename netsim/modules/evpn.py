@@ -83,8 +83,18 @@ def get_bgp_neighbor_types(node: Box, topology: Box) -> list:
     return device_transport.get(topo_transport,[]) or \
            device_transport.get(f'cp_{topo_transport}',[])  # Return DP- or CP- settings
 
-  # Default: support IBGP and EBGP for VXLAN and only IBGP for MPLS/SR
-  return ['ibgp', 'ebgp'] if topo_transport == 'vxlan' else ['ibgp']
+  # Default: support IBGP and EBGP for VXLAN, IBGP and local-as IBGP for IP, only IBGP for MPLS/SR
+  if topo_transport == 'vxlan':
+    return ['ibgp', 'ebgp']
+  if topo_transport == 'ip':
+    return ['ibgp', 'localas_ibgp']
+  return ['ibgp']
+
+def evpn_session_enabled(session_type: str, enabled_sessions: list, topology: Box) -> bool:
+  if session_type in enabled_sessions:
+    return True
+  parent = topology.defaults.bgp.attributes._inherit_community.get(session_type,None)
+  return parent in enabled_sessions if parent else False
 
 def enable_evpn_af(node: Box, topology: Box) -> None:
   AF_WARNING = {}
@@ -100,7 +110,7 @@ def enable_evpn_af(node: Box, topology: Box) -> None:
   # that also use EVPN module
   #
   for bn in node.bgp.get('neighbors',[]):
-    if bn.type in bgp_session and 'evpn' in topology.nodes[bn.name].get('module'):
+    if evpn_session_enabled(bn.type,bgp_session,topology) and 'evpn' in topology.nodes[bn.name].get('module'):
       if evpn_af not in bn:
         continue
       if bgp_neighbor_types is None:                        # Get BGP neighbor types only when needed
@@ -127,7 +137,7 @@ def enable_evpn_af(node: Box, topology: Box) -> None:
       # warnings generated for a single node. We still have to create warnings for individual
       # nodes as the bgp.community could be set on a node.
       #
-      s_type = bn.type
+      s_type = topology.defaults.bgp.attributes._inherit_community.get(bn.type,bn.type)
       if s_type not in AF_WARNING and 'extended' not in bgp_community.get(s_type,[]):
         log.warning(
           text=f'Extended BGP communities are not enabled on {s_type} BGP sessions on {node.name}',
@@ -323,6 +333,17 @@ def get_next_vni(start_vni: int, used_vni_list: typing.List[int]) -> int:
     if not start_vni in used_vni_list:
       return start_vni
 
+def prepare_ip_transport_transit_vni(topology: Box) -> None:
+  if topology.get('evpn.transport') != 'ip':
+    return
+
+  for vrf_name in topology.get('evpn.vrfs',[]):
+    vrf_data = topology.vrfs.get(vrf_name)
+    if not isinstance(vrf_data,Box) or 'evpn' not in vrf_data:
+      continue
+    if vrf_data.get('evpn.transit_vni',None) is None:
+      vrf_data.evpn.transit_vni = True                          # Auto-assign L3VNI for listed EVPN VRFs
+
 def vrf_transit_vni(topology: Box) -> None:
   if not 'vrfs' in topology:
     return
@@ -334,8 +355,8 @@ def vrf_transit_vni(topology: Box) -> None:
                                 VALID_TRANSPORTS[0])            # Default to first valid transport listed, may not be active
 
   for vrf_name,vrf_data in topology.vrfs.items():               # First pass: build a list of statically configured VNIs
-    vni = vrf_data.get('evpn.transit_vni',None)                 # transit_vni makes no sense with non-VXLAN transport
-    if vni and evpn_transport != 'vxlan':
+    vni = vrf_data.get('evpn.transit_vni',None)                 # transit_vni makes no sense with MPLS/SR transport
+    if vni and evpn_transport not in ['vxlan','ip']:
       log.error(
         f'evpn.transit_vni in VRF {vrf_name} is not allowed with {evpn_transport} evpn.transport',
         log.IncorrectValue,
@@ -651,6 +672,7 @@ class EVPN(_Module):
     for vname in topology.get('evpn.vrfs',[]):
       ip_vrf_service(topology.vrfs[vname],vname,topology)
 
+    prepare_ip_transport_transit_vni(topology)
     vrf_transit_vni(topology)
     for vname in topology.get('evpn.vlans',[]):
       create_vlan_service(vname,topology)

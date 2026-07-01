@@ -193,7 +193,7 @@ The **evpn.transit_vni** parameter must specify a globally unique VNI value. It 
 
 Use `evpn.transport: ip` when you want to exchange VRF routes as EVPN type-5 prefixes over existing IPv4 BGP reachability without enabling VXLAN, MPLS, or SR-MPLS data-plane modules. This mode does not create L2 VNIs, L3 transit VNIs, or stretched VLAN services.
 
-With IP transport, list the EVPN-enabled VRFs explicitly with **evpn.vrfs**. Do not set VLAN **vni** attributes or VRF **evpn.transit_vni** values; those attributes belong to VXLAN transport.
+With IP transport, list the EVPN-enabled VRFs explicitly with **evpn.vrfs**. Do not set VLAN **vni** attributes. The EVPN module auto-assigns **evpn.transit_vni** for VRFs listed in **evpn.vrfs**; VRFs not in that list are not EVPN-enabled.
 
 (evpn-asymmetric-irb)=
 ## Asymmetric IRB

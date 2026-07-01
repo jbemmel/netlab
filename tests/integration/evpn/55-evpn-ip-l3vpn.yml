@@ -3,71 +3,97 @@ message: |
   routes as EVPN type-5 prefixes over plain IP transport.
 
   This test checks EVPN control-plane setup without VXLAN, MPLS, SR transport,
-  or VPNv4. CE routers use EBGP/EVPN with the PE routers; the PE-to-PE BGP
-  session carries only EVPN.
+  or VPNv4. CE routers in a single customer AS use IBGP/EVPN with the PE
+  routers (BGP local-as on the PE attachment links); the PE-to-PE BGP session
+  carries only EVPN.
+
+  Linux hosts attached to the CE routers should be able to ping each other.
 
 defaults.sources.extra: [ ../wait_times.yml, ../warnings.yml ]
 plugin: [ fix_mtu ]
 
 bgp.as: 65000
 bgp.activate.ipv4: []
-bgp.community.ebgp: [ standard, large, extended ]
+bgp.community.ibgp: [ standard, large, extended ]
 
 evpn.transport: ip
-evpn.session: [ ibgp, ebgp ]
+evpn.session: [ ibgp ]
 evpn.vrfs: [ customer ]
 
 vrfs:
   customer:
-    links: [ ce1, dut, ce2, s2 ]
+    links: [ h1-ce1, ce1, dut, ce2, s2, h2-ce2 ]
 
 groups:
   _auto_create: True
+  hosts:
+    members: [ h1, h2 ]
+    device: linux
+    provider: clab
   ce:
     members: [ ce1, ce2 ]
-    module: [ bgp, evpn, vrf ]
+    module: [ bgp, evpn, vrf, routing ]
+    bgp.as: 65201
   pe:
     members: [ dut, s2 ]
-    module: [ isis, bgp, evpn, vrf ]
+    module: [ isis, bgp, evpn, vrf, routing ]
   x_devices:
     members: [ ce1, ce2 ]
     device: frr
     provider: clab
 
-nodes:
-  ce1.bgp.as: 65201
-  ce2.bgp.as: 65202
-
 links:
-- ce1-dut
+- ce1:
+  dut:
+    bgp.local_as: 65201
 - dut-s2
-- ce2-s2
+- ce2:
+  s2:
+    bgp.local_as: 65201
+
+nodes:
+  ce1:
+    routing.static:
+    - ipv4: 0.0.0.0/0
+      nexthop.node: dut
+  ce2:
+    routing.static:
+    - ipv4: 0.0.0.0/0
+      nexthop.node: s2
+  dut:
+    routing.static:
+    - node: ce1
+      nexthop.node: ce1
+  s2:
+    routing.static:
+    - node: ce2
+      nexthop.node: ce2
 
 validate:
   evpn_ce1:
     description: Check EVPN address family session with DUT
-    wait: ebgp_session
+    wait: ibgp_session
     wait_msg: Waiting for EVPN BGP session to start
     nodes: [ ce1 ]
     plugin: bgp_neighbor(node.bgp.neighbors,'dut',activate='evpn')
     stop_on_error: true
   evpn_dut_ce1:
     description: Check EVPN address family session with CE1
-    wait: ebgp_session
+    wait: ibgp_session
     wait_msg: Waiting for EVPN BGP session to start
     nodes: [ dut ]
     plugin: bgp_neighbor(node.bgp.neighbors,'ce1',activate='evpn')
     stop_on_error: true
   evpn_ce2:
     description: Check EVPN address family session with S2
-    wait: ebgp_session
+    wait: ibgp_session
     wait_msg: Waiting for EVPN BGP session to start
     nodes: [ ce2 ]
     plugin: bgp_neighbor(node.bgp.neighbors,'s2',activate='evpn')
     stop_on_error: true
   evpn_s2_ce2:
     description: Check EVPN address family session with CE2
-    wait: ebgp_session
+    wait: ibgp_session
     wait_msg: Waiting for EVPN BGP session to start
     nodes: [ s2 ]
     plugin: bgp_neighbor(node.bgp.neighbors,'ce2',activate='evpn')
@@ -100,3 +126,14 @@ validate:
     nodes: [ s2 ]
     plugin: isis_neighbor('dut')
     stop_on_error: true
+  ping_gw:
+    description: Pinging the CE default gateway
+    wait: ping
+    nodes: [ h1, h2 ]
+    plugin: ping(node.interfaces[0].gateway.ipv4)
+  ping_hosts:
+    description: End-to-end host reachability in customer VRF
+    wait: ping_evpn
+    wait_msg: Waiting for EVPN type-5 route propagation
+    nodes: [ h1 ]
+    plugin: ping('h2')

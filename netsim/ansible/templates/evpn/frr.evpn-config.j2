@@ -39,6 +39,9 @@ router bgp {{ bgp.as }}
 {%   if n.rr_client|default(False) %}
   neighbor {{ peer }} route-reflector-client
 {%   endif %}
+{%   if n.next_hop_self|default(False) %}
+  neighbor {{ peer }} next-hop-self{% if n.next_hop_self == 'all' %} force{% endif +%}
+{%   endif %}
 {% endfor %}
 
  exit-address-family
@@ -50,14 +53,14 @@ exit
 {% if vrfs is defined %}
 {% for vname,vdata in vrfs.items() if 'evpn' in vdata %}
 vrf {{ vname }}
-{% if vdata.evpn.transit_vni is defined or evpn_transport == 'ip' %}
- vni {{ vdata.evpn.transit_vni|default(vdata.evpn.evi) }}
+{% if vdata.evpn.transit_vni is defined %}
+ vni {{ vdata.evpn.transit_vni }}
 {% endif %}
  exit-vrf
 
 router bgp {{ bgp.as }} vrf {{ vname }}
  address-family l2vpn evpn
-{% if vdata.evpn.transit_vni is defined or evpn_transport == 'ip' %}
+{% if vdata.evpn.transit_vni is defined %}
   ! This sets the EVPN RD/RT for this VRF
   rd {{ vdata.rd }}
   route-target export {{ vdata.export[0] }}

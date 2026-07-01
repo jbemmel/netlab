@@ -4,8 +4,8 @@ set -e
 {% set evpn_transport = evpn.transport|default('vxlan') %}
 {% if evpn_transport == 'ip' and vrfs is defined %}
 # FRR originates VRF EVPN type-5 routes only when the VRF has a Linux L3VNI binding.
-{% for vname,vdata in vrfs.items() if 'evpn' in vdata %}
-{%   set l3vni = vdata.evpn.transit_vni|default(vdata.evpn.evi) %}
+{% for vname,vdata in vrfs.items() if 'evpn' in vdata and vdata.evpn.transit_vni is defined %}
+{%   set l3vni = vdata.evpn.transit_vni %}
 ip link add br{{ l3vni }} type bridge 2>/dev/null || true
 ip link set br{{ l3vni }} master {{ vname }} 2>/dev/null || true
 ip link set br{{ l3vni }} up

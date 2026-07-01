@@ -119,7 +119,7 @@ features:
     multi_rt: True
     transport:
       vxlan: [ ibgp, ebgp ]
-      ip: [ ibgp, ebgp ]
+      ip: [ ibgp, localas_ibgp, ebgp ]
     ipv6: True
   gateway:
     protocol: [ vrrp, anycast ]
