@@ -18,10 +18,12 @@ interface {{ intf.ifname }}
     Enable OSPF to install routes learned over tunnel interfaces (adjacencies
     form without this, but their routes are not installed).
 #}
-{% for intf in netlab_interfaces if intf.tunnel.mode|default('') in ['gre'] and 'ospf' in intf %}
-{%   if loop.first %}
+{% if 'ospf' in module|default([]) %}
+{%   for intf in netlab_interfaces if intf.tunnel.mode|default('') in ['gre'] and 'ospf' in intf %}
+{%     if loop.first %}
 !
 router ospf {{ ospf.process|default(1) }}
   tunnel routes
-{%   endif %}
-{% endfor %}
+{%     endif %}
+{%   endfor %}
+{% endif %}

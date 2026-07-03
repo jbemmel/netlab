@@ -140,8 +140,6 @@ features:
     supported_protocols: [ stp, rstp, mstp, pvrst ]
     enable_per_port: True
     port_type: True
-  tunnel:
-    gre: true
   vlan:
     model: l3-switch
     native_routed: true
@@ -162,6 +160,8 @@ clab:
       ipv6: False
     initial:
       config_mode: [ sh ]
+    tunnel:
+      gre: true                 # cEOS GRE tunnels do not support a transport (underlay) VRF
   interface:
     name: et{ifindex}
   node:

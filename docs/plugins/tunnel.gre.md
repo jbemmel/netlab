@@ -9,12 +9,14 @@ The plugin includes Jinja2 templates for the following platforms:
 
 | Operating system    | GRE over<br>IPv4 | GRE over<br>IPv6 | Transport<br>VRF |
 |--------------|:-:|:-:|:-:|
-| Arista EOS          |✅|✅|❌|
+| Arista EOS[^ceos]   |✅|✅|❌|
 | Cisco IOS/XE[^18v] |✅|✅|✅|
 | FRR                 |✅|✅|✅|
 | VyOS               |✅|✅|✅|
 
 [^18v]: Includes Cisco IOSv, Cisco IOSvL2, Cisco CSR 1000v, Cisco Catalyst 8000v, Cisco IOS-on-Linux (IOL), and IOL Layer-2 image.
+
+[^ceos]: Arista EOS GRE tunnels are supported only with the *containerlab* provider (cEOS). The cEOS platform does not support a transport (underlay) VRF for GRE tunnels.
 
 ## Specifying Tunnel Parameters
 
