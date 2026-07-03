@@ -1,0 +1,27 @@
+{% for intf in netlab_interfaces if intf.tunnel.mode|default('') in ['gre'] %}
+{%   set t_af = intf.tunnel.af|default('ipv4') %}
+{#   GRE overhead = 4-byte GRE header + outer IP header (20B IPv4 / 40B IPv6) #}
+{%   set payload_mtu = intf.mtu|default(1500 - (44 if t_af == 'ipv6' else 24)) %}
+!
+interface {{ intf.ifname }}
+  tunnel mode {{ intf.tunnel.mode }}
+  tunnel source {{ intf.tunnel._source[t_af] }}
+  tunnel destination {{ intf.tunnel._destination[t_af] }}
+{#   PMTUD is a prerequisite for setting the outer TTL, which defaults to 1 #}
+  tunnel path-mtu-discovery
+  tunnel ttl 255
+{%   for af in ['ipv4','ipv6'] if af in intf %}
+  tcp mss ceiling {{ af }} {{ payload_mtu - (60 if af == 'ipv6' else 40) }}
+{%   endfor %}
+{% endfor %}
+{#
+    Enable OSPF to install routes learned over tunnel interfaces (adjacencies
+    form without this, but their routes are not installed).
+#}
+{% for intf in netlab_interfaces if intf.tunnel.mode|default('') in ['gre'] and 'ospf' in intf %}
+{%   if loop.first %}
+!
+router ospf {{ ospf.process|default(1) }}
+  tunnel routes
+{%   endif %}
+{% endfor %}
