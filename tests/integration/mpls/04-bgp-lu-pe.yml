@@ -9,6 +9,10 @@ message: |
 
 defaults.sources.extra: [ ../wait_times.yml, ../warnings.yml ]
 
+mpls:
+  bgp.ipv4: [ ebgp ]
+  ldp: False
+
 groups:
   _auto_create: True
   hosts:
@@ -18,13 +22,9 @@ groups:
   pe:
     members: [ dut, pe2 ]
     module: [ bgp, mpls ]
-    mpls.ldp: False
-    mpls.bgp.ipv4: [ ebgp ]
   p:
     members: [ p1, p2 ]
     module: [ bgp, mpls ]
-    mpls.ldp: False
-    mpls.bgp.ipv4: [ ebgp ]
   x_switches:
     members: [ p1, p2, pe2 ]
     device: eos

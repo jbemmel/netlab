@@ -55,6 +55,7 @@ def bird_daemon_includes(node: Box, topology: Box) -> None:
 
   features = a_devices.get_device_features(node,topology.defaults)
   extra_cp = features.initial.get('extra_daemon_config',{})
+  node_mods = node.get('module',[])
   includes: list[str] = []
   seen: set[str] = set()
 
@@ -64,7 +65,9 @@ def bird_daemon_includes(node: Box, topology: Box) -> None:
     seen.add(path)
     includes.append(path)
 
-  for _, path in extra_cp.items():
+  for mod, path in extra_cp.items():
+    if mod not in node_mods:
+      continue
     add_include(path)
 
   for key, path in node._daemon_config.items():
