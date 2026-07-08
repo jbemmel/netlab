@@ -142,6 +142,7 @@ protocol bgp bgp_{{ ('vrf_' + vrf_name + '_') if vrf_name else '' }}{{ n.name }}
 {%     endif %}
 {%     for _af in [ 'ipv4','ipv6' ] if _af==af or (_af=='ipv4' and n.ipv4_rfc8950|default(False)) %}
 {%       if _af in n.activate and n.activate[_af] %}
+{%         if not (n[_af+'_label']|default(False) and mpls.bgp.disable_unlabeled|default(False)) %}
   {{ _af }} {
 {%       if vrf_name %}
     table vrf_{{ vrf_name }}_{{ _af }};
@@ -159,8 +160,24 @@ protocol bgp bgp_{{ ('vrf_' + vrf_name + '_') if vrf_name else '' }}{{ n.name }}
     # require extended next hop on;
 {%       endif %}
   };
+{%         endif %}
 {%       endif %}
 {%     endfor %}
+{%     if n[af+'_label']|default(False) %}
+  {{ af }} mpls {
+{%     if vrf_name %}
+    table vrf_{{ vrf_name }}_{{ af }};
+    import filter vrf_{{ vrf_name }}_tag;
+{%     else %}
+    import all;
+{%     endif %}
+    export filter { bgp_export_{{ ('vrf_' + vrf_name + '_') if vrf_name else '' }}{{ n.type }}( {{ 'true' if n.get('default_originate') else 'false' }},
+                                             {{ 'true' if n.get('remove_private_as') else 'false' }}); };
+  };
+  mpls {
+    label policy aggregate;
+  };
+{%     endif %}
 {%     if n.evpn|default('') == af %}
   evpn {
     table evpntab;

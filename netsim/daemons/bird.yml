@@ -28,13 +28,15 @@ clab:
   build: True
   sw_version: 2.19.1
   sw_download_url: https://bird.nic.cz/download/bird-{sw_version}.tar.gz
+  kmods:
   features:
     initial:
       roles: [ host, router ]
       config_mode: [ sh ]
-      dataplane_config: [ vxlan, vrf ]
+      dataplane_config: [ vxlan, vrf, mpls ]
       extra_daemon_config:
         vrf: /etc/bird/vrf.mod.conf
+        mpls: /etc/bird/mpls.mod.conf
 libvirt:                        # Not yet available on libvirt or virtualbox
   image:
 virtualbox:
@@ -96,3 +98,5 @@ features:
     bgp: true
   evpn:
     transport: [ vxlan ]
+  mpls:
+    bgp: true

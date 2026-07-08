@@ -1,0 +1,27 @@
+#!/bin/bash
+#
+set -e
+#
+
+#
+# Make sure MPLS kernel modules are loaded
+# For clab containers, modules are loaded on the host by load_kmods()
+# For libvirt VMs, modules need to be loaded inside the VM
+#
+{% if node_provider|default('') != 'clab' %}
+for module in mpls-router mpls-iptunnel; do
+  if [ ! -e /sys/module/$module ]; then
+    modprobe $module >/dev/null 2>&1
+  fi
+done
+{% endif %}
+
+if [ -d /proc/sys/net/mpls ]; then
+  sysctl -w net.mpls.platform_labels=1048575
+{% if mpls.bgp is defined %}
+{%   include 'bird.bgp-lu.j2' +%}
+{% endif %}
+fi
+#
+touch /var/run/mpls.done
+exit 0

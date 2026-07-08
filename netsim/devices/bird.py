@@ -3,6 +3,7 @@
 #
 from box import Box
 
+from ..augment import devices as a_devices
 from . import _Quirks
 from ._common import check_daemon_dataplane_config
 
@@ -42,10 +43,42 @@ def bird_vlan_evpn_rt(node: Box) -> None:
 
       vdata.evpn[f'_bird_{kw}'] = [ bird_transform_rt(rt) for rt in vdata.evpn[kw]]
 
+def bird_daemon_includes(node: Box, topology: Box) -> None:
+  '''
+  Build ordered list of BIRD configuration files to include from bird.conf.
+
+  extra_daemon_config snippets (for example MPLS domain) must be parsed before
+  module configuration files that reference them (for example BGP-LU).
+  '''
+  if not node.get('_daemon',False) or '_daemon_config' not in node:
+    return
+
+  features = a_devices.get_device_features(node,topology.defaults)
+  extra_cp = features.initial.get('extra_daemon_config',{})
+  includes: list[str] = []
+  seen: set[str] = set()
+
+  def add_include(path: str) -> None:
+    if path.endswith('.sh') or path in seen:
+      return
+    seen.add(path)
+    includes.append(path)
+
+  for _, path in extra_cp.items():
+    add_include(path)
+
+  for key, path in node._daemon_config.items():
+    if key.startswith('_') or key == node.device:
+      continue
+    add_include(path)
+
+  node._bird_daemon_includes = includes
+
 class Bird(_Quirks):
 
   @classmethod
   def device_quirks(self, node: Box, topology: Box) -> None:
     check_daemon_dataplane_config(node,topology)
+    bird_daemon_includes(node,topology)
     bird_vrf_rt(node)
     bird_vlan_evpn_rt(node)

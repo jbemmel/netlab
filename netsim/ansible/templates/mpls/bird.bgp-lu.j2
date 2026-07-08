@@ -1,0 +1,5 @@
+{% for n in bgp.neighbors|default([]) if n.ipv4_label|default(False) or n.ipv6_label|default(False) %}
+{%   for intf in interfaces if intf.ifindex == n.ifindex %}
+sysctl -w net.mpls.conf.{{ intf.ifname }}.input=1
+{%   endfor %}
+{% endfor %}

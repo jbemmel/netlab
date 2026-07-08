@@ -1,0 +1,11 @@
+{% if mpls.bgp is defined %}
+mpls domain netlab_mpls;
+mpls table netlab_mpls_tab;
+
+protocol kernel krt_mpls {
+  mpls {
+    table netlab_mpls_tab;
+    export all;
+  };
+}
+{% endif %}

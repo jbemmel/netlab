@@ -1,0 +1,65 @@
+---
+message: |
+  The tested device (DUT) is a PE-router. It runs BGP labeled unicast with a
+  P-router (no LDP) and performs IP-to-MPLS encapsulation to carry traffic
+  across an MPLS core that uses hop-by-hop EBGP-LU for label distribution.
+
+  The validation test checks end-to-end connectivity between Linux hosts
+  attached to the PE-routers.
+
+defaults.sources.extra: [ ../wait_times.yml, ../warnings.yml ]
+
+groups:
+  _auto_create: True
+  hosts:
+    members: [ h1, h2 ]
+    device: linux
+    provider: clab
+  pe:
+    members: [ dut, pe2 ]
+    module: [ bgp, mpls ]
+    mpls.ldp: False
+    mpls.bgp.ipv4: [ ebgp ]
+  p:
+    members: [ p1, p2 ]
+    module: [ bgp, mpls ]
+    mpls.ldp: False
+    mpls.bgp.ipv4: [ ebgp ]
+  x_switches:
+    members: [ p1, p2, pe2 ]
+    device: eos
+    provider: clab
+
+nodes:
+  dut:
+    bgp.as: 65001
+  p1:
+    bgp.as: 65002
+  p2:
+    bgp.as: 65003
+  pe2:
+    bgp.as: 65004
+
+links:
+- h1:
+  dut:
+- dut-p1
+- p1-p2
+- p2-pe2
+- pe2:
+  h2:
+
+validate:
+  ebgp:
+    description: Check EBGP session with DUT
+    wait: ebgp_session
+    wait_msg: Waiting for EBGP sessions
+    nodes: [ p1 ]
+    plugin: bgp_neighbor(node.bgp.neighbors,'dut')
+    stop_on_error: true
+  ping:
+    description: Ping-based end-to-end reachability test
+    wait_msg: We might have to wait a bit longer
+    wait: ping_long
+    nodes: [ h1 ]
+    plugin: ping('h2')
