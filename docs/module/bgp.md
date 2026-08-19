@@ -177,7 +177,7 @@ Advanced global configuration parameters include:
 
 * **bgp.confederation** -- defines BGP confederations ([more details](bgp-confederations))
 * **bgp.community** -- configure BGP community propagation. By default, standard and extended communities are propagated to IBGP neighbors, and standard communities are propagated to EBGP neighbors. See *[BGP Community Propagation](#bgp-communities-propagation)* for more details.
-* **bgp.advertise_roles** -- a list of link types and roles. Links matching any element of the list will be advertised into BGP. See *[Advertised BGP Prefixes](bgp-advertise-prefix)* for details.
+* **bgp.advertise_roles** -- a list of link types and roles. Links matching any element of the list will be advertised into BGP. See *[Advertised BGP Prefixes](#bgp-advertise-prefix)* for details.
 * **bgp.ebgp_role** -- link role set on links connecting nodes from different autonomous systems. See *[Interaction with IGP](#interaction-with-igp)* for details.
 * **bgp.advertise_loopback** -- when set to `True` (default), the loopback IP addresses of the default loopback interface and any other [loopback links](links-loopback) are advertised as a BGP prefix. Set it to `False` in the global defaults or as a node attribute to turn off loopback prefix advertisements. You can also control the advertisement of individual loopback prefixes with the **bgp.advertise** interface attribute.
 * **bgp.rr_mesh** -- Set it to `False` (default: `True`) to remove the IBGP sessions between BGP route reflectors.
