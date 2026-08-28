@@ -7,17 +7,26 @@
    :backlinks: none
 ```
 
-(caveats-eos)=
 ## Arista EOS
 
+(caveats-veos)=
 ### Arista vEOS VM Caveats
 
 * Use **libvirt.uuid** node property to ensure a vEOS VM does not change its serial number every time you start the lab.
+* You can also configure Arista vEOS VMs with the *netmiko* library. To use this configuration method, set the **defaults.devices.eos.libvirt.group_vars.netlab_config_mode** [topology default](topo-defaults) or **netlab_config_mode** node variable to **netmiko**.
+* Using *netmiko* to configure Arista vEOS VMs disables Arista's proprietary linkdown emulation.
 
 (caveats-ceos)=
 ### Arista cEOS Container Caveats
 
-* Arista cEOS containers are configured through an Ansible playbook, using an SSH session with the **arista.eos.eos_config** Ansible modules. To configure them with Linux scripts using FastCLI, set the **defaults.devices.eos.clab.group_vars.netlab_config_mode** [topology default](topo-defaults) to **sh**. You can also set the **netlab_config_mode** node variable to **sh** to experiment with this feature.
+Device configuration:
+
+* With no additional settings, Arista cEOS containers are configured through an Ansible playbook, using an SSH session with the **arista.eos.eos_config** Ansible modules.
+* To configure cEOS containers with Linux scripts using FastCLI, set the **defaults.devices.eos.clab.group_vars.netlab_config_mode** [topology default](topo-defaults) to **sh**. You can also set the **netlab_config_mode** node variable to **sh** to experiment with this feature.
+* You can also configure Arista cEOS containers with the *netmiko* library. Set the **netlab_config_mode** parameter to **netmiko** to try out this experimental feature.
+* Using Linux scripts or *netmiko* to configure Arista cEOS containers disables Arista's proprietary linkdown emulation.
+
+Other caveats:
 * You can set Arista cEOS serial number and system MAC address with the **eos.serialnumber** and **eos.systemmacaddr** node properties.
 * Anycast gateways and DHCP/DHCPv6 clients do not work on Arista cEOS Ethernet interfaces.
 * cEOS MPLS data plane was introduced in release 4.32.1F.
@@ -45,6 +54,7 @@ nodes:
       intf_map: /mnt/flash/EosIntfMapping_json
 ```
 
+(caveats-eos)=
 ### Other Arista EOS Caveats
 
 * Routed VLANs cannot be used in EVPN MPLS VLAN bundles
@@ -52,6 +62,7 @@ nodes:
 * Arista EOS uses an [invalid value for the suboption 150 of the DHCP option 82](https://blog.ipspace.net/2023/03/netlab-vrf-dhcp-relay.html#vendor-interoperability-is-fun) when doing inter-VRF DHCPv4 relaying.
 * The DHCP client on Arista EOS is finicky. When the DHCP state changes on one of the data-plane Ethernet interfaces, the management interface might lose its IPv4 address.
 * Arista EOS cannot configure OSPF NSSA type-7 address ranges.
+* On Arista EOS, IPv6 is enabled on all interfaces as soon as one has an IPv6 address. Arista EOS implementation of IS-IS refuses to work on interfaces with missing address families.
 * IPv6 BFD for IS-IS cannot be enabled on individual interfaces.  If you set **isis.bfd.ipv6** to *True*, BFD is enabled on all IS-IS interfaces.
 * Arista EOS virtual machines and containers use [proprietary control-plane messages to indicate the loss of Ethernet line protocol](https://blog.ipspace.net/2025/03/arista-spooky-action-distance/). Set the **netlab_phy_control** node variable to *False* to disable this functionality.
 * Device configurations that contain `no lldp transmit` or `no lldp receive` configuration command trigger configuration reload failures due to an Arista EOS bug ([more details](https://github.com/ipspace/netlab/issues/2577)). These commands are thus automatically removed from collected device configurations.
@@ -147,7 +158,7 @@ and validation. Configuration is deployed with a bash script executed within the
 ## Cisco ASAv Caveats
 
 * Some ASAv versions use older SSH protocols. For more details, see the [SSH Access to Cisco IOS/IOS-XE](cisco-ios-ssh).
-* ASAv does not have a standard implementation of OSPFv2 or IS-IS point-to-point circuits. netlab reports an error if you try to use them with ASAv nodes.
+* ASAv does not have a standard implementation of OSPFv2 or IS-IS point-to-point circuits. netlab reports an error if you try to use them with ASAv nodes. You could add `isis.network_type: false` to point-to-point links connecting ASA to other devices.
 * The ASAv OSPF and IS-IS configuration templates were not tested, as all OSPFv2/IS-IS integration tests include at least one point-to-point circuit
 
 (caveats-cat8000v)=
@@ -726,6 +737,7 @@ Other VyOS caveats:
 
 * VyOS configuration template configures BFD timers only at the global level
 * VyOS containers need host kernel modules (drivers) to implement the data-plane functionality of _vrf_, _mpls_, and _vxlan_ netlab modules. The kernel modules are automatically loaded (when available) during the **netlab up** processing.
+* On VyOS, IPv6 is enabled on all interfaces as soon as one has an IPv6 address.
 * VyOS containers cannot deal with min/max MTU sizes on dummy Ethernet interfaces used to implement stub networks. Stub networks in containers are implemented as **dum** interfaces.
 * VRF and VXLAN kernel modules are usually bundled with a Linux distribution. If your Ubuntu distribution does not include the MPLS drivers, try installing them with `sudo apt install linux-generic`.
 * You cannot load kernel modules in GitHub Codespaces and thus cannot use _vrf_, _mpls_, or _vxlan_ modules on VyOS nodes in that environment.

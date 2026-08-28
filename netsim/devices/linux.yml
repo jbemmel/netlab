@@ -26,7 +26,11 @@ libvirt:
   create_iso: linux
   group_vars:
     netlab_linux_distro: ubuntu
+    netlab_config_path: /tmp/
+    netmiko_device_type: linux
   features:
+    initial:
+      config_mode: [ sh, cp_sh ]
     dhcp:
       client:
         ipv4: true
@@ -73,7 +77,6 @@ clab:
     kind: linux
     config_templates:
       hosts: /etc/hosts:shared
-      resolv: /etc/resolv.conf
   group_vars:
     ansible_connection: docker
     ansible_user: root

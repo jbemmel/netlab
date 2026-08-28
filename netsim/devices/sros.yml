@@ -84,12 +84,17 @@ features:
     unnumbered: True
   routing:
     policy:
-      set: [ locpref, med ]
+      set:
+        locpref: True
+        med: True
     static:
       vrf: True
       discard: True
   gateway:
     protocol: [ anycast, vrrp ]
+  services:
+    syslog:
+      transport_vrf: False
   sr:
     af: [ ipv4, ipv6 ]
     protocol: [ isis ]
