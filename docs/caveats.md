@@ -206,6 +206,7 @@ These caveats are common to all Cisco IOS/IOS XE platforms:
 * Cisco IOS requires a *default metric* when redistributing routes into RIPv2. The RIPv2 configuration template sets the default metric to the value of the **netlab_ripv2_default_metric** node parameter (default: 5)
 * Cisco IOS behaves like an awful IP host from the 1980s with the **no ip routing** configuration; it does not use static routes and relies only on the **ip default-gateway**. IPv4 routing is thus enabled even when a Cisco IOS device has **role** set to *host*.
 * You can use the **ios.debug** global- or node attribute to [enable debugging](node-debug-attribute) during the initial device configuration.
+* The **remove-private-as** option **all** or **replace** is not accepted when the local BGP AS number is private.
 
 These caveats are common to all Cisco IOS XE platforms:
 
@@ -272,11 +273,12 @@ See also [common Cisco IOS](caveats-ios) caveats.
 * Cisco IOS XR routing policies cannot use traditional prefix lists. _netlab_ thus implements **routing.prefix** lists as **prefix-sets** which cannot mix **permit** and **deny** conditions. When encountering such a filter, _netlab_ generates a warning and does its best (**deny** check followed by **permit** check).
 * The same limitation applies to BGP AS-path matching (using **as-set** objects) and BGP community matching (using **community-set** objects)
 * _netlab_ translates **match.community** routing policy entry into IOS XR `community matches-any` test, and the **community-set** object cannot match two (or more) communities in a single entry. You cannot use the current _netlab_ IOS XR implementation of BGP community lists to match two (or more) communities being attached to the route *at the same time*.
+* The **remove-private-as** option **all** or **replace** is not accepted when the local BGP AS number is private.
 
 ### Cisco IOS XRv
 
-* netlab was tested with IOS XR release 7.4. Earlier releases might use a different management interface name. In that case, you must set **defaults.devices.iosxr.mgmt_if** parameter to the name of the management interface
-* Copying Vagrant public insecure SSH key into IOS XR during the box building process is cumbersome. The vagrant configuration file uses a fixed SSH password.
+* netlab was tested with IOS XR release 7.4. Earlier releases might use a different management interface name. In that case, you must set the **defaults.devices.iosxr.mgmt_if** parameter to the name of the management interface
+* Copying the Vagrant public insecure SSH key into IOS XR during the box building process is cumbersome. The vagrant configuration file uses a fixed SSH password.
 * Maximum interface bandwidth on IOS XRv is 1 Gbps (1000000).
 * It seems IOS XR starts an SSH server before it parses the device configuration[^WCPGW], and newer versions of Vagrant don't like that and will ask you for the password for user **vagrant**. Ignore that prompt and the subsequent error messages[^POT]; you might get a running lab in a few minutes[^MAS].
 
@@ -724,22 +726,23 @@ The `sonic` device also runs under *containerlab* with the community `docker-son
 (caveats-vyos)=
 ## VyOS
 
-**netlab ** uses VyOS 1.5, which is currently a rolling release with daily builds. However, all the configurations should also work on the 1.4 LTS release (since it was tested just before it became the new LTS).
+**netlab ** uses VyOS 1.5-compatible configuration syntax. The configurations should also work on the 1.4 LTS release (since it was tested just before it became the new LTS).
 
-The use of a *rolling release* means potentially any build is broken or with regressions, even if the VyOS team is smart enough to perform some [automated smoke tests](https://github.com/vyos/vyos-1x/tree/current/smoketest/scripts/cli) and load [arbitrary configurations](https://github.com/vyos/vyos-1x/tree/current/smoketest/configs) to ensure there are no errors during config migration and system bootup.
+The use of a *rolling release* means that potentially any build is broken or has regressions, even if the VyOS team is smart enough to perform some [automated smoke tests](https://github.com/vyos/vyos-1x/tree/current/smoketest/scripts/cli) and load [arbitrary configurations](https://github.com/vyos/vyos-1x/tree/current/smoketest/configs) to ensure there are no errors during config migration and system bootup.
 
-Using the latest build published on [Vagrant Hub](https://app.vagrantup.com/vyos/boxes/current) should allow us to easily track and react to any configuration syntax change (which, anyway, is a very rare event). In any case, if you find a misalignment between the VyOS config and the **netlab** templates, feel free to *Open an Issue* or *Submit a PR*.
+(vyos-vagrant)=
+[Building a local Vagrant box](build-vyos) from a recent [VyOS rolling/nightly](https://vyos.net/get/nightly-builds/) or VyOS Stream ISO image lets us easily track and react to any configuration syntax change (which, anyway, is very rare). However, we're testing all new functionality only with VyOS containers; if you find a misalignment between the VyOS VM config and the **netlab** templates, feel free to *Open an Issue* or *Submit a PR*.
 
 (vyos-clab)=
-It looks like the official VyOS container is not updated as part of the daily builds; *netlab* uses a [third-party container](https://github.com/sysoleg/vyos-container) (`ghcr.io/sysoleg/vyos-container`) to run VyOS with *containerlab*.
+Speaking of containers, there's no official VyOS container; the documentation only describes how to build your own from the sources or downloaded ISO images. *netlab* uses a [third-party container](https://github.com/sysoleg/vyos-container) (`ghcr.io/sysoleg/vyos-container`) to run VyOS with *containerlab*.
 
 Other VyOS caveats:
 
 * VyOS configuration template configures BFD timers only at the global level
-* VyOS containers need host kernel modules (drivers) to implement the data-plane functionality of _vrf_, _mpls_, and _vxlan_ netlab modules. The kernel modules are automatically loaded (when available) during the **netlab up** processing.
+* VyOS containers need host kernel modules (drivers) to implement the data-plane functionality of _vrf_, _mpls_, and _vxlan_ netlab modules. The kernel modules load automatically (when available) during **netlab up** processing.
 * On VyOS, IPv6 is enabled on all interfaces as soon as one has an IPv6 address.
 * VyOS containers cannot deal with min/max MTU sizes on dummy Ethernet interfaces used to implement stub networks. Stub networks in containers are implemented as **dum** interfaces.
 * VRF and VXLAN kernel modules are usually bundled with a Linux distribution. If your Ubuntu distribution does not include the MPLS drivers, try installing them with `sudo apt install linux-generic`.
 * You cannot load kernel modules in GitHub Codespaces and thus cannot use _vrf_, _mpls_, or _vxlan_ modules on VyOS nodes in that environment.
-* While VyOS itself supports IPv6 transport for VXLAN, using static flooding with the **vxlan** module, this seems not to work with EVPN, where an IPv4 VTEP is always announced by **frr**.
-* VyOS does not have a simple way to handle a management VRF on containerlab, so it will always have a default IPv4 route (`0.0.0.0/0`) on the default routing table. This can cause some problems if you want to originate a default only if received by other routers.
+* While VyOS itself supports IPv6 transport for VXLAN, using static flooding with the **vxlan** module, the version of the FRR BGP daemon it uses does not support EVPN with IPv6 next hops.
+* VyOS does not have a simple way to handle a management VRF on containerlab, so it will always have a default IPv4 route (`0.0.0.0/0`) in the default routing table. This can cause problems if you want a device to originate a default route only when it receives one from other routers.
