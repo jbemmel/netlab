@@ -67,13 +67,13 @@ IPv4 and IPv6 packet forwarding on Linux devices is controlled with the **role**
 
 * **host** (default): a Linux device does not perform packet forwarding and cannot be the default gateway for other hosts.
 * **gateway**: a Linux device does not perform packet forwarding but acts as the default gateway for other hosts. You will have to install a proxy (or a similar solution) for inter-subnet packet forwarding.
-* **router**: A Linux device performs packet forwarding but does not run routing protocols. Use the **frr** device if you want to run routing protocols on a Linux server.
+* **router**: A Linux device performs packet forwarding but does not run routing protocols. Use the **frr** device if you want to run routing protocols on a Linux server. The initial configuration sets **net.ipv4.fib_multipath_hash_policy** to **1** (Layer-4 hashing) so multi-flow traffic can load-balance across equal-cost paths.
 
 ```{warning}
 Linux-based *host* devices use the RA-derived IPv6 default route for intra-lab connectivity. The Linux container management interface is thus configured not to accept RA messages.
 ```
 
-You can also enable the IPv4/IPv6 packet forwarding on a Linux device with the **netlab_ip_forwarding** node attribute/group variable set to *True*.
+You can also enable the IPv4/IPv6 packet forwarding on a Linux device with the **netlab_ip_forwarding** node attribute/group variable set to *True*. Forwarding nodes also use Layer-4 ECMP hashing, as described above.
 
 (linux-loopback)=
 ## Loopback Interface

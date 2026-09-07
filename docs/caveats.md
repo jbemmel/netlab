@@ -470,6 +470,7 @@ ansible_httpapi_port: 80
 ## FRRouting
 
 * Many FRR configuration templates are not idempotent -- you cannot run **netlab initial** multiple times. Non-idempotent templates include VLAN and VRF configurations.
+* The initial configuration sets **net.ipv4.fib_multipath_hash_policy** to **1** so ECMP uses Layer-4 hashing instead of the Linux default (outer IP header only).
 * You can change the FRR default profile with the **netlab_frr_defaults** node parameter (`traditional` or `datacenter`, default is `datacenter`).
 * **netlab collect** downloads FRR configuration but not Linux interface configuration.
 * FRR has no default logging destinations. The initial device configuration adds file logging to `/var/log/frr/frr.log`.
