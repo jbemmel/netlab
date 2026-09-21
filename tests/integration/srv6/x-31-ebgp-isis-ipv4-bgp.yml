@@ -1,0 +1,146 @@
+---
+message: |
+  The tested device runs inter-AS SRv6 across an IPv6-only network to
+  interconnect two IPv4-only networks. The validation test checks end-to-end
+  IPv4 connectivity across a SRv6 core. See
+  https://www.ietf.org/archive/id/draft-mishra-idr-v4-islands-v6-core-4pe-06.html
+
+defaults.sources.extra: [ ../wait_times.yml, ../warnings.yml ]
+
+addressing:
+  core:
+    ipv4: False               # ipv6-only
+    ipv6: 2001:1::/48         # SRv6 requires ipv6 addresses on interfaces
+
+  loopback:
+    ipv4: False               # No need for ipv4 loopbacks, this avoids creating ipv4 ibgp sessions too
+    ipv6: 2001:db8::/48
+
+  lb_ce:
+    ipv4: 192.168.0.0/24
+    prefix: 32
+
+srv6.bgp:
+  ipv4: True                  # Enable IPv4 in the overlay (for IBGP/EBGP)
+  ipv6: False
+srv6.vpn: False
+srv6.igp: [ isis, ebgp ]
+
+groups:
+  _auto_create: True
+  hosts:
+    members: [ h1, h2 ]
+    device: linux
+    provider: clab
+  pe:
+    members: [ dut, pe2 ]
+    module: [ isis, bgp, srv6 ]
+    bgp.import: [ connected ]
+    bgp.advertise_loopback: False # Using IS-IS for this
+  core:
+    members: [ p1, p2 ]
+    module: [ isis, bgp, srv6 ]
+  ce:
+    members: [ ce1, ce2 ]
+    module: [ bgp ]
+    loopback.pool: lb_ce
+  x_switches:
+    members: [ p1, p2, pe2, ce1, ce2 ]
+    device: frr
+    provider: clab
+  as1:
+    members: [ dut, p1 ]
+    bgp.as: 65001
+  as2:
+    members: [ p2, pe2 ]
+    bgp.as: 65002
+
+nodes:
+  dut:
+  pe2:
+  ce1:
+    bgp.as: 65101
+  ce2:
+    bgp.as: 65102
+
+links:
+- group: core
+  pool: core
+  members: [ dut-p1, p1-p2, p2-pe2 ]
+- group: edge
+  isis: False
+  members: [ h1-dut, h2-pe2 ]
+- group: customer
+  members: [ ce1-dut, ce2-pe2 ]
+
+validate:
+  isis_dut:
+    description: Check ISIS sessions with DUT
+    wait: isis_adj_p2p
+    wait_msg: Waiting for ISIS adjacency
+    nodes: [ p1 ]
+    plugin: isis_neighbor('dut',level='L2',area='49.0001')
+    stop_on_error: true
+  isis_pe2:
+    description: Check ISIS sessions with PE2
+    wait: isis_adj_p2p
+    wait_msg: Waiting for ISIS adjacency
+    nodes: [ p2 ]
+    plugin: isis_neighbor('pe2',level='L2',area='49.0001')
+    stop_on_error: true
+  ibgp_dut:
+    description: Check IBGP sessions DUT-P1
+    wait: ibgp_session
+    wait_msg: Waiting for IBGP session in AS 65001
+    nodes: [ p1 ]
+    plugin: bgp_neighbor(node.bgp.neighbors,'dut',af='ipv6')
+    stop_on_error: true
+  ebgp_dut:
+    description: Check EBGP session DUT-CE1
+    wait: ebgp_session
+    wait_msg: Waiting for EBGP session DUT-CE1
+    nodes: [ ce1 ]
+    plugin: bgp_neighbor(node.bgp.neighbors,'dut',af='ipv4')
+  ebgp_pe2:
+    description: Check EBGP session PE2-CE2
+    wait: ebgp_session
+    wait_msg: Waiting for EBGP session PE2-CE2
+    nodes: [ ce2 ]
+    plugin: bgp_neighbor(node.bgp.neighbors,'pe2',af='ipv4')
+  ibgp:
+    description: Check IBGP session with activation of IPv4 over IPv6
+    wait: ibgp_session
+    wait_msg: Waiting for IBGP sessions to start
+    nodes: [ pe2 ]
+    plugin: bgp_neighbor(node.bgp.neighbors,'dut',af='ipv6',activate='ipv4')
+    stop_on_error: true
+  pfx_ce1:
+    description: Did CE1 prefix propagate to CE2?
+    wait_msg: Waiting for BGP convergence
+    wait: bgp_scan_long
+    nodes: [ ce2 ]
+    plugin: bgp_prefix(nodes.ce1.loopback.ipv4,af='ipv4')
+  pfx_ce2:
+    description: Did CE2 prefix propagate to CE1?
+    wait_msg: Waiting for BGP convergence
+    wait: bgp_scan_long
+    nodes: [ ce1 ]
+    plugin: bgp_prefix(nodes.ce2.loopback.ipv4,af='ipv4')
+  ping_hh:
+    description: Ping-based host-to-host reachability test
+    wait_msg: We might have to wait a bit longer
+    wait: ping_long
+    nodes: [ h1 ]
+    plugin: ping('h2')
+  ping_h_ce:
+    description: Ping-based host-to-CE reachability test
+    wait_msg: We might have to wait a bit longer
+    wait: ping
+    nodes: [ h1, h2 ]
+    plugin: ping('ce1')
+  ping_ce_ce:
+    description: Ping-based CE-to-CE reachability test
+    wait_msg: We might have to wait a bit longer
+    wait: ping
+    nodes: [ ce1 ]
+    plugin: ping(nodes.ce2.loopback.ipv4,src=nodes.ce1.loopback.ipv4)

@@ -120,6 +120,7 @@ done
 {% for l in interfaces if l.type in ['lan','p2p','stub','lag','loopback'] and (l.ipv6 is defined or 'external' in l.role|default('')) %}
 sysctl -qw net.ipv6.conf.{{ l.ifname }}.disable_ipv6=0
 {% endfor %}
+sysctl -w net.ipv4.fib_multipath_hash_policy=1
 #
 # Enable FRR modules for {{ module|default('none') }}
 #
