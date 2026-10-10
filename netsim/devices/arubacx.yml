@@ -19,6 +19,8 @@ clab:
   mtu: 1500
   node:
     kind: vr-aoscx
+    env:
+      CLAB_MGMT_PASSTHROUGH: "true"
   interface:
     name: eth{ifindex}
   group_vars:
@@ -28,6 +30,7 @@ clab:
   features:
     initial:
       config_mode: [ startup ]
+      healthcheck: True
 group_vars:
   ansible_network_os: arubanetworks.aoscx.aoscx
   ansible_connection: network_cli

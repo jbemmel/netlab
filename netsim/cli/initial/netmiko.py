@@ -2,6 +2,7 @@
 Use netmiko instead of Ansible to deploy device configurations
 """
 import os
+import time
 
 from box import Box
 
@@ -31,8 +32,16 @@ def deploy(n_data: Box,topology: Box,n_deploy: list) -> None:
     return
 
   session_log = netmiko_params["session_log"]
-  netmiko_err_list = a_devices.get_node_group_var(n_data,'netmiko_error_regexp',topology.defaults)
+  features = a_devices.get_device_features(n_data,topology.defaults)
+
+  netmiko_delay = features.get('netmiko.delay',None)
+  if netmiko_delay:
+    time.sleep(netmiko_delay)
+
+  netmiko_err_list = features.get('netmiko.error_regexp',None)
   netmiko_errors = rf"({'|'.join(netmiko_err_list)})" if isinstance(netmiko_err_list,list) else (netmiko_err_list or "")
+  if log.debug_active('netmiko'):
+    print(f'Netmiko config errors for {n_data.device}: {netmiko_errors}')
   for cfg_item in n_deploy:
     if node_config.get(cfg_item.replace('.','@'),None) != ':netmiko':
       return
@@ -42,13 +51,18 @@ def deploy(n_data: Box,topology: Box,n_deploy: list) -> None:
       append_to_list(n_data._deploy,'failed',cfg_item)
       continue
     try:
-      net_connect.send_config_from_file(cfg_file,error_pattern=netmiko_errors)
+      cfg_result = net_connect.send_config_from_file(cfg_file,error_pattern=netmiko_errors)
       log.info(f'Sent {cfg_item} configuration to {n_data.name}',module='netmiko')
       if _netmiko.has_commit(net_connect):
-        net_connect.commit()
+        cfg_result += net_connect.commit()
+      if features.get('netmiko.step_config',False):
+        cfg_result += net_connect.exit_config_mode()
+      if log.debug_active('netmiko'):
+        print(f'Config {cfg_item} on {n_data.name}:\n{cfg_result}')
       if cfg_item in ['normalize','initial']:
         net_connect.set_base_prompt()
       append_to_list(n_data._deploy,'success',cfg_item)
+      n_data._deploy.method = 'Netmiko'
     except Exception as ex:
       append_to_list(n_data._deploy,'failed',cfg_item)
       log.error(

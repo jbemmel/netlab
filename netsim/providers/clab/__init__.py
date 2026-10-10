@@ -3,6 +3,7 @@
 #
 import argparse
 import json
+import typing
 
 from box import Box
 
@@ -25,7 +26,12 @@ from . import binds, configs, labops, utils
 
 
 class Containerlab(_Provider):
-  
+
+  def init(self, topology: Box) -> None:
+    if not topology.defaults.providers.clab.get('healthy_timeout',False):
+      return
+    labops.health_ready_setup(topology)
+
   def augment_node_data(self, node: Box, topology: Box) -> None:
     if node.name in topology.defaults.providers.clab.reserved_names:
       log.error(
@@ -48,6 +54,11 @@ class Containerlab(_Provider):
     validate_mgmt_ip(node,required=True,provider='clab',mgmt=topology.addressing.mgmt)
     binds.add_templates_to_binds(node)
     configs.add_startup_config(node)
+
+  def create(self, topology: Box, fname: typing.Optional[str]) -> None:
+    utils.create_clab_batches(topology)
+    utils.create_clab_stages(topology)
+    super().create(topology,fname)
 
   def post_configuration_create(self, topology: Box) -> None:
     if labops.use_ovs_bridge(topology):
@@ -80,6 +91,14 @@ class Containerlab(_Provider):
         labops.destroy_ovs_bridge(brname)
       else:
         labops.destroy_linux_bridge(brname)
+
+  def health_check(self, nodeset: list, topology: Box) -> None:
+    timeout = topology.defaults.providers.clab.get('healthy_timeout',0)
+    if not timeout:
+      return
+    log.info(f'Waiting up to {timeout} seconds for {len(nodeset)} container(s) to become healthy',module='clab')
+    containers = [ self.get_node_name(node,topology) for node in nodeset ]
+    labops.health_check(containers,timeout,topology)
 
   def get_lab_status(self,collect_status: dict) -> Box:
     try:
@@ -205,8 +224,10 @@ class Containerlab(_Provider):
 
   def set_tc(self, node: Box, topology: Box, intf: Box, error: bool = True) -> None:
     c_name = self.get_node_name(node.name,topology)
-    c_intf = intf.get('clab.name',intf.ifname)
+    c_intf = intf.get('clab.name',intf.ifname).replace('/','-')
     netns = 'sudo ip netns exec ' + c_name
+    if len(c_intf) > 15:             # tc truncates names longer than 15 characters
+      c_intf = utils.get_linux_ifname(netns,c_intf)
     status = tc_netem_set(intf=c_intf,tc_data=intf.tc,pfx=netns)
     if status is False:
       log.error(

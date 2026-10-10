@@ -163,9 +163,10 @@ and validation. Configuration is deployed with a bash script executed within the
 ## Cisco ASAv Caveats
 
 * Some ASAv versions use older SSH protocols. For more details, see the [SSH Access to Cisco IOS/IOS-XE](cisco-ios-ssh).
-* ASAv does not have a standard implementation of OSPFv2 or IS-IS point-to-point circuits. netlab reports an error if you try to use them with ASAv nodes. You could add `isis.network_type: false` to point-to-point links connecting ASA to other devices.
+* ASAv does not have a standard implementation of OSPFv2 or IS-IS point-to-point circuits. netlab reports an error if you try to use IS-IS point-to-point with ASAv nodes. You could add `isis.network_type: false` to point-to-point links connecting ASA to other devices.
+* The ASAv IS-IS configuration templates were not tested, as all IS-IS integration tests include at least one point-to-point circuit
+* ASAv implements OSPFv2 point-to-point links with the `point-to-point non-broadcast` network type. *netlab* configures static OSPF neighbors on these links.
 * We did not implement OSPFv3 for ASAv
-* The ASAv OSPF and IS-IS configuration templates were not tested, as all OSPFv2/IS-IS integration tests include at least one point-to-point circuit
 
 (caveats-cat8000v)=
 ## Cisco Catalyst 8000v
@@ -245,7 +246,9 @@ $ export ANSIBLE_NETWORK_CLI_SSH_TYPE=paramiko
 $ export ANSIBLE_PARAMIKO_LOOK_FOR_KEYS=False
 ```
 
-However, even the **paramiko** release 5.0 [removed support for the ancient algorithms used in Cisco IOSv](https://github.com/ipspace/netlab/discussions/3714). You might be able to get IOSv to work with a downgraded version of paramiko installed, for example, with `pip3 install --upgrade 'paramiko<5.0'`. However, it's much better to use IOL and IOLL2 containers instead of IOSv and IOSvL2.
+However, even the **paramiko** release 5.0 [removed support for the ancient algorithms used in Cisco IOSv](https://github.com/ipspace/netlab/discussions/3714). You might be able to get IOSv to work with a downgraded version of paramiko installed, for example, with `pip3 install --upgrade 'paramiko<5.0'`. Alternatively, use **[netlab install netmiko](netlab-install)** to install the latest *netmiko* library and an old-enough *paramiko* library, and enable *netmiko*-based configuration of Cisco IOS devices (totally bypassing the IOS-related Ansible headaches).
+
+Nonetheless, it's much better to use IOL and IOLL2 containers instead of IOSv and IOSvL2.
 
 We added a similar mechanism to _netlab_ commands that use SSH to connect to network devices. These commands append the group variable `netlab_ssh_args` (when defined) to the **ssh** command; the value of that variable for Cisco IOS/IOS-XE devices is set to:
 
@@ -647,7 +650,7 @@ Other caveats you might encounter:
 * Only supported on top of *Containerlab*
 * Supports SR Linux release 24.7.1 or later (due to YANG model changes)
 * Requires `nokia.srlinux` Ansible Galaxy collection (minimum version 0.5.0). Use **ansible-galaxy collection install nokia.srlinux** command to install it.
-* MPLS, LDP, and SR-MPLS are only supported on 7250 IXR and 7730 SXR routers. Set the `clab.type` node attribute to one of the [valid node types](https://containerlab.dev/manual/kinds/srl/#types) to use these features. You will also need a license to run these containers.
+* MPLS, LDP, SR-MPLS, and SRv6 are only supported on 7250 IXR and 7730 SXR routers. Set the `clab.type` node attribute to one of the [valid node types](https://containerlab.dev/manual/kinds/srl/#types) to use these features. You will also need a license to run these containers.
 * Nokia SR Linux needs an EVPN control plane to enable VXLAN functionality. VXLAN ingress replication lists are built from EVPN Route Type 3 updates.
 * Inter-VRF route leaking is supported only in combination with BGP EVPN
 * SR Linux does not support configurable propagation of extended BGP communities.
@@ -656,6 +659,7 @@ Other caveats you might encounter:
 * SR Linux needs a static default route (with low route preference) to implement OSPF **default-originate always** functionality.
 * SR Linux does not set metrics on routes imported into OSPF. While you can specify the metric and metric type of the OSPF default route, those settings have no impact.
 * SR Linux does not support setting a default metric for NSSA areas
+* You cannot use non-SRv6 interface EBGP neighbors in the global routing table together with SRv6 layer-3 services. SR Linux does not strip SRv6 TLVs from outgoing updates sent to interface EBGP neighbors, resulting in incorrect routing tables on the receiving router. 
 
 (caveats-sros)=
 ## Nokia SR OS
