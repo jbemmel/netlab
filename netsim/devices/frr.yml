@@ -199,6 +199,8 @@ features:
     af: [ ipv4, ipv6 ]
     protocol: [ isis, ospfv2 ]
   srv6:
+    local_sids:
+      End: [ psp, next-csid ]
     bgp: true
     isis: true
     ebgp: true

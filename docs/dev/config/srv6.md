@@ -24,6 +24,7 @@ Add the following **features.srv6** entries to a device YAML file (`netsim/devic
 * **ospf** -- device supports SRv6 with OSPFv3
 * **bgp** -- device supports BGP v4/v6 overlay over SRv6 (end.dt4/end.dt6)
 * **vpn** -- device supports BGP L3VPN v4/v6 over SRv6
+* **local_sids** -- dictionary mapping each supported explicit endpoint behavior to its supported flavor list. A behavior key with an empty list supports the unflavored behavior. For example, `local_sids: { End: [ psp, next-csid ] }`.
 
 ## Node Attributes
 
@@ -39,6 +40,17 @@ Templates typically use `srv6.locator` to configure the SRv6 locator prefix:
 locator {{ inventory_hostname }}
   prefix {{ srv6.locator }}
 ```
+
+### srv6.local_sids
+
+An optional dictionary of named local SID entries. After transformation, each entry contains:
+
+* **prefix**: a canonical IPv6 network, resolved to the full node locator prefix when omitted.
+* **behavior**: the endpoint behavior name.
+* **flavors**: a list, present even when empty.
+* **block_length** and **csid_length**: present for `next-csid`, including resolved defaults of 32 and 16 bits.
+
+Templates must install each entry's match prefix and behavior, including all requested flavors. Unsupported behaviors and flavors are rejected during transformation using **features.srv6.local_sids**. The FRR template installs Linux `seg6local` routes on the SRv6 dummy interface after configuring the locator.
 
 ### srv6.igp
 
@@ -206,3 +218,5 @@ The integration tests for the SRv6 module are in the `tests/integration/srv6/` d
 * `12-isis-ipv6-bgp-vpn.yml` — Similar scenario with IPv6 L3VPN overlay.
 * `x-01-isis-ipv4-bgp.yml` — PE router running IS-IS + BGP (`srv6.bgp.ipv4: True`) with `allocate_loopback: True`, carrying IPv4 over an IPv6-only SRv6 core (4PE scenario).
 * `x-11-isis-ipv6-bgp.yml` — Similar scenario with IPv6 BGP overlay.
+
+* `31-static-usid.yml` — Static IPv6 forwarding through two spines with explicit `End`/`next-csid` local SIDs; validates native packets using ICMPv6 echo probes.

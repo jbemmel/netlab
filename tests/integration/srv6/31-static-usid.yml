@@ -1,0 +1,172 @@
+---
+message: |
+  Test static SRv6 uSID forwarding through two alternative spine paths.
+  Only the selected spine executes NEXT-CSID (32-bit block, 16-bit uSID). Both leaves use
+  ordinary IPv6 forwarding.
+  GPU1 uses 5f00:0:301::1:0/64; GPU2 uses 5f00:0:302::2:0/64.
+  Validation tests both directions through each spine, encoding its uSID before
+  the destination GPU prefix and identifier.
+  Validation sends an ICMPv6 echo request with a checksum for the terminal
+  destination, then checks the echo reply from that address. Ordinary ping
+  computes its checksum using the initial destination and cannot test this shift.
+
+defaults.sources.extra: [ ../wait_times.yml, ../warnings.yml ]
+
+addressing:
+  loopback:
+    ipv4: false
+    ipv6: 2001:db8::/48
+  p2p:
+    ipv4: false
+    ipv6: 2001:db8:1::/48
+  lan:
+    ipv4: false
+    ipv6: 2001:db8:2::/48
+
+srv6:
+  igp: []
+  bgp: false
+  vpn: false
+
+groups:
+  spines:
+    members: [ spine1, spine2 ]
+    device: frr
+    provider: clab
+    module: [ routing, srv6 ]
+    srv6.local_sids:
+      advance:
+        behavior: End
+        flavors: [ next-csid ]
+        block_length: 32
+        csid_length: 16
+  leaves:
+    members: [ leaf1, leaf2 ]
+    device: frr
+    provider: clab
+    module: [ routing ]
+  hosts:
+    members: [ gpu1, gpu2 ]
+    device: linux
+    provider: clab
+    module: [ routing ]
+    loopback: false
+
+nodes:
+  gpu1:
+    routing.static:
+    - ipv6: ::/0
+      nexthop.node: leaf1
+  leaf1:
+    routing.static:
+    - ipv6: 5f00:0:302::/48
+      nexthop.node: spine1
+    - ipv6: 5f00:0:100::/48
+      nexthop.node: spine1
+    - ipv6: 5f00:0:101::/48
+      nexthop.node: spine2
+  spine1:
+    srv6.locator: 5f00:0:100::/48
+    routing.static:
+    - ipv6: 5f00:0:302::/48
+      nexthop.node: leaf2
+    - ipv6: 5f00:0:301::/48
+      nexthop.node: leaf1
+  spine2:
+    srv6.locator: 5f00:0:101::/48
+    routing.static:
+    - ipv6: 5f00:0:302::/48
+      nexthop.node: leaf2
+    - ipv6: 5f00:0:301::/48
+      nexthop.node: leaf1
+  leaf2:
+    routing.static:
+    - ipv6: 5f00:0:100::/48
+      nexthop.node: spine1
+    - ipv6: 5f00:0:101::/48
+      nexthop.node: spine2
+    - ipv6: 5f00:0:301::/48
+      nexthop.node: spine1
+  gpu2:
+    routing.static:
+    - ipv6: ::/0
+      nexthop.node: leaf2
+
+links:
+- gpu1:
+    ipv6: 5f00:0:301::1:0/64
+  leaf1:
+    ipv6: 5f00:0:301::1/64
+  prefix:
+    ipv4: false
+    ipv6: 5f00:0:301::/64
+- leaf1-spine1
+- spine1-leaf2
+- leaf1-spine2
+- spine2-leaf2
+- leaf2:
+    ipv6: 5f00:0:302::1/64
+  gpu2:
+    ipv6: 5f00:0:302::2:0/64
+  prefix:
+    ipv4: false
+    ipv6: 5f00:0:302::/64
+
+validate:
+  ping_usid:
+    description: Bidirectional ICMPv6 echo through each spine with native uSID advancement
+    wait: ping_long
+    nodes: [ gpu1, gpu2 ]
+    devices: [ linux ]
+    exec: |
+      python3 - <<'PY'
+      import ipaddress
+      import socket
+      import struct
+      import time
+
+      source = '{{ interfaces[0].ipv6 }}'.split('/')[0]
+      peer = '{{ "gpu2" if name == "gpu1" else "gpu1" }}'
+      endpoints = {
+          'gpu1': '{{ hostvars.gpu1.interfaces[0].ipv6 }}'.split('/')[0],
+          'gpu2': '{{ hostvars.gpu2.interfaces[0].ipv6 }}'.split('/')[0],
+      }
+      terminal = endpoints[peer]
+      packed = lambda address: socket.inet_pton(socket.AF_INET6, address)
+      payload = b'netlab-native-usid-ping'
+      def ping(initial, identifier):
+          echo = struct.pack('!BBHHH', 128, 0, 0, identifier, 1) + payload
+          pseudo = packed(source) + packed(terminal) + struct.pack('!I3xB', len(echo), 58)
+          data = pseudo + echo
+          data += b'\0' * (len(data) % 2)
+          checksum = sum(struct.unpack('!%dH' % (len(data) // 2), data))
+          while checksum >> 16:
+              checksum = (checksum & 0xffff) + (checksum >> 16)
+          echo = echo[:2] + struct.pack('!H', (~checksum) & 0xffff) + echo[4:]
+          header = struct.pack('!IHBB', 6 << 28, len(echo), 58, 64) + packed(source) + packed(initial)
+          with socket.socket(socket.AF_INET6, socket.SOCK_RAW, 58) as receiver:
+              receiver.bind((source, 0))
+              with socket.socket(socket.AF_INET6, socket.SOCK_RAW, socket.IPPROTO_RAW) as sender:
+                  sender.sendto(header + echo, (initial, 0))
+              deadline = time.monotonic() + 3
+              while time.monotonic() < deadline:
+                  receiver.settimeout(max(0.01, deadline - time.monotonic()))
+                  try:
+                      reply, peer = receiver.recvfrom(65535)
+                  except socket.timeout:
+                      break
+                  if (packed(peer[0]) == packed(terminal) and len(reply) >= 8
+                          and reply[0] == 129 and reply[1] == 0
+                          and reply[4:8] == struct.pack('!HH', identifier, 1)
+                          and reply[8:] == payload):
+                      return
+          raise SystemExit(f'No echo reply from {terminal} via {initial}')
+
+      locators = ['{{ hostvars.spine1.srv6.locator }}', '{{ hostvars.spine2.srv6.locator }}']
+      suffix = (int(ipaddress.IPv6Address(terminal)) & ((1 << 96) - 1)) >> 16
+      for identifier, locator in enumerate(locators, 0x3142):
+          initial = str(ipaddress.IPv6Address(int(ipaddress.IPv6Network(locator).network_address) | suffix))
+          ping(initial, identifier)
+      print('uSID ping succeeded')
+      PY
+    valid: "'uSID ping succeeded' in stdout"

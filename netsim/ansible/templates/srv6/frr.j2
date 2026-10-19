@@ -62,4 +62,9 @@ exit
 do write
 CONFIG
 vtysh -f /tmp/srv6_config
+
+# Explicit local SID behaviors use the Linux forwarding plane.
+{% for name,sid in srv6.local_sids|default({})|dictsort %}
+ip -6 route replace {{ sid.prefix }} encap seg6local action {{ sid.behavior }}{% if sid.flavors %} flavors {{ sid.flavors|join(',') }}{% endif %}{% if 'next-csid' in sid.flavors %} lblen {{ sid.block_length }} nflen {{ sid.csid_length }}{% endif %} dev ${SRv6_DEV}
+{% endfor %}
 exit 0

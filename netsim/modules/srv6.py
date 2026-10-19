@@ -85,6 +85,54 @@ def process_srv6_locator(node: Box, topology: Box) -> None:
   node.srv6._usid_block = str(ipaddress.IPv6Network(str(locator_addr)+"/32",strict=False))
   node.srv6._usid_node_id = (int(locator_addr) >> 80) & 0xffff
 
+def process_local_sids(node: Box, topology: Box) -> None:
+  """Resolve local SID prefixes and validate device capabilities and CSID layout."""
+  if not node.get('srv6.local_sids'):
+    return
+  capabilities = devices.get_device_features(node,topology.defaults).get('srv6.local_sids',{})
+  # Preserve dotted behavior names during capability lookup.
+  supported = capabilities.to_dict() if isinstance(capabilities,Box) else capabilities
+  prefixes: set[str] = set()
+  locator = ipaddress.IPv6Network(node.srv6.locator)
+  for name,sid in node.get('srv6.local_sids',{}).items():
+    path = f'nodes.{node.name}.srv6.local_sids.{name}'
+    sid.prefix = str(ipaddress.IPv6Network(sid.get('prefix',node.srv6.locator)))
+    prefix = ipaddress.IPv6Network(sid.prefix)
+    if not prefix.subnet_of(locator):
+      log.error(f'{path}.prefix must be within locator {locator}',log.IncorrectValue,'srv6')
+    if sid.prefix in prefixes:
+      log.error(f'{path}.prefix duplicates local SID prefix {sid.prefix}',log.IncorrectValue,'srv6')
+    prefixes.add(sid.prefix)
+    sid.flavors = sid.get('flavors',[])
+    if len(sid.flavors) != len(set(sid.flavors)):
+      log.error(f'{path}.flavors contains duplicate flavors',log.IncorrectValue,'srv6')
+
+    if sid.behavior not in supported:
+      log.error(
+        f'{path}: device {node.device} does not support local SID behavior {sid.behavior}',
+        log.IncorrectValue,'srv6')
+    else:
+      for flavor in sid.flavors:
+        if flavor not in supported[sid.behavior]:
+          log.error(
+            f'{path}: device {node.device} does not support {flavor} for {sid.behavior}',
+            log.IncorrectValue,'srv6')
+
+    if 'next-csid' not in sid.flavors:
+      if 'block_length' in sid or 'csid_length' in sid:
+        log.error(f'{path}: CSID field lengths require the next-csid flavor',log.IncorrectValue,'srv6')
+      continue
+
+    sid.block_length = sid.get('block_length',32)
+    sid.csid_length = sid.get('csid_length',16)
+    if sid.block_length + sid.csid_length >= 128:
+      log.error(f'{path}: block_length + csid_length must be less than 128',log.IncorrectValue,'srv6')
+    if prefix.prefixlen < sid.block_length + sid.csid_length:
+      log.error(f'{path}.prefix must cover the block and active CSID fields',log.IncorrectValue,'srv6')
+    if node.device == 'frr' and (sid.block_length % 8 or sid.csid_length % 8):
+      log.error(f'{path}: Linux NEXT-CSID field lengths must be multiples of 8',log.IncorrectValue,'srv6')
+
+
 class SRV6(_Module):
   """
   module_pre_default - create the default SRv6 locator address pool
@@ -158,6 +206,7 @@ class SRV6(_Module):
         module='srv6')
 
     process_srv6_locator(node,topology)
+    process_local_sids(node,topology)
     
   def node_post_transform(self, node: Box, topology: Box) -> None:
     if 'ipv6' not in node.loopback:

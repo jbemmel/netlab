@@ -30,11 +30,82 @@ attributes:
     igp:
     vpn:
     locator: { type: ipv6, use: subnet_prefix }
+    local_sids:
+      type: dict
+      _keytype: id
+      _subtype:
+        type: dict
+        _keys:
+          prefix: { type: ipv6, use: subnet_prefix }
+          behavior:
+            type: str
+            _required: True
+            # Base names from the IANA SRv6 Endpoint Behaviors registry.
+            # Flavored registrations are represented by behavior + flavors.
+            # https://www.iana.org/assignments/segment-routing/ (2026-10-19)
+            valid_values:
+            - End
+            - End.X
+            - End.T
+            - End.B6.Insert
+            - End.B6.Encaps
+            - End.BM
+            - End.DX6
+            - End.DX4
+            - End.DT6
+            - End.DT4
+            - End.DT46
+            - End.DX2
+            - End.DX2V
+            - End.DT2U
+            - End.DT2M
+            - End.B6.Insert.Red
+            - End.B6.Encaps.Red
+            - End.MAP
+            - End.Limit
+            - End.M.GTP6.D
+            - End.M.GTP6.Di
+            - End.M.GTP6.E
+            - End.M.GTP4.E
+            - End.DTM
+            - End.M
+            - End.Replicate
+            - End.DTMC4
+            - End.DTMC6
+            - End.DTMC46
+            - End.BXC
+            - End.NSH
+            - End.LBS
+            - End.XLBS
+            - End.PSID
+            - End.DTM46
+            - End.DXM4
+            - End.DXM6
+            - End.DXM2
+            - End.XU
+            - End.DX1
+            - End.AN
+            - End.AS
+            - End.AD
+            - End.AM
+            - End.AMN
+            - End.M.GTP6.E.Red
+            - End.AN.CI.S
+            - End.AN.CI.D.A
+            - End.AN.CI.D.T
+            - End.AN.CI.D.V
+            - End.AN.CI.D.D
+          flavors:
+            type: list
+            valid_values: [ psp, usp, usd, next-csid, replace-csid, next-only-csid ]
+          block_length: { type: int, min_value: 1, max_value: 120 }
+          csid_length: { type: int, min_value: 1, max_value: 120 }
     transit_only: bool
     _obsolete:
       allocate_loopback: This attribute is obsolete and does nothing
 
 features:
+  local_sids: Explicit local SID behaviors and supported flavors (per-behavior dictionary)
   bgp: Supports BGP v4/v6 over SRv6
   vpn: Supports BGP L3VPN v4/v6 over SRv6
   isis: Supports SRv6 with IS-IS

@@ -58,6 +58,39 @@ The following table describes the per-platform support of SRv6 features:
 * **srv6.locator**: an optional IPv6 address prefix to allocate to a given SRv6 node; by default, each node is assigned a unique /48 prefix from the global pool
 * **srv6.transit_only**: an optional Boolean flag to optimize resource usage and only allocate transit behaviors, not endpoint behaviors
 
+(srv6-local-sids)=
+## Explicit Local SID Behaviors
+
+Use the node-level **srv6.local_sids** dictionary to install named endpoint behaviors independently of a routing protocol:
+
+```yaml
+nodes:
+  spine1:
+    module: [ routing, srv6 ]
+    srv6:
+      igp: []
+      locator: 5f00:0:100::/48
+      local_sids:
+        advance:
+          behavior: End
+          flavors: [ next-csid ]
+          block_length: 32
+          csid_length: 16
+```
+
+Each entry accepts these attributes:
+
+* **behavior** (required): an endpoint behavior name, such as `End`.
+* **prefix**: the IPv6 prefix matching this behavior. When omitted, it uses the full node locator prefix, including its prefix length. An explicit prefix must be within that locator. Two entries cannot use the same prefix.
+* **flavors**: a list of behavior modifiers, empty by default.
+* **block_length** and **csid_length**: field widths in bits for `next-csid`, defaulting to 32 and 16. Their sum must be less than 128, and the matching prefix must cover both fields. These attributes require `next-csid`.
+
+The schema in `netsim/modules/srv6.yml` lists the base behavior names from the [IANA SRv6 Endpoint Behaviors registry](https://www.iana.org/assignments/segment-routing/) and the flavors `psp`, `usp`, `usd`, `next-csid`, `replace-csid`, and `next-only-csid`. Flavored registrations use a base **behavior** plus **flavors**; `uDX*` and `uDT*` names use the corresponding `End.DX*` or `End.DT*` behavior with `next-csid`.
+
+FRR supports explicit `End` entries with no flavors, `psp`, `next-csid`, or both. Other behaviors and flavors produce a topology validation error. FRR installs these entries with Linux `seg6local`; the host kernel and container's `ip` utility must support the requested operations. Linux requires both CSID widths to be positive multiples of eight.
+
+The integration topology `srv6/31-static-usid.yml` uses two spines with explicit `End`/`next-csid` entries and validates native IPv6 forwarding with ICMPv6 echo probes.
+
 (srv6-services)=
 ## Configurable Layer-3 Services and L3VPN Parameters
 
