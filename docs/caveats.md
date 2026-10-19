@@ -167,6 +167,11 @@ and validation. Configuration is deployed with a bash script executed within the
 * The ASAv IS-IS configuration templates were not tested, as all IS-IS integration tests include at least one point-to-point circuit
 * ASAv implements OSPFv2 point-to-point links with the `point-to-point non-broadcast` network type. *netlab* configures static OSPF neighbors on these links.
 * We did not implement OSPFv3 for ASAv
+* ASAv static routes require an outgoing interface. *netlab* does not configure static routes with indirect next hops on ASAv.
+* ASAv does not support equal-cost static routes over multiple interfaces. *netlab* configures only the first next hop of a static route.
+* ASAv releases before 9.18(2) do not support loopback interfaces; *netlab* does not configure them by default. Set `loopback: true` on ASAv nodes running release 9.18(2) or later.
+* *netlab* uses loopback interfaces for IBGP sessions. IBGP sessions with ASAv nodes that have no loopback interface do not work; use EBGP sessions instead.
+* OSPF routes are not imported into the IPv6 BGP address family (OSPFv3 is not implemented). Routing policies cannot be used with route import.
 
 (caveats-cat8000v)=
 ## Cisco Catalyst 8000v
@@ -409,6 +414,15 @@ ansible-galaxy collection install community.network
 
 * EXOS does not support the same VRRP group for IPv4 and IPv6
 * Saved EXOS device configuration includes commands that cannot be configured on the EXOS VM. _netlab_ therefore cannot do a configuration reload for EXOS devices.
+
+(caveats-voss)=
+## Extreme Networks VOSS
+
+* The only way to configure VOSS devices with Ansible is the now-deprecated **community.network.voss_config** Ansible module. This collection is no longer actively maintained. To install it, you can still run:
+
+```shell
+ansible-galaxy collection install community.network
+```
 
 (caveats-fortios)=
 ## Fortinet FortiOS
