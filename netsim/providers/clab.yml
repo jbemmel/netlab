@@ -61,6 +61,7 @@ attributes:
       srl-agents:
       license: str
       runtime: str
+      user: str
       startup-delay: int
       restart-policy: str
       network-mode: str

@@ -1,0 +1,12 @@
+---
+provider: clab
+module: [ bgp ]
+nodes:
+  twin:
+    device: labnet
+    bgp.as: 65001
+  native:
+    device: frr
+    bgp.as: 65002
+links:
+- twin-native

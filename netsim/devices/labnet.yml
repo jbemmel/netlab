@@ -1,0 +1,46 @@
+---
+description: lab.net browser control-plane twin
+docname: lab.net
+interface_name: eth{ifindex}
+loopback_interface_name: lo{ifindex if ifindex else ""}
+mgmt_if: eth0
+role: router
+support:
+  level: minimal
+group_vars:
+  ansible_network_os: linux
+  netlab_device_type: labnet
+  ansible_connection: docker
+  ansible_user: root
+  netlab_linux_distro: vanilla
+  netlab_lldp_enable: False
+  netlab_net_tools: False
+clab:
+  image: ghcr.io/exergy-connect/lab.net-go:latest
+  node:
+    kind: linux
+    user: root
+    config_templates:
+      relay: /config/relay.json
+  node_config:
+    initial: :ns
+    bgp: :ns
+    ospf: :ns
+    isis: :ns
+features:
+  initial:
+    config_mode: [ sh ]
+    roles: [ router ]
+    ipv6:
+      lla: True
+  bgp:
+    activate_af: True
+  ospf: {}
+  isis: {}
+attributes:
+  node:
+    labnet:
+      token: str
+      port: { type: int, min_value: 1, max_value: 65535 }
+      https: bool
+graphite.icon: router
