@@ -32,6 +32,17 @@ routes. Netlab configures Linux interface addresses through the container's
 network namespace and mounts a generated topology in `/config/relay.json`.
 Protocol configuration is read from this file by the browser and relay.
 
+The device sets `LAB_NET_INITIAL_DONE_FILE=/var/run/initial.done`. Compatible
+images wait for that marker before starting the relay, browser, and protocol
+helpers. The initial configuration template creates it inside the container
+only after Linux provisioning succeeds. Use an image with this startup gate;
+older images ignore the variable and can start helpers before addresses exist.
+
+LLDP is enabled by default (`netlab_lldp_enable: True`). The device sets
+`LAB_NET_LLDP=1`, and compatible images run `lldpd` on data interfaces after
+provisioning. The advertised system name is the netlab node name. Management
+and loopback interfaces are excluded.
+
 Node attributes `labnet.port` (default 8080), `labnet.https` (default false), and
 `labnet.token` configure the relay. The default token is
 `lab-net-browser-connect`; set a private token for shared environments.

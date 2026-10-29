@@ -13,13 +13,16 @@ group_vars:
   ansible_connection: docker
   ansible_user: root
   netlab_linux_distro: vanilla
-  netlab_lldp_enable: False
+  netlab_lldp_enable: True
   netlab_net_tools: False
 clab:
   image: ghcr.io/exergy-connect/lab.net-go:latest
   node:
     kind: linux
     user: root
+    env:
+      LAB_NET_INITIAL_DONE_FILE: /var/run/initial.done
+      LAB_NET_LLDP: "1"
     config_templates:
       relay: /config/relay.json
   node_config:
