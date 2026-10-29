@@ -34,7 +34,7 @@
 | Fortinet FortiOS [❗](caveats-fortios) | fortios | minimal  |
 | FRRouting (FRR) [❗](caveats-frr) | frr     | full          |
 | [Generic Linux host](generic-linux-devices) | linux | full          |
-| [lab.net Browser Twin](labnet.md) | labnet | minimal |
+| [exergy-lab Browser Twin](exergy-lab.md) | exergy-lab | minimal |
 | IP Infusion OcNOS [❗](caveats-ocnos) | ocnos | minimal |
 | Juniper cRPD | crpd | full |
 | Juniper cSRX [❗](caveats-csrx) | csrx | minimal |

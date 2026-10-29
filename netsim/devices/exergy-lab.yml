@@ -1,6 +1,6 @@
 ---
-description: lab.net browser control-plane twin
-docname: lab.net
+description: Exergy Lab browser-based virtual network router
+docname: exergy-lab
 interface_name: eth{ifindex}
 loopback_interface_name: lo{ifindex if ifindex else ""}
 mgmt_if: eth0
@@ -9,7 +9,7 @@ support:
   level: minimal
 group_vars:
   ansible_network_os: linux
-  netlab_device_type: labnet
+  netlab_device_type: exergy-lab
   ansible_connection: docker
   ansible_user: root
   netlab_linux_distro: vanilla
@@ -24,7 +24,7 @@ clab:
       LAB_NET_INITIAL_DONE_FILE: /var/run/initial.done
       LAB_NET_LLDP: "1"
     config_templates:
-      relay: /config/relay.json
+      relay: /config/exergy-lab.json
   node_config:
     initial: :ns
     bgp: :ns
@@ -42,7 +42,7 @@ features:
   isis: {}
 attributes:
   node:
-    labnet:
+    exergy-lab:
       token: str
       port: { type: int, min_value: 1, max_value: 65535 }
       https: bool

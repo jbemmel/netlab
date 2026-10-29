@@ -17,9 +17,9 @@
 {%   for key in ['id', 'name', 'device', 'role', 'mgmt', 'loopback', 'interfaces', 'bgp', 'ospf', 'isis'] if key in n %}
 {%     set _ = item.update({key: n[key]}) %}
 {%   endfor %}
-{%   if n.device == 'labnet' %}
-{%     set _ = item.update({'device': 'lab.net', 'ws': {'port': n.labnet.port|default(8080), 'https': n.labnet.https|default(false)}}) %}
+{%   if n.device == 'exergy-lab' %}
+{%     set _ = item.update({'device': 'lab.net', 'ws': {'port': n['exergy-lab'].port|default(8080), 'https': n['exergy-lab'].https|default(false)}}) %}
 {%   endif %}
 {%   set _ = ns.nodes.update({n_name: item}) %}
 {% endfor %}
-{{ {'name': inventory_hostname, 'listenHost': '0.0.0.0', 'token': labnet.token|default('lab-net-browser-connect'), 'topology': {'nodes': ns.nodes, 'links': ns.links.values()|list, 'module': ns.modules}} | tojson(indent=2) }}
+{{ {'name': inventory_hostname, 'listenHost': '0.0.0.0', 'token': hostvars[inventory_hostname]['exergy-lab'].token|default('lab-net-browser-connect'), 'topology': {'nodes': ns.nodes, 'links': ns.links.values()|list, 'module': ns.modules}} | tojson(indent=2) }}

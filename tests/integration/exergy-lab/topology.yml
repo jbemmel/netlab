@@ -3,7 +3,7 @@ provider: clab
 module: [ bgp ]
 nodes:
   twin:
-    device: labnet
+    device: exergy-lab
     bgp.as: 65001
   native:
     device: frr
