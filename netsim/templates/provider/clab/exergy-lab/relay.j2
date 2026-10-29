@@ -14,7 +14,7 @@
 {%     set _ = endpoint.update(intf) %}
 {%     set _ = ns.links[idx].interfaces.append(endpoint) %}
 {%   endfor %}
-{%   for key in ['id', 'name', 'device', 'role', 'mgmt', 'loopback', 'interfaces', 'bgp', 'ospf', 'isis'] if key in n %}
+{%   for key in ['id', 'name', 'device', 'role', 'mgmt', 'loopback', 'interfaces', 'bgp', 'ospf', 'isis', 'vrfs', 'routing'] if key in n %}
 {%     set _ = item.update({key: n[key]}) %}
 {%   endfor %}
 {%   if n.device == 'exergy-lab' %}

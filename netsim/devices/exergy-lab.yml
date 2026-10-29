@@ -21,7 +21,6 @@ clab:
     kind: linux
     user: root
     env:
-      LAB_NET_INITIAL_DONE_FILE: /var/run/initial.done
       LAB_NET_LLDP: "1"
     config_templates:
       relay: /config/exergy-lab.json
@@ -30,6 +29,7 @@ clab:
     bgp: :ns
     ospf: :ns
     isis: :ns
+    vrf: :ns
 features:
   initial:
     config_mode: [ sh ]
@@ -40,6 +40,11 @@ features:
     activate_af: True
   ospf: {}
   isis: {}
+  vrf:
+    ospfv2: True
+    ospfv3: True
+    bgp: True
+    isis: True
 attributes:
   node:
     exergy-lab:

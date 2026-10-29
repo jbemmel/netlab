@@ -2,8 +2,11 @@
 
 Use `device: exergy-lab` with the Containerlab provider to run a lab.net relay.
 The browser owns the control plane; keep its page open while running the lab.
-The initial integration supports numbered BGP, OSPF, and IS-IS configurations.
-Advanced protocol options are not advertised as supported.
+The initial integration supports numbered BGP, OSPF, and IS-IS configurations,
+including those protocols inside VRFs. lab.net reads each VRF from
+`/config/exergy-lab.json`, creates the Linux VRF device, and moves its
+interfaces into that device. Advanced protocol options outside that set are
+not advertised as supported.
 
 The default image is `ghcr.io/exergy-connect/lab.net-go:latest`, matching the
 lab.net deployment default. Override `box` to use another compatible image.
@@ -28,15 +31,9 @@ generated TLS certificate. The management address must be
 reachable from your browser. Containerlab does not publish this port on the host.
 
 The device runs as root so its protocol agents can use raw sockets and install
-routes. Netlab configures Linux interface addresses through the container's
-network namespace and mounts a generated topology in `/config/exergy-lab.json`.
-Protocol configuration is read from this file by the browser and relay.
-
-The device sets `LAB_NET_INITIAL_DONE_FILE=/var/run/initial.done`. Compatible
-images wait for that marker before starting the relay, browser, and protocol
-helpers. The initial configuration template creates it inside the container
-only after Linux provisioning succeeds. Use an image with this startup gate;
-older images ignore the variable and can start helpers before addresses exist.
+routes. Netlab mounts the generated topology at `/config/exergy-lab.json`.
+lab.net reads that file at startup and applies interface addresses, forwarding,
+and VRFs before it serves the control plane.
 
 LLDP is enabled by default (`netlab_lldp_enable: True`). The device sets
 `LAB_NET_LLDP=1`, and compatible images run `lldpd` on data interfaces after

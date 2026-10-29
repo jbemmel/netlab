@@ -1,7 +1,2 @@
-{% include 'initial/linux-clab.j2' %}
-
-# This script runs on the host in the container's network namespace; mark
-# completion in the container's filesystem, where the runtime waits.
-docker exec -u 0 "{{ ansible_host }}" touch /var/run/initial.done
-
-exit 0
+#!/bin/sh
+# Interface addresses are applied by lab.net from /config/exergy-lab.json.
