@@ -1,0 +1,1 @@
+{{ {'name': inventory_hostname, 'labName': topology.name, 'listenHost': '0.0.0.0', 'token': hostvars[inventory_hostname]['exergy-lab'].token|default('lab-net-browser-connect'), 'topology': topology} | tojson(indent=2) }}

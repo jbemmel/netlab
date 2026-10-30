@@ -8,10 +8,12 @@ from pathlib import Path
 from box import Box
 
 from ..augment import devices, groups, nodes
+from ..augment.topology import cleanup_topology
 from ..providers import SHARED_PREFIX, SHARED_SUFFIX, get_provider_module
 from ..utils import log, strings, templates
 from . import _TopologyOutput, check_writeable
 from . import common as output_common
+from .yaml import transform_sets
 
 
 class ConfigurationFiles(_TopologyOutput):
@@ -44,6 +46,8 @@ class ConfigurationFiles(_TopologyOutput):
           more_data=[str(ex)],
           module='config')
 
+    config_topology = transform_sets(cleanup_topology(topology)).to_dict()
+
     # Creates a "ghost clean" topology after transformation
     # (AKA, remove unmanaged devices)
     topology = output_common.create_adjusted_topology(nodes.ghost_buster(topology),ignore=[],template_vars=True)
@@ -58,6 +62,7 @@ class ConfigurationFiles(_TopologyOutput):
       p = get_provider_module(topology,n_provider)
       provider_path = p.get_full_template_path()
       node_dict = templates.template_node_data(n_data,topology)       # The dictionary used in templates
+      node_dict['topology'] = config_topology
 
       create_list = []
       skip_config = n_data.get('skip_config',[])

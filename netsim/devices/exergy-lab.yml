@@ -16,35 +16,58 @@ group_vars:
   netlab_lldp_enable: True
   netlab_net_tools: False
 clab:
-  image: ghcr.io/exergy-connect/lab.net-go:latest
+  image: ghcr.io/exergy-connect/lab.net-router:latest
   node:
     kind: linux
     user: root
+    cmd: --wait-init /config/exergy-lab.json
+    exec:
+    - /usr/local/bin/exergy-lab.net-go --startup
     env:
       LAB_NET_LLDP: "1"
     config_templates:
-      relay: /config/exergy-lab.json
+      config: /config/exergy-lab.json
   node_config:
     initial: :ns
     bgp: :ns
     ospf: :ns
     isis: :ns
     vrf: :ns
+    vlan: :ns
+    vxlan: :ns
+    srv6: :ns
 features:
   initial:
     config_mode: [ sh ]
     roles: [ router ]
+    ipv4:
+      unnumbered: True
     ipv6:
       lla: True
   bgp:
+    import: [ isis, connected, vrf ]
     activate_af: True
-  ospf: {}
-  isis: {}
+  ospf:
+    unnumbered: True
+    timers: True
+  isis:
+    import: [ bgp, connected, vrf ]
+  srv6:
+    ebgp: True
+    bgp: True
   vrf:
     ospfv2: True
     ospfv3: True
     bgp: True
     isis: True
+  vlan:
+    mixed_trunk: true
+    model: router
+    native_routed: true
+    subif_name: '{ifname}.{vlan.access_id}'
+    svi_interface_name: vlan{vlan}
+  vxlan:
+    vtep6: true
 attributes:
   node:
     exergy-lab:
