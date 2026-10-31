@@ -1,14 +1,32 @@
 # exergy-lab Browser Twin
 
 Use `device: exergy-lab` with the Containerlab provider to run a lab.net relay.
-The browser owns the control plane; keep its page open while running the lab.
-The initial integration supports numbered BGP, OSPF, and IS-IS configurations,
-including those protocols inside VRFs, and VLAN access, trunk, and routed
-subinterface topologies, including VXLAN. lab.net reads each VRF from
-`/config/exergy-lab.json`, creates the Linux VRF device, and moves its
-interfaces into that device. It also creates 802.1Q VLAN devices, per-VLAN
-bridges, and VXLAN VTEPs from that file. Advanced protocol options outside that set are
-not advertised as supported.
+Compatible images start an embedded headless browser controller automatically.
+An interactive browser can also own the control plane.
+
+The device supports these features through the Go/Linux dataplane:
+
+* IPv4 and IPv6 BGP, IPv6 link-local transport, IPv4 over IPv6 transport
+  (RFC 8950), local AS (including IBGP and VRFs), confederations, address-family
+  activation, prefix advertisement, and configurable keepalive/hold timers.
+* OSPFv2, OSPFv3, and IS-IS, including routing inside VRFs.
+* VLAN access, trunks, routed subinterfaces, and static VXLAN with IPv4 or IPv6 VTEPs.
+* VXLAN EVPN bridging and symmetric IRB with tenant L3 VNIs, multiple import/export
+  route targets, and IPv4/IPv6 tenant reachability.
+* LAG interfaces using Linux bonds, including active and passive LACP.
+* IPv4 and IPv6 anycast gateways on routed interfaces and SVIs, including VRFs.
+* The existing BGP SRv6 IPv4 service signaling over IPv6 transport.
+
+Netlab mounts the resolved topology at `/config/exergy-lab.json`. The runtime
+creates Linux VRFs, VLAN devices, bridges, bonds, VXLAN VTEPs, and anycast gateway
+interfaces from that file. Module configuration does not require a separate CLI. The device belongs to the
+`unprovisioned` group so netlab skips dynamic provisioning; Containerlab mounts
+the JSON config template and invokes the runtime startup hook.
+
+Native VRRP, asymmetric EVPN IRB, and EVPN MPLS transport are not advertised.
+The lab.net runtime also supports EVPN Ethernet Segments, but netlab's
+`evpn.multihoming` plugin uses a different ESI representation and is not yet
+integrated with this device.
 
 The default image is `ghcr.io/exergy-connect/lab.net-router:latest`, matching the
 lab.net deployment default. Override `box` to use another compatible image.
@@ -27,7 +45,12 @@ links:
 - twin-native
 ```
 
-Open `http://<twin-management-ip>:8080/` and launch the browser control plane.
+Open `http://<twin-management-ip>:4242/?lab=running-lab` to inspect the running lab.
+The embedded headless browser owns the control plane by default; additional browser
+pages provide read-only inspection of its live state. An interactive browser can
+own the control plane when no other controller owns it; keep that page open while
+it does.
+Set `LAB_NET_HEADLESS=0` in the container environment to disable the embedded controller.
 HTTPS is disabled by default. Set `exergy-lab.https: true` to enable it with a
 generated TLS certificate. The management address must be
 reachable from your browser. Containerlab does not publish this port on the host.
@@ -45,7 +68,7 @@ interfaces once Containerlab has attached them. The advertised system name is th
 name. Management and loopback interfaces are excluded. Show neighbors with
 `exergy-lab.net-lldp show`.
 
-Node attributes `exergy-lab.port` (default 8080), `exergy-lab.https` (default false), and
+Node attributes `exergy-lab.port` (default 4242), `exergy-lab.https` (default false), and
 `exergy-lab.token` configure the relay. The default token is
 `lab-net-browser-connect`; set a private token for shared environments.
 Generated files contain the token and should be treated as lab credentials.

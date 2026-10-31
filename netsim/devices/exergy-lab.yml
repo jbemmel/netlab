@@ -4,6 +4,7 @@ docname: exergy-lab
 interface_name: eth{ifindex}
 loopback_interface_name: lo{ifindex if ifindex else ""}
 mgmt_if: eth0
+lag_interface_name: "bond{lag.ifindex}"
 role: router
 support:
   level: minimal
@@ -27,15 +28,6 @@ clab:
       LAB_NET_LLDP: "1"
     config_templates:
       config: /config/exergy-lab.json
-  node_config:
-    initial: :ns
-    bgp: :ns
-    ospf: :ns
-    isis: :ns
-    vrf: :ns
-    vlan: :ns
-    vxlan: :ns
-    srv6: :ns
 features:
   initial:
     config_mode: [ sh ]
@@ -47,6 +39,23 @@ features:
   bgp:
     import: [ isis, connected, vrf ]
     activate_af: True
+    advertise: True
+    ipv6_lla: True
+    rfc8950: True
+    local_as: True
+    local_as_ibgp: True
+    vrf_local_as: True
+    confederation: True
+    timers: True
+  evpn:
+    irb: True
+    multi_rt: True
+    transport: [ vxlan ]
+    ipv6: True
+  gateway:
+    protocol: [ anycast ]
+  lag:
+    passive: True
   ospf:
     unnumbered: True
     timers: True
