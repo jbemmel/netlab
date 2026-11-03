@@ -48,7 +48,7 @@ nodes:
         setcomm:
           set.community:
             standard: [ '65000:1' ]
-            extended: [ 'bandwidth 100' ]
+            extended: [ 'LB:65000:12500000' ]
             large: [ '65000:0:1' ]
   r2:
   x1:
