@@ -17,7 +17,7 @@ group_vars:
   ansible_become_method: enable
   ansible_network_os: ios
   ansible_connection: network_cli
-
+  netlab_config_mode: netmiko
   # yamllint disable-line rule:line-length
   netlab_ssh_args: "-o KexAlgorithms=+diffie-hellman-group-exchange-sha1 -o PubkeyAcceptedKeyTypes=ssh-rsa -o HostKeyAlgorithms=+ssh-rsa"
 
@@ -105,9 +105,17 @@ features:
     6pe: true
   netmiko:
     device_type: cisco_ios
+    collect:
+      config: show running-config
+      _config_skip: 3
     error_regexp:
     - (?i:invalid|incomplete|ambiguous|error|overlap|enabled|bad).*
-
+    reload:
+      config: nvram:replace-config
+      command: configure replace nvram:replace-config force
+      configure: |
+        ip scp server enable
+      file_transfer: true
   ospf:
     unnumbered: true
     import: [ bgp, isis, ripv2, connected, static, vrf ]

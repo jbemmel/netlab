@@ -5,6 +5,7 @@ Create detailed node-level data structures from topology
 * Add default module list to nodes without specific modules
 * Set management interface data
 '''
+import importlib.util
 import typing
 
 import netaddr
@@ -207,6 +208,70 @@ def check_duplicate_mgmt_addr(topology: Box) -> None:
           module='nodes')
       else:
         used_addr[af][n_addr] = nname
+
+def netmiko_fallback_config_mode(ddata: Box, pname: str) -> bool:
+  """
+  When netmiko is missing, remove netlab_config_mode group variable(s) depending on it
+  """
+  gv_path = 'group_vars.netlab_config_mode'       # Setup: the path to the relevant group var
+  nm_values = ['netmiko']                         # ... and the netmiko-based config methods
+  if pname == 'libvirt':
+    nm_values += ['sh','cp_sh']                   # ... which include sh/cp_sh under libvirt
+
+  removed = False
+  for gv_key in (f'{pname}.{gv_path}',gv_path):   # Now try provider-specific and generic group var
+    if gv_key not in ddata:                       # No opinion on config mode, check the less-specific value
+      continue
+    if ddata.get(gv_key,None) not in nm_values:   # No problem with the most-specific value, return
+      return removed                              # ... reporting what we found so far
+    ddata.pop(gv_key)                             # The group variable is present and netmiko-based
+    removed = True                                # ... remove it, but also check the less-specific value
+
+  return removed                                  # Report what we found
+
+def check_netmiko_config_mode(topology: Box) -> None:
+  """
+  Check all devices used in the lab for netmiko config modes, generate warning if netmiko is missing
+  """
+
+  defaults = topology.defaults
+  if defaults.get('netmiko.installed',importlib.util.find_spec('netmiko')):
+    return                                        # Someone claims using netmiko is OK. Fine with me
+
+  checked_devices = set()
+  netmiko_miss_list = []
+  netmiko_rq_list = []
+
+  for n_data in topology.nodes.values():
+    n_device = n_data.device
+    n_provider = devices.get_provider(n_data,defaults)
+    ck_key = f'{n_device}/{n_provider}'
+    if ck_key in checked_devices:                 # Did we already check this device?
+      continue                                    # Cool, move on
+
+    checked_devices.add(ck_key)
+    d_data = defaults.devices[n_device]
+    if netmiko_fallback_config_mode(d_data,n_provider):
+      features = devices.get_device_features(n_data,defaults)
+      if features.get('netmiko.required',False):
+        netmiko_rq_list.append(n_device)
+      else:
+        netmiko_miss_list.append(n_device)
+
+  nm_hints = 'use "netlab install netmiko" to install Netmiko and Paramiko libraries'
+  if netmiko_rq_list:
+    log.error(
+      f'netlab needs Netmiko library to work with device(s) {",".join(netmiko_rq_list)}',
+      category=log.MissingDependency,
+      module='netmiko',
+      more_hints=nm_hints)
+
+  if netmiko_miss_list:
+    log.warning(
+      text=f'Netmiko is not installed, device(s) {",".join(netmiko_miss_list)} will be configured with Ansible',
+      flag='installed',
+      module='netmiko',
+      more_hints=nm_hints)
 
 """
 Set up the default loopback interface
@@ -534,6 +599,7 @@ def transform(topology: Box, defaults: Box, pools: Box) -> None:
     augment_loopback_interface(n,pools,topology)
 
   check_duplicate_mgmt_addr(topology)
+  check_netmiko_config_mode(topology)
 
 '''
 Cleanup non-Ansible configuration file data -- remove all daemon/node config mappings that

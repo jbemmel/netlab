@@ -19,8 +19,10 @@ from . import images as _images
 from . import module_support as _mod_support
 from . import modules as _modules
 from . import outputs as _outputs
+from . import plugins as _plugins
 from . import providers as _providers
 from . import reports as _reports
+from . import tools as _tools
 from .utils import DEVICES_TO_SKIP, show_common_parser
 
 show_dispatch: dict = {
@@ -48,6 +50,10 @@ show_dispatch: dict = {
     'exec':  _outputs.show,
     'parse': _outputs.parse
   },
+  'plugins': {
+    'exec':  _plugins.show,
+    'parse': _plugins.parse
+  },
   'reports': {
     'exec':  _reports.show,
     'parse': _reports.parse
@@ -63,6 +69,10 @@ show_dispatch: dict = {
   'defaults': {
     'exec':  _defaults.show,
     'parse': _defaults.parse
+  },
+  'tools': {
+    'exec':  _tools.show,
+    'parse': _tools.parse
   }
 }
 

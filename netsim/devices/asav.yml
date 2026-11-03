@@ -18,12 +18,15 @@ group_vars:
   netlab_ssh_args: "-o KexAlgorithms=+diffie-hellman-group14-sha1 -o PubkeyAcceptedKeyTypes=+ssh-rsa -o HostKeyAlgorithms=+ssh-rsa"
   netlab_check_retries: 50
   netlab_initial: always
+  netlab_check_command: |
+    exit
 external:
   image: none
 features:
   initial:
     collect: true
     reload: true
+    config_mode: [ netmiko ]
   bgp:
     advertise: true
     caveats:
@@ -32,6 +35,13 @@ features:
   isis:
     caveats: true
     circuit_type: true
+  netmiko:
+    device_type: cisco_asa
+    collect:
+      config: show running-config
+    error_regexp: "^ERROR: %.*"
+    ssh_ready:
+      command: show version
   ospf:
     caveats:
       core: caveats-asav
@@ -71,6 +81,5 @@ clab:
     ansible_ssh_pass: CiscoAsa1!
     ansible_become_password: CiscoAsa1!
     ansible_user: admin
+    netlab_config_mode: netmiko
     netlab_ready: [ ssh ]
-    netlab_check_command: |
-      exit
