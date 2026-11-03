@@ -316,6 +316,18 @@ def cleanup_bgp_neighbors(topology: Box) -> None:
       if 'bgp' in vdata and 'neighbors' in vdata.bgp:
         vdata.bgp.neighbors = [ ngb for ngb in vdata.bgp.neighbors if '_zapped' not in ngb ]
 
+def check_restart_dependencies(ndata: Box) -> None:
+  """LLGR requires GR on each effective session, including VRF sessions."""
+  for (rp_data,_,_) in _bgp.rp_data(ndata,'bgp'):
+    for ngb in rp_data.get('neighbors',[]):
+      gr = ngb.get('gr',rp_data.get('gr.state','disable'))
+      llgr = ngb.get('llgr',rp_data.get('llgr.state','disable'))
+      if llgr != 'disable' and gr == 'disable':
+        log.error(
+          f'BGP LLGR on node {ndata.name} toward {ngb.name} requires GR enable or helper',
+          log.IncorrectValue,
+          _config_name)
+
 '''
 post_transform hook
 
@@ -336,6 +348,7 @@ def post_transform(topology: Box) -> None:
 
     _bgp.cleanup_neighbor_attributes(ndata,topology,topology.defaults.bgp.attributes.session.attr)
     copy_local_attributes(ndata,topology)
+    check_restart_dependencies(ndata)
     process_tcpao_secrets(ndata,topology)
     process_bfd_requests(ndata,topology)
     process_default_requests(ndata,topology)

@@ -25,8 +25,8 @@ bgp:
     session:                  # All bgp.session attributes
       attr: [
         as_override, allowas_in, default_originate, password, passive,
-        gr, gtsm, timers, tcp_ao, bfd, remove_private_as, rs, description ]
-      no_propagate: [ gr ]
+        gr, llgr, gtsm, timers, tcp_ao, bfd, remove_private_as, rs, description ]
+      no_propagate: [ gr, llgr ]
     global:
       bfd:
         type: bool
@@ -67,8 +67,16 @@ bgp:
         type: dict
         _keys:
           state: bgp_gr_state
+          notification: bool
           restart_time: { type: int, min_value: 0, max_value: 3600 }
           stalepath_time: { type: int, min_value: 1, max_value: 3600 }
+        _value_to_dict:
+          state: '{value}'
+      llgr:
+        type: dict
+        _keys:
+          state: bgp_gr_state
+          stale_time: { type: int, min_value: 0, max_value: 16777215 }
         _value_to_dict:
           state: '{value}'
       gtsm:
@@ -106,6 +114,7 @@ bgp:
     link:
       password: str
       gr: bgp_gr_state
+      llgr: bgp_gr_state
       tcp_ao:
         copy: global
       gtsm:
@@ -118,4 +127,6 @@ bgp:
 
     vrf:
       gr:
+        copy: node
+      llgr:
         copy: node

@@ -36,6 +36,7 @@ features:
       unnumbered: True
     ipv6:
       lla: True
+  bfd: True
   bgp:
     import: [ isis, connected, vrf ]
     activate_af: True
@@ -47,18 +48,28 @@ features:
     vrf_local_as: True
     confederation: True
     timers: True
+    gr: True
+    llgr: True
+    bfd: True
   evpn:
     irb: True
     multi_rt: True
     transport: [ vxlan ]
     ipv6: True
+    multihoming:
+      lag: True
+      interface: True
+      esi_auto: True
+      modes: [ all-active ]
   gateway:
     protocol: [ anycast ]
   lag:
     passive: True
   ospf:
+    default: True
     unnumbered: True
     timers: True
+    priority: True
   isis:
     import: [ bgp, connected, vrf ]
   srv6:

@@ -1,0 +1,35 @@
+---
+message: |
+  LLGR configuration for lab.net follows the BGP graceful restart state model.
+provider: clab
+plugin: [ bgp.session ]
+module: [ bgp, vrf ]
+vrfs:
+  tenant:
+    bgp.gr: helper
+    bgp.llgr: helper
+nodes:
+  dut:
+    device: exergy-lab
+    bgp.as: 65000
+    bgp.gr:
+      state: enable
+      notification: true
+      restart_time: 13
+      stalepath_time: 23
+    bgp.llgr:
+      state: enable
+      stale_time: 43
+  peer:
+    device: exergy-lab
+    bgp.as: 65001
+    bgp.gr: enable
+    bgp.llgr: helper
+links:
+- dut:
+  peer:
+- dut.bgp.llgr: disable
+  peer:
+- dut:
+  peer:
+  vrf: tenant

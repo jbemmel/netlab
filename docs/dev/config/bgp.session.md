@@ -265,3 +265,17 @@ The integration tests for this plugin are in the `tests/integration/bgp.session/
 * **24-default-unnumbered.yml** -- default route origination over unnumbered EBGP sessions
 
 The data model details covered by this document are verified by the topology and coverage tests `tests/topology/input/bgp-rs-2as.yml` and `tests/coverage/input/bgp-default.yml`, and by the topology test `tests/topology/input/ebgp.utils.yml` (which also covers the `bgp.session.apply` parameter).
+### Long-Lived Graceful Restart Data
+
+Node-level **bgp.llgr** and VRF-level **vrfs._vname_.bgp.llgr** dictionaries contain
+**state** (`enable`, `helper`, or `disable`) and optional **stale_time** in seconds.
+Neighbor **llgr** is a state string. Node settings are not copied to VRF processes
+or neighbor entries. The feature flag is **features.bgp.llgr**; configuration
+support currently exists for exergy-lab, which consumes the resolved JSON.
+See **tests/integration/exergy-lab/llgr.yml** for the transformed data contract.
+
+
+For exergy-lab, **bgp.gr.notification** (and the corresponding VRF setting) is
+an optional boolean enabling RFC 8538 graceful notification negotiation; it
+is enabled by default when GR is configured. Other device templates currently
+leave their platform notification defaults unchanged.

@@ -1,0 +1,35 @@
+---
+# Symmetric IRB, dual-stack tenants, anycast gateways, and an LACP access bond.
+provider: clab
+defaults.device: exergy-lab
+module: [ bgp, ospf, vlan, vxlan, evpn, vrf, gateway, lag ]
+bgp.as: 65000
+addressing:
+  loopback.ipv6: 2001:db8:ffff::/48
+  lan.ipv6: 2001:db8::/48
+vrfs:
+  tenant:
+    evpn.transit_vni: 50000
+vlans:
+  red:
+    vrf: tenant
+    gateway: True
+  blue:
+    vrf: tenant
+    gateway: True
+nodes:
+  pe1:
+  pe2:
+  h1:
+    device: linux
+    module: [ lag, vlan ]
+  h2:
+    device: linux
+    module: []
+links:
+- pe1-pe2
+- lag.members: [ pe1-h1, pe1-h1 ]
+  vlan.access: red
+- pe2:
+  h2:
+  vlan.access: blue

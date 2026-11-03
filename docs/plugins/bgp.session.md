@@ -293,3 +293,20 @@ links:
     vrf: blue
     bgp.as_override: True
 ```
+
+## Long-Lived Graceful Restart
+
+`bgp.llgr` follows the `bgp.gr` state model on devices advertising LLGR support.
+At node and VRF level it is a dictionary with `state` (`enable`, `helper`, or
+`disable`) and `stale_time` (0–16777215 seconds). A state string is accepted as
+shorthand. A link endpoint can set `bgp.llgr` to override the neighbor state.
+Like GR, process settings are not copied into neighbor entries or other VRFs.
+Each effective LLGR-enabled session requires GR to be enabled or in helper mode.
+Currently, this model is supported by exergy-lab; other devices reject it until
+configuration support is added.
+
+
+Exergy-lab also accepts `bgp.gr.notification` (boolean, default true with GR)
+to negotiate RFC 8538 notification support. Set it to false for legacy GR
+behavior, where NOTIFICATION messages remove routes immediately. This optional
+setting currently applies to exergy-lab; other platforms retain their defaults.

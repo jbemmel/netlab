@@ -1,0 +1,40 @@
+---
+message: |
+  BFD interoperability for exergy-lab and FRR. Inspect BFD sessions in the
+  lab.net inspection panel and with "show bfd peers" on native.
+provider: clab
+module: [ bgp, ospf, isis, bfd ]
+plugin: [ bgp.session ]
+addressing:
+  p2p:
+    ipv6: 2001:db8:1::/48
+bfd:
+  min_tx: 100
+  min_rx: 150
+  multiplier: 3
+ospf.bfd: true
+isis.bfd: true
+nodes:
+  twin:
+    device: exergy-lab
+    bgp.as: 65001
+  native:
+    device: frr
+    bgp.as: 65002
+links:
+- twin:
+  native:
+  bgp.bfd: true
+  role: internal
+- twin:
+  native:
+  bgp: false
+  role: internal
+  bfd: false
+- twin:
+  native:
+  bgp: false
+  role: internal
+  bfd:
+    min_tx: 200
+    min_rx: 250
