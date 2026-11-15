@@ -18,11 +18,14 @@ The device supports these features through the Go/Linux dataplane:
 * IPv4 and IPv6 anycast gateways on routed interfaces and SVIs, including VRFs.
 * The existing BGP SRv6 IPv4 service signaling over IPv6 transport.
 
-Netlab mounts the resolved topology at `/config/exergy-lab.json`. The runtime
+Netlab mounts one shared resolved topology at `/config/topology.json`, read-only
+in every lab.net container. Each node has a separate `/config/exergy-lab.json`
+containing its name, token, listener settings, `topologyFile`, and the explicit
+`topologyFormat: netlab-resolved` declaration. The runtime
 creates Linux VRFs, VLAN devices, bridges, bonds, VXLAN VTEPs, and anycast gateway
 interfaces from that file. Module configuration does not require a separate CLI. The device belongs to the
 `unprovisioned` group so netlab skips dynamic provisioning; Containerlab mounts
-the JSON config template and invokes the runtime startup hook.
+the JSON files and invokes the runtime startup hook.
 
 Native VRRP, asymmetric EVPN IRB, and EVPN MPLS transport are not advertised.
 The `evpn.multihoming` plugin's segment id is the Ethernet Segment Identifier.
@@ -55,8 +58,8 @@ generated TLS certificate. The management address must be
 reachable from your browser. Containerlab does not publish this port on the host.
 
 The device runs as root so its protocol agents can use raw sockets and install
-routes. Netlab mounts the generated topology at `/config/exergy-lab.json`.
-The supervisor loads that file once at startup and waits in `--wait-init` mode.
+routes. The supervisor loads the node configuration and shared topology once
+at startup and waits in `--wait-init` mode.
 Containerlab invokes `exergy-lab.net-go --startup` from its exec list after attaching data links.
 The supervisor then provisions Linux interfaces and starts the runtime from the
 loaded configuration. Runtime reloads do not reread the file or provision Linux.

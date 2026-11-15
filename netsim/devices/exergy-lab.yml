@@ -28,6 +28,7 @@ clab:
       LAB_NET_LLDP: "1"
     config_templates:
       config: /config/exergy-lab.json
+      topology: /config/topology.json:shared
 features:
   initial:
     config_mode: [ sh ]
