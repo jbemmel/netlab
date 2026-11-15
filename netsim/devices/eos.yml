@@ -15,6 +15,7 @@ group_vars:
   netlab_config_remove:
   - no lldp transmit
   - no lldp receive
+  netlab_config_mode: netmiko
 features:
   initial:
     system_mtu: true
@@ -103,6 +104,13 @@ features:
   netmiko:
     device_type: arista_eos
     error_regexp: "^%.*"
+    collect:
+      config: show running
+      _config_clean: ^\s+no lldp (transmit|receive)$
+    execute: rce
+    reload:
+      config: replace-config
+      command: 'configure replace flash:replace-config'
   ospf:
     unnumbered: true
     import: [ bgp, isis, ripv2, connected, static, vrf ]
@@ -117,6 +125,7 @@ features:
     ipv4: true
     ipv6: false
     passive: false
+    timers: true
   routing:
     policy:
       set:

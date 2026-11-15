@@ -213,6 +213,26 @@ features:
   vxlan: true
 ```
 
+(dev-device-plugin)=
+### Device Plugins
+
+A device definition can specify one or more [plugins](../plugins.md) in its **plugin** attribute (a string or a list of strings). _netlab_ adds these plugins to the list of lab plugins whenever a lab topology uses the device. The plugins are found through the usual plugin search path and can modify any part of the lab topology.
+
+For example, the [KinD cluster](plugin-kind) device uses the following definition to load the `kind` plugin:
+
+```yaml
+description: Kubernetes in Docker (KinD) cluster
+parent: linux
+plugin: [ kind ]
+```
+
+**Notes:**
+
+* The **plugin** attribute is evaluated before the plugins are loaded and before the group parameters are copied into nodes. _netlab_ loads the plugins of devices specified in nodes, [groups](topo-groups), default groups (**defaults.groups**), [topology components](../components.md), component nodes, and include requests, and the plugins of the default device (**defaults.device**) if at least one node does not have a **device** attribute. _netlab_ might thus load plugins of devices that are not used in the lab topology (for example, devices specified in unused components or default groups).
+* The **plugin** attribute is inherited from the parent device. Set it to an empty list to disable the plugins specified in the parent device.
+* A device used by a node added to the lab topology by a plugin cannot load additional plugins. _netlab_ reports an error if a node uses a device whose plugins were not loaded.
+* Lab users can disable the device plugins with **defaults.devices._device_.plugin: []**.
+
 ## Vagrant Template File
 
 If you'll use a Vagrant box to start the network device as a VM, you have to add a template that will generate the part of *Vagrantfile* (or *containerlab* configuration file) describing your virtual machine. See `netsim/templates/provider/...` directories for more details.
@@ -270,6 +290,10 @@ clab:
     ansible_become_method: enable
 ```
 
+## Waiting for the Device to Become Ready
+
+Some devices cannot be configured as soon as the virtualization provider reports they have started. If your device needs extra time to start its SSH server or detect its interfaces, add the [device readiness checks](dev-ready) (container health check, SSH server check, CLI command check, or an Ansible task list) to the device parameters file. [More details...](ready.md)
+
 (dev-new-devices-configure)=
 ## Configuring the Device
 
@@ -287,7 +311,7 @@ _netlab_ assumes you're using Jinja2-based device configuration templates. Add e
 * **Daemon configuration files** (Linux-based containers): you'll have to create Jinja2 templates that will generate configuration files for your Linux-based daemon. Those files will be mapped into the target container and available when the container starts. [More details...](dev-config-daemon)
 * **Linux configuration scripts** (Linux-based containers): you'll have to create Jinja2 templates that will generate `sh` scripts that will configure your device. Those files will be mapped into the target container and executed during the **netlab initial** process. [More details...](dev-config-script)
 
-You might also want to implement configuration download to allow the lab users to save final device configurations with **collect-configs.ansible** playbook used by **[netlab collect](../netlab/collect.md)** command -- add a task list collecting the device configuration into the `netsim/ansible/tasks/fetch-config` directory.
+You might also want to implement configuration download to allow the lab users to save final device configurations with **collect-configs.ansible** playbook used by **[netlab collect](../netlab/collect.md)** command -- add a task list collecting the device configuration into the `netsim/ansible/tasks/fetch-config` directory. Alternatively, use the **features.netmiko.collect** or **features.command.collect** device feature to collect the device configuration without an Ansible playbook ([more details](dev-config-netmiko-collect)).
 
 ## Initial Device Configuration
 
@@ -329,6 +353,7 @@ To add a device that is already supported by *netlab* to a new virtualization en
 * Add the [image/box/container name](device-box.md#adding-new-device-settings) for the new virtualization provider to device parameters file.
 * Add device-specific virtualization provider configuration template to provider-specific subdirectory of `netsim/templates/provider` directory. Use existing templates to figure out what exactly needs to be done.
 * You might need to add provider-specific device settings to device parameters file. See the above Arista cEOS examples for more details.
+* You might have to add provider-specific [device readiness checks](dev-ready) (for example, the container health check and the SSH server check for *vrnetlab* containers).
 
 **Notes**
 * The **node** dictionary within provider-specific device settings is copied directly into node data under provider key. For example, **clab.node**  Arista cEOS setting (from `netsim/devices/eos.yml`) is copied into **nodes.s1.clab** assuming S1 is an EOS device and you're using *clab* provider.

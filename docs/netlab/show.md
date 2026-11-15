@@ -12,8 +12,10 @@ The following settings can be displayed:
 * **[modules](netlab-show-modules)** -- Configuration modules
 * **[module-support](netlab-show-module-support)** -- Configuration modules support matrix
 * **[outputs](netlab-show-outputs)** -- Output modules used by the **[netlab create](create.md)** command
+* **[plugins](netlab-show-plugins)** -- Plugins available on the plugin search path
 * **[reports](netlab-show-reports)** -- Report templates shipped with _netlab_
 * **[providers](netlab-show-providers)** -- Virtualization providers
+* **[tools](netlab-show-tools)** -- [External tools](../extools.md) that can be started with the lab
 
 The system settings can be displayed as a table, as raw text that is easy to parse in automation scripts, and as YAML data that can be used by third-party utilities. See usage guidelines  and examples in individual command descriptions for more details.
 
@@ -763,6 +765,72 @@ Supported output modules
 +----------+--------------------------------------------------------+
 ```
 
+(netlab-show-plugins)=
+## Display Plugins
+
+The **netlab show plugins** command displays the [plugins](../plugins.md) available on the [plugin search path](change-search-paths): the plugins in the current directory, the lab topology directory, the `~/.netlab` and `/etc/netlab` directories, and the plugins shipped with _netlab_. When several plugins have the same name, the command displays the one _netlab_ would load (the first one found on the search path).
+
+The plugin information is extracted from the plugin source code; the displayed plugins are not loaded or executed. The summary displays only plugins that have a description (defined in the `_description` [plugin variable](dev-plugin-metadata)); the plugins without a description are considered internal plugins.
+
+```{warning}
+Like all other **netlab show** commands, **netlab show plugins** loads the default plugins specified in the **defaults.plugin** [user defaults](../defaults.md) and executes their **topology_expand** and **init** hooks, as these plugins might modify the plugin search path. Use the `--system` parameter to ignore the user defaults (including the default plugins).
+```
+
+```text
+$ netlab show plugins -h
+usage: netlab show plugins [-h] [--system] [--format {table,text,yaml}] [-p PLUGIN] [match]
+
+Display plugins available on the plugin search path
+
+positional arguments:
+  match                 Display plugins with names containing the specified string
+
+options:
+  -h, --help            show this help message and exit
+  --system              Display system information (without user defaults)
+  --format {table,text,yaml}
+                        Output format (table, text, yaml)
+  -p, --plugin PLUGIN   Display information for a single plugin
+```
+
+**Examples:**
+
+* Display BGP-related plugins:
+
+```text
+$ netlab show plugins bgp
++---------------+---------------------------------------------------------------+----------+--------+
+| plugin        | description                                                   | requires | source |
++===============+===============================================================+==========+========+
+| bgp.domain    | Multiple independent copies of the same BGP autonomous system | bgp      | netlab |
+| bgp.originate | Originate IPv4 and IPv6 BGP prefixes from loopback interfaces | bgp      | netlab |
+| bgp.policy    | Simple BGP routing policies                                   | bgp      | netlab |
+| bgp.session   | BGP session attributes (authentication, AS path, timers...)   | bgp      | netlab |
+| ebgp.multihop | Multihop EBGP sessions between loopback interfaces            | bgp      | netlab |
++---------------+---------------------------------------------------------------+----------+--------+
+```
+
+* Display the details of a single plugin. The **source** property is the search path directory in which the plugin was found (*netlab* for the plugins shipped with _netlab_), the **hooks** property lists the [plugin hooks](dev-plugin-hooks) defined in the plugin, and the **device templates** property lists the configuration templates included with the plugin:
+
+```text
+$ netlab show plugins -p ospf.areas
++------------------+-----------------------------------------------------------------------------+
+| property         | value                                                                       |
++==================+=============================================================================+
+| plugin           | ospf.areas                                                                  |
+| description      | OSPF stub/NSSA areas and area ranges                                        |
+| source           | netlab                                                                      |
+| file             | package:extra/ospf/areas/__init__.py                                        |
+| requires         | ospf                                                                        |
+| config template  | ospf.areas                                                                  |
+| hooks            | pre_transform, post_transform                                               |
+| device templates | arubacx, bird, cumulus_nvue, dellos10, eos, frr, ios, junos, ocnos, srlinux |
+| defaults         | package:extra/ospf/areas/defaults.yml                                       |
++------------------+-----------------------------------------------------------------------------+
+
+Use "netlab show attributes --plugin ospf.areas" to display the attributes defined by the plugin
+```
+
 (netlab-show-reports)=
 ## Display Report Templates
 
@@ -914,4 +982,59 @@ Error executing containerlab version:
   [Errno 2] No such file or directory: 'containerlab'
 
 Status: N/A
+```
+
+(netlab-show-tools)=
+## Display External Tools
+
+The **netlab show tools** command displays the [external tools](../extools.md) that can be started together with a lab, their default runtime environment, and whether they are [enabled in user defaults](tools-enable-default).
+
+```text
+$ netlab show tools -h
+usage: netlab show tools [-h] [--system] [--format {table,text,yaml}] [-t TOOL]
+
+Display external tools that can be started with the lab
+
+options:
+  -h, --help            show this help message and exit
+  --system              Display system information (without user defaults)
+  --format {table,text,yaml}
+                        Output format (table, text, yaml)
+  -t, --tool TOOL       Display information for a single tool
+```
+
+**Examples:**
+
+* Display all external tools (Graphite was enabled with the `NETLAB_TOOLS_GRAPHITE_ENABLED` environment variable):
+
+```text
+$ netlab show tools
+External tools supported by netlab
+
++--------------+-----------------------------------------------------+---------+---------+
+| tool         | description                                         | runtime | enabled |
++==============+=====================================================+=========+=========+
+| edgeshark    | Container network discovery and live packet capture | docker  |         |
+| graphite     | Web-based lab topology visualizer                   | docker  | yes     |
+| network_xray | Lab topology and routing state visualizer           | docker  |         |
+| nso          | Cisco Network Services Orchestrator                 | docker  |         |
+| nuts         | Network Unit Testing System                         | docker  |         |
+| suzieq       | Multi-vendor network observability platform         | docker  |         |
++--------------+-----------------------------------------------------+---------+---------+
+```
+
+* Display a single tool in YAML format:
+
+```text
+$ netlab show tools -t suzieq --format yaml
+suzieq:
+  description: Multi-vendor network observability platform
+  enabled: false
+  runtime: docker
+  runtimes:
+  - docker
+```
+
+```{tip}
+Use **netlab show defaults tools._name_** to display the complete tool definition.
 ```

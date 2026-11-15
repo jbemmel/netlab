@@ -39,6 +39,7 @@ The plugin functions (hooks) are executed at these stages of the transformation 
 **Notes:**
 
 * Every plugin function is called with a single *topology* argument: the current topology data structure. The node or link-manipulation functions must iterate over the `topology.nodes` dictionary or the `topology.links` list.
+* The `topology.nodes` and `components._name_.nodes` data structures are always dictionaries (node name: node data) when the plugin hooks are executed. Plugins adding nodes to the lab topology or to topology components must use the same format; each node must be a dictionary with the **name** attribute set to the node name.
 * Plugins extending [configuration modules](../modules.md) might have to define additional module attributes. The [module attribute lists](module-attributes.md) must be extended before any module validation code is executed, either by defining the [attributes](dev-plugin-attributes) in the [plugin defaults](dev-plugin-defaults) (see also [sample plugin](dev-plugin-sample)) or in the plugin **init** function.
 
 (dev-plugin-cli-hooks)=
@@ -59,10 +60,12 @@ A plugin can also be called during the **[netlab up](netlab-up)**/**[netlab down
 
 [^SC]: The post-shell hook is obviously not called if the CLI command fails.
 
+(dev-plugin-metadata)=
 ## Plugin Metadata
 
 A plugin can specify global variables that are used to influence the plugin's behavior or order of execution:
 
+* `_description`: A short description of the plugin displayed by the **[netlab show plugins](netlab-show-plugins)** command. Plugins without a description are considered internal plugins and are not listed in the **netlab show plugins** printout.
 * `_requires`: A list of prerequisite modules and plugins. _netlab_ will abort if any prerequisite plugins are not listed in the **topology.plugin** list, or if any of the prerequisite modules are not used by at least one node.
 * `_execute_after`: A list of plugins that should execute before the current plugin. For example, the **ebgp.multihop** plugin has to be executed after **ebgp.utils** plugin, and therefore defines `_execute_after = [ 'ebgp.utils' ]`
 * `_config_name`: The name of extra configuration templates to add to the node **config** attribute when a node using the plugin functionality requires additional device configuration. This variable is set during the plugin initialization process, but it's still recommended to define it in the plugin and set its value to a string to prevent **mypy** complaints.

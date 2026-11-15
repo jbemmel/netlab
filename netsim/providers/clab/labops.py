@@ -4,6 +4,7 @@
 import json
 import os
 import pathlib
+import shutil
 import time
 
 from box import Box
@@ -53,7 +54,7 @@ def check_ovs_installation() -> None:
   if _OVS_OK:
     return
 
-  if not external_commands.has_command('ovs-vsctl'):
+  if not shutil.which('ovs-vsctl'):
     log.error(
       'Open vSwitch package is not installed, you cannot use OVS bridges with containerlab',
       more_hints = [
@@ -174,7 +175,7 @@ def health_ready_setup(topology: Box) -> None:
   defaults = topology.defaults
 
   for n_data in topology.nodes.values():
-    n_device = n_data.get('device',defaults.device)
+    n_device = n_data.get('device',defaults.get('device',None))
     if n_device in dev_done:
       continue
     n_provider = devices.get_provider(n_data,defaults)

@@ -45,10 +45,10 @@ Ubuntu 26.04 introduced the Hardware Enablement (`-hwe`) version of `qemu-system
 * The *netmiko* script installs *paramiko* and *netmiko* libraries. While the same libraries are installed with the *ansible* script, this script helps you enable [netmiko-based configuration](platform-config-mode) on supported devices
 * The *ansible* script uses **pip3** to install the latest version of Ansible, networking libraries (*netaddr, paramiko, netmiko*), text parsing libraries (*testfsm, ttp, ntc-templates*), and a few other utility libraries (*jmespath, yamllint, yq*)
 * The *graph* script installs GraphViz and D2 software needed to generate graphs from _netlab_ topologies
-* The *grpc* script installs gRPC Python libraries needed to configure Nokia SR Linux and Nokia SR OS.
+* The *grpc* script installs gRPC Python libraries and Nokia Ansible collections (`nokia.srlinux` and `nokia.openconfig`) needed to configure Nokia SR Linux and Nokia SR OS.
 * The *podman* script installs *podman*, its Docker-compatible CLI, and *containerlab*.
 
-[^UT]: Tested on Ubuntu 22.04, 24.04, and 26.04
+[^UT]: Tested on Ubuntu 24.04 and 26.04
 
 [^DT]: Tested on Debian 12 (bookworm) and 13 (trixie)
 
@@ -64,7 +64,7 @@ $ netlab install
 │ containerlab │ Docker and containerlab                           │
 │ netmiko      │ Netmiko and Paramiko Python libraries             │
 │ ansible      │ Ansible and prerequisite Python libraries         │
-│ grpc         │ GRPC libraries and Nokia GRPC Ansible collection  │
+│ grpc         │ GRPC libraries and Nokia Ansible collections      │
 │ graph        │ GraphViz and D2 software                          │
 │ podman       │ Podman and containerlab                           │
 └──────────────┴───────────────────────────────────────────────────┘
@@ -75,6 +75,6 @@ $ netlab install
 
 Unless you started the **netlab install** command in a Python virtual environment, it runs **pip3** as root. You can change that default with the `-u` option, asking **netlab install** to install Python packages into the `~/.local` directory.
 
-Newer Python installations (including Ubuntu 22.04) refuse to install Python packages outside a virtual environment. In these cases, **netlab install** asks the user for a confirmation and uses `--break-system-packages` **pip3** option to force user-wide or system-wide package installation:
+Newer Python installations (including Ubuntu 22.04 and later) refuse to install Python packages outside a virtual environment. In these cases, **netlab install** asks the user for a confirmation and uses `--break-system-packages` **pip3** option to force user-wide or system-wide package installation:
 
 ![](install-warnings.png)

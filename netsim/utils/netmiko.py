@@ -7,12 +7,14 @@ netmiko utility functions
 """
 import inspect
 import logging
+import os
 import typing
 
 from box import Box
 
 from ..augment import devices as a_devices
-from . import log
+from ..outputs import common as outputs_common
+from . import log, templates
 
 NETMIKO_IS_MISSING: bool = False
 NETMIKO_LOAD_ERROR: str = ''
@@ -44,13 +46,13 @@ def check_netmiko(n_data: Box) -> bool:
 
 NETMIKO_GROUP_VARS: dict = {
   'ansible_user': 'username',
-  'ansible_ssh_pass': 'password',
+  'ansible_ssh_pass': '*password',
   'ansible_become_password': '*secret'
 }
 
 NETMIKO_PARAM_FEATURES: list = ['device_type']
 
-def prepare_params(n_data: Box, topology: Box) -> typing.Optional[dict]:
+def prepare_params(n_data: Box, topology: Box, quiet: bool = False) -> typing.Optional[dict]:
   """
   Prepare netmiko connection parameters
   """
@@ -74,6 +76,20 @@ def prepare_params(n_data: Box, topology: Box) -> typing.Optional[dict]:
     elif '*' not in np:                           # Are we missing a value for a non-optional target?
       config_err_list.append(f'{gv} node/group variable is not set')
 
+  host = outputs_common.adjust_inventory_host(n_data,defaults,group_vars=True)
+  key_file = host.get('ansible_ssh_private_key_file',None)
+  if key_file:                                    # Key file could be a Jinja2 template (example: Vagrant boxes)
+    host.inventory_hostname = n_data.name         # template_vars=True would modify node data
+    key_file = templates.render_template(host,j2_text=key_file)
+    if os.path.isfile(key_file):                  # paramiko crashes on a missing key file, so we skip it
+      netmiko_params['use_keys'] = True
+      netmiko_params['key_file'] = key_file
+
+  if 'password' not in netmiko_params and 'key_file' not in netmiko_params:
+    config_err_list.append(
+      'ansible_ssh_pass node/group variable is not set' +
+      (f' and SSH key file {key_file} does not exist' if key_file else ''))
+
   netmiko_host = n_data.mgmt.get('ipv4',None) or n_data.mgmt.get('ipv6',None)
   if not netmiko_host:                            # Finally, try to add management IP address
     config_err_list.append('Cannot use netmiko with devices that have no management IP addresses')
@@ -81,11 +97,12 @@ def prepare_params(n_data: Box, topology: Box) -> typing.Optional[dict]:
     netmiko_params['host'] = netmiko_host
 
   if config_err_list:                             # Any errors so far?
-    log.error(
-      f'Cannot use netmiko to configure {n_data.name} (device {n_data.device})',
-      more_hints=config_err_list,
-      category=log.MissingValue,
-      module='netmiko')
+    if not quiet:
+      log.error(
+        f'Cannot use netmiko to configure {n_data.name} (device {n_data.device})',
+        more_hints=config_err_list,
+        category=log.MissingValue,
+        module='netmiko')
     return None
 
   # Cool, we're good to go. Just the final detail: add session log file
@@ -95,9 +112,20 @@ def prepare_params(n_data: Box, topology: Box) -> typing.Optional[dict]:
     print(f'Netmiko params for {n_data.name}: {netmiko_params}')
   return netmiko_params
 
+def set_param_timeout(params: dict, timeout: int) -> None:
+  """
+  Sets all known netmiko timeouts in the netmiko parameters dictionary
+  """
+  for kw in ('conn_timeout','banner_timeout','auth_timeout','read_timeout_override'):
+    params[kw] = timeout
+
 PARAMIKO_LOGGER: typing.Optional[logging.Logger] = None
 
-def connect(n_data: Box, netmiko_params: dict) -> 'typing.Optional[_netmiko.BaseConnection]':
+def connect(
+      n_data: Box,
+      netmiko_params: dict,
+      quiet: bool = False,
+      enable: bool = True) -> 'typing.Optional[_netmiko.BaseConnection]':
   """
   Use netmiko to open a SSH session to a lab device
   """
@@ -114,14 +142,16 @@ def connect(n_data: Box, netmiko_params: dict) -> 'typing.Optional[_netmiko.Base
     net_connect = _netmiko.ConnectHandler(**netmiko_params)
     if log.VERBOSE:
       log.info(f'Connected to {n_data.name}',module='netmiko')
-    net_connect.enable()
+    if enable:
+      net_connect.enable()
   except Exception as ex:
     err = str(ex).strip("\n")
-    log.error(
-      f'netmiko cannot connect to {n_data.name}',
-      more_data=[ err ],
-      category=log.FatalError,
-      module='netmiko')
+    if not quiet:
+      log.error(
+        f'netmiko cannot connect to {n_data.name}',
+        more_data=[ err ],
+        category=log.FatalError,
+        module='netmiko')
     return None
 
   return net_connect
@@ -134,3 +164,90 @@ def has_commit(conn: '_netmiko.BaseConnection') -> bool:
     return False
 
   return inspect.getattr_static(conn,'commit') is not _netmiko.BaseConnection.commit
+
+def scp(conn: '_netmiko.BaseConnection', n_name: str, src: str, dst: str) -> bool:
+  """
+  Use SCP to copy a file to a lab device. The SCP connection is a separate channel
+  established off an existing netmiko connection.
+  """
+  import scp  # type: ignore
+  if log.VERBOSE:
+    print(f"netmiko SCP: {src} -> {n_name}:{dst}")
+  try:
+    if not conn.remote_conn_pre:
+      raise Exception("netmiko connection data is missing")
+    scp_conn = scp.SCPClient(conn.remote_conn_pre.get_transport())
+    with scp_conn:
+      scp_conn.put(src,dst)
+    return True
+  except Exception as ex:
+    log.error(
+      f'SCP error copying {src} to {n_name}:{dst}',
+      more_data=str(ex),module='netmiko',skip_header=True,category=log.ErrorAbort)
+
+  return False
+
+def file_transfer(conn: '_netmiko.BaseConnection', n_name: str, src: str, dst: str) -> bool:
+  """
+  Use netmiko file_transfer function to copy a file to a lab device
+  """
+  if log.VERBOSE:
+    print(f"netmiko file_transfer: {src} -> {n_name}:{dst}")
+  if ':' in dst:
+    (file_system,dst) = dst.split(':',1)
+    file_system += ':'
+  else:
+    file_system = None
+  try:
+    status = _netmiko.file_transfer(
+                ssh_conn = conn,
+                source_file=src,
+                dest_file=dst,
+                file_system=file_system,
+                overwrite_file=True)
+    return status['file_exists'] or status['file_transferred']
+  except Exception as ex:
+    log.error(
+      f'file_transfer error copying {src} to {n_name}:{dst}',
+      more_data=str(ex),module='netmiko',skip_header=True,category=log.ErrorAbort)
+
+  return False
+
+def execute(
+      conn: '_netmiko.BaseConnection',
+      n_name: str,
+      cmd: str,
+      quiet: bool = False) -> typing.Optional[typing.Tuple]:
+  """
+  Executes a single command over a new SSH (RCE) channel. Returns (stdout,stderr,rc)
+  after successful command execution and None after a netmiko error
+  """
+  if not conn.remote_conn_pre:
+    raise Exception("netmiko connection data is missing")
+  try:
+    stdin, stdout, stderr = conn.remote_conn_pre.exec_command(cmd)
+  except Exception as ex:
+    if not quiet:
+      log.error(
+        f'Cannot execute a SSH command on {n_name}: {str(ex)}',
+        module='netmiko',
+        skip_header=True)
+    return None
+
+  try:
+    output = stdout.read().decode()
+    errors = stderr.read().decode()
+    rc = stdout.channel.recv_exit_status()
+    return (output, errors, rc)
+  except Exception as ex:
+    if not quiet:
+      log.error(
+        f'Cannot fetch results of a SSH command on {n_name}: {str(ex)}',
+        module='netmiko',
+        skip_header=True)
+    return None
+  finally:
+    stdout.channel.close()
+    stdin.close()
+    stdout.close()
+    stderr.close()

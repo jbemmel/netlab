@@ -4,6 +4,8 @@
 
 import argparse
 import os
+import pathlib
+import re
 import subprocess
 import typing
 
@@ -67,6 +69,9 @@ def get_tarball_file(tarball: str) -> str:
   return tarball
 
 def create_tar(args: argparse.Namespace, run_dir: str) -> None:
+  """
+  Create tarball from the collected configurations
+  """
   tarball = get_tarball_file(args.tar)
   if not args.quiet:
     log.section_header('Create',f'Creating tar archive {tarball}')
@@ -96,3 +101,34 @@ def create_tar(args: argparse.Namespace, run_dir: str) -> None:
       log.section_header('Cleanup','Removing temporary configuration directory')
     fs_cleanup([ args.output ],args.verbose)
     log.info(f'Config directory {args.output} removed')
+
+def cleanup(contents: str, action: str, collect: Box) -> str:
+  """
+  Clean the contents gathered with 'action' command
+  """
+  lines = contents.split('\n')
+  skip = collect.get(f'_{action}_skip',None)      # Do we have to skip a few lines?
+  if skip:
+    lines = lines[skip:]
+
+  clean = collect.get(f'_{action}_clean',None)    # RE-based cleanup?
+  if clean:
+    cl_re = re.compile(clean)                     # Filter config lines with the specified RE
+    lines = [ line for line in lines if not cl_re.search(line) ]
+
+  return '\n'.join(lines)                         # Finally, convert lines back to config string
+
+def save_config(filename: str, directory: str, contents: str) -> None:
+  """
+  Save the gathered configuration into specified directory/filename
+  """
+  if not contents.endswith('\n'):
+    contents += '\n'
+  try:
+    o_file = pathlib.Path(directory) / filename
+    o_file.write_text(contents)
+    log.info(f'Collected {filename}: {len(contents)} bytes')
+  except KeyboardInterrupt as ex:
+    raise KeyboardInterrupt from ex
+  except Exception as ex:
+    log.error(f'Cannot create {filename}: {ex}',module='collect')
