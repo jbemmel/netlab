@@ -19,7 +19,7 @@ The device supports these features through the Go/Linux dataplane:
 * The existing BGP SRv6 IPv4 service signaling over IPv6 transport.
 
 Netlab mounts one shared resolved topology at `/config/topology.json`, read-only
-in every lab.net container. Each node has a separate `/config/exergy-lab.json`
+in every lab.net container. Each node has a separate `/config/node.json`
 containing its name, token, listener settings, `topologyFile`, and the explicit
 `topologyFormat: netlab-resolved` declaration. The runtime
 creates Linux VRFs, VLAN devices, bridges, bonds, VXLAN VTEPs, and anycast gateway

@@ -21,13 +21,13 @@ clab:
   node:
     kind: linux
     user: root
-    cmd: --wait-init /config/exergy-lab.json
+    cmd: --wait-init /config/node.json
     exec:
     - /usr/local/bin/exergy-lab.net-go --startup
     env:
       LAB_NET_LLDP: "1"
     config_templates:
-      config: /config/exergy-lab.json
+      config: /config/node.json
       topology: /config/topology.json:shared
 features:
   initial:
