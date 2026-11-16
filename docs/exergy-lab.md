@@ -10,6 +10,7 @@ The device supports these features through the Go/Linux dataplane:
   (RFC 8950), local AS (including IBGP and VRFs), confederations, address-family
   activation, prefix advertisement, and configurable keepalive/hold timers.
 * OSPFv2, OSPFv3, and IS-IS, including routing inside VRFs.
+* Redistribution of OSPFv2, OSPFv3, IS-IS, and connected routes into BGP, including VRF instances.
 * Asynchronous BFD for BGP, OSPFv2, OSPFv3, and IS-IS over IPv4 or IPv6.
 * VLAN access, trunks, routed subinterfaces, and static VXLAN with IPv4 or IPv6 VTEPs.
 * VXLAN EVPN bridging and symmetric IRB with tenant L3 VNIs, multiple import/export
@@ -118,6 +119,86 @@ honors the per-address-family BFD flags on dual-stack interfaces.
 See `tests/integration/exergy-lab/bfd.yml` for a dual-stack FRR interoperability
 lab with shared protocol sessions, interface opt-outs, and timer overrides.
 Inspect BFD in the browser's BFD tab and use `show bfd peers` on FRR.
+
+(exergy-lab-bgp-mnh)=
+## BGP MultiNexthop WECMP Use Case
+
+`tests/integration/exergy-lab/bgp-mnh.yml` models weighted ECMP from ingress
+PEs `r3` and `r4` toward the Internet feed `192.168.255.10/32` on `r0`.
+It uses Exergy Lab for every router, retaining the roles of the reference
+topology rather than its cRPD and vMX implementations.
+
+Router `r0` is in AS 65100 and peers with four egress PEs in AS 65000:
+`r11`, `r12`, `r13`, and `r14`. Their external link bandwidths are 10000,
+20000, 30000, and 40000 Mbps. All provider routers connect through `p1`,
+which runs OSPF only. Route reflectors `rr1` and `rr2` distribute BGP routes
+to the egress and ingress PEs over loopback sessions. Ingress loopbacks are
+`198.51.100.3/32` and `198.51.100.4/32`.
+
+Set `bgp.mnh: send` on `rr1` and `rr2`, and `bgp.mnh: receive` on ingress
+and egress PEs. RRs originate MNH; PEs consume it without sending MNH.
+Boolean `true` selects `send` on RRs and `receive` on other routers.
+The setting is omitted on `r0`; `p1` has no BGP process.
+
+Egress PEs attach a link-bandwidth extended community to routes imported from
+EBGP, using the external interface bandwidth in Mbps. RRs combine eligible
+paths for a prefix into a single MNH advertisement with per-endpoint bandwidth
+in bits per second. Reflected next hops remain the egress loopbacks. A PE uses
+the selected reflector's complete set, so duplicate advertisements from the
+two RRs do not double the weights.
+
+Enable `module: [ bgp, ospf, mpls ]` on the PEs and RRs, and
+`module: [ ospf, mpls ]` on `p1`, with these MPLS settings:
+
+```yaml
+mpls:
+  ldp: false
+  static: true
+```
+
+Static transport labels are `16000 + node.id`, allocated consistently from the
+shared topology. Linux installs a weighted IP route whose next hops each push
+an egress transport label. `p1` swaps that label toward the egress, which pops
+it and forwards the original IP packet. LFIB entries follow IGP reachability
+and are removed when no longer needed. This is static label forwarding, with
+no LDP signaling. The Linux host needs `mpls_router` and `mpls_iptunnel` kernel
+support loaded before deployment; startup enables the MPLS label table and
+MPLS input on provider interfaces.
+
+The implementation supports up to 16 IPv4 unicast endpoints in the default
+routing table, with primary-path, equal-preference Forward instructions and
+endpoint bandwidths. It follows the encoding in
+[draft-ietf-idr-multinexthop-attribute-05](https://datatracker.ietf.org/doc/html/draft-ietf-idr-multinexthop-attribute-05)
+and uses experimental attribute code **254**, since the draft's IANA code is
+unassigned. This local lab profile is not a claim of Junos interoperability.
+Unsupported optional encodings discard MNH and use the conventional next hop;
+invalid v0 mandatory MNH makes the route ineligible. Linux weights use exact
+integer ratios where possible and scale to its 1–256 range when necessary.
+
+The runtime regression tests cover these acceptance criteria:
+
+* Both ingress PEs receive all four egress next hops for `192.168.255.10/32`
+  through either reflector, retaining their bandwidth information.
+* Each ingress PE installs weights `1:2:3:4`, corresponding to approximately
+  10%, 20%, 30%, and 40% of sufficiently many independent traffic flows.
+* Receiving the same next hops through both reflectors does not double their
+  weights. Reflectors remain outside the forwarding path.
+* Removing the `r0-r14` link withdraws that next hop and leaves weights
+  `1:2:3` on `r11-r13`; restoring the link restores `1:2:3:4`.
+* Loss of either reflector preserves the next hops learned through the other.
+
+`lab.net/tests/bgp-mnh.test.js` exercises signaling direction, MPLS forwarding,
+weights, malformed wire input, and reconvergence. Go tests check Linux route
+commands, snapshot validation, and MPLS startup settings. Live kernel forwarding
+still needs validation on an MPLS-capable deployment.
+
+Check topology transformation without deploying containers:
+
+```bash
+netlab create tests/integration/exergy-lab/bgp-mnh.yml -o none
+```
+
+Omitting `bgp.mnh` or setting it to `false` requests ordinary BGP behavior.
 
 ## BGP Graceful Restart
 

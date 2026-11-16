@@ -18,6 +18,8 @@ group_vars:
   netlab_net_tools: False
 clab:
   image: ghcr.io/exergy-connect/lab.net-router:latest
+  kmods:
+    initial: [ 'vrf?' ]
   node:
     kind: linux
     user: root
@@ -38,7 +40,10 @@ features:
     ipv6:
       lla: True
   bfd: True
+  mpls:
+    static: True
   bgp:
+    mnh: True
     import: [ isis, connected, vrf ]
     activate_af: True
     advertise: True

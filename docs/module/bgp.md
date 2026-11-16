@@ -204,6 +204,7 @@ Use **bgp.advertise** link/interface attribute to advertise connected subnets wi
 * **bgp.community** -- override global BGP community propagation defaults for this node. See *[](bgp-community-propagation)* for more details.
 * **bgp.import** -- [import (redistribute) IPv4 and IPv6 routes](routing_import) into global BGP instance (default: **false**)
 * **bgp.local_as** -- the autonomous system used on all EBGP sessions. See *[IBGP local-as](bgp-ibgp-localas)* on how this could also result in **IBGP** sessions.
+* **bgp.mnh** -- Experimental IPv4 MultiNexthop signaling for the [Exergy Lab WECMP use case](exergy-lab-bgp-mnh): `send` on RRs, `receive` on ingress and egress PEs. Boolean `True` selects the mode from the RR role; `False` or omission disables MNH.
 * **bgp.next_hop_self** -- Use *next-hop-self* on IBGP sessions. This parameter can also be specified as a global value; the system default is **true**.
 * **bgp.originate** -- a list of additional prefixes to advertise ([details](bgp-advertise-prefix)). Unlike the prefixes listed in the **bgp.advertise**  attribute, these prefixes are supported with a static discard route (usually pointing to *Null0*).
 * **bgp.router_id** -- Set a static router ID. The default **router_id** is taken from the IPv4 address of the loopback interface or the **router_id** address pool if the device does not have a loopback interface or there is no usable IPv4 address on the loopback interface.

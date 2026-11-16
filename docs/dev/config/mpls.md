@@ -3,6 +3,16 @@
 
 This document describes how to create configuration templates for the **[mpls](module-mpls)** configuration module to implement LDP, MPLS/VPN, 6PE, or BGP-LU.
 
+## Device Features
+
+The **features.mpls.static** flag indicates support for static loopback transport
+labels. The resolved node attribute **mpls.static** is a boolean. On Exergy Lab,
+`True` enables transport label `16000 + node.id` for each participating router;
+the runtime installs label forwarding entries from IGP reachability. Set
+**mpls.ldp** to `False` when using static transport alone. No LDP signaling is
+implied by this feature. See the [MNH use case](exergy-lab-bgp-mnh) and
+`tests/integration/exergy-lab/bgp-mnh.yml`.
+
 ## Enabling MPLS Support on a Device
 
 To enable MPLS features on a device, add the `mpls` dictionary to the device YAML file (`netsim/devices/<device>.yml`). Enable individual features within that file, for example:

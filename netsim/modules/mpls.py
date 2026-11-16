@@ -27,6 +27,7 @@ DEFAULT_VPN_AF: typing.Final[dict] = {
 DEFAULT_6PE_AF: typing.Final[list] = [ 'ibgp' ]
 
 FEATURE_NAME: typing.Final[dict] = {
+  'static': 'static MPLS transport',
   'ldp': 'LDP-based label distribution',
   'bgp': 'BGP Labeled Unicast',
   'vpn': 'MPLS/VPN',
@@ -215,7 +216,7 @@ check_node_features: Check if a node supports the requested MPLS features
 '''
 def check_node_features(node: Box, topology: Box, features: Box) -> None:
   for fn in FEATURE_NAME.keys():
-    if not fn in node.mpls:
+    if not fn in node.mpls or node.mpls[fn] is False:
       continue
     if not features.mpls[fn]:
       log.error(

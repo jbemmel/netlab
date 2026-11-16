@@ -6,6 +6,7 @@ transform_after: [ vlan, bgp, vrf ]
 ldp: True
 attributes:
   global:
+    static: bool              # Static loopback transport labels (no LDP)
     ldp:
       _alt_types: [ bool ]
       router_id: { type: ipv4, use: id }
@@ -24,6 +25,7 @@ attributes:
       ipv6: { type: list, true_value: [ ibgp ] }
     6pe: { type: list, true_value: [ ibgp ], valid_values: [ ibgp, ebgp ] }
   node:
+    static: { copy: global }
     ldp:
     bgp:
     vpn:
@@ -31,6 +33,7 @@ attributes:
   link:
     ldp: bool
 features:
+  static: Static loopback transport label forwarding
   ldp: Can run LDP within an autonomous system
   bgp: Supports BGP Labeled Unicast address family
   vpn: Supports MPLS/VPN

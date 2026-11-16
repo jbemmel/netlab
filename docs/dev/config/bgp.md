@@ -27,6 +27,7 @@ You can use the following **features.bgp** [device features](dev-device-features
 * **community** -- Granular control of BGP community propagation see `netsim/devices/frr.yml` or `netsim/devices/eos.yml` for an example.
 * **confederation** -- device supports BGP confederations
 * **ipv6_lla** -- device supports unnumbered (interface) EBGP sessions
+* **mnh** -- device supports the experimental IPv4 unicast MultiNexthop profile
 * **local_as** -- device supports **local_as** feature
 * **local_as_ibgp** -- the **local_as** feature can be used to convert an EBGP session into an IBGP session
 * **rfc8950** -- device supports **extended next hop** functionality that can be used to implement RFC8950-style IPv6 next hops for IPv4 AF
@@ -54,6 +55,7 @@ _netlab_ assumes the IPv4 BGP session carries the IPv4 address family (plus othe
 * **bgp.import** (optional) -- List of routing protocols (including **static** and **connected**) to be redistributed into BGP.
 * **bgp.ipv4** (optional) -- You should configure IPv4 BGP address family
 * **bgp.ipv6** (optional) -- You should configure IPv6 BGP address family
+* **bgp.mnh** (optional) -- `send` originates MNH on the RR; `receive` consumes it on PEs. Boolean `True` selects `send` on RRs and `receive` on other nodes; `False` disables it. The attribute is preserved on the node without generating neighbor attributes. See the [Exergy Lab use case](exergy-lab-bgp-mnh).
 * **bgp.neighbors** -- A list of IBGP and EBGP neighbors
 * **bgp.next_hop_self** -- When set to *True*, the BGP process should set itself as the next hop on EBGP routes propagated as IBGP routes. This attribute is propagated to the neighbor **next_hop_self** attribute and can be ignored if you configure **next-hop-self** on individual neighbors.
 * **bgp.originate** (optional) -- A list of additional prefixes that should be advertised by the BGP process. These prefixes are automatically converted into *discard static routes* if your device supports them. Otherwise, you'll have to create static IPv4 routes to support these prefixes.

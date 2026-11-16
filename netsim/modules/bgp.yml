@@ -87,6 +87,10 @@ attributes:
       type: asn
       _required: True
     next_hop_self: { copy: global }
+    mnh:
+      type: str
+      valid_values: [ send, receive ]
+      _alt_types: [ bool ]
     rr: bool
     rr_cluster_id: { copy: global }
     rr_mesh: { copy: global }
@@ -138,6 +142,7 @@ features:
     community: Granular BGP community propagation
     confederation: BGP confederations
     import: Import routes from other routing protocols
+    mnh: Experimental IPv4 MultiNexthop signaling
   session:
     _title: BGP session parameters
     allowas_in: Allow own AS in incoming AS path (allowas in)

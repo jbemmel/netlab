@@ -1,0 +1,140 @@
+---
+# WECMP from ingress PEs r3/r4 to Internet-feed router r0 through r11-r14.
+# All nodes use Exergy Lab; rr1/rr2 and r3/r4 retain the roles in the diagram.
+message: |
+  BGP MultiNexthop use case: r3/r4 should use r11-r14 with weights 1:2:3:4
+  for 192.168.255.10/32. RRs send MNH; ingress and egress PEs receive only.
+  Static MPLS transport uses label 16000 + node id, without LDP signaling.
+
+provider: clab
+defaults.device: exergy-lab
+module: [ bgp, ospf, mpls ]
+mpls:
+  ldp: false
+  static: true
+bgp.as: 65000
+
+groups:
+  egress:
+    members: [ r11, r12, r13, r14 ]
+    bgp.mnh: receive
+  reflectors:
+    members: [ rr1, rr2 ]
+    bgp.rr: true
+    bgp.mnh: send
+    bgp.next_hop_self: false
+  ingress:
+    members: [ r3, r4 ]
+    bgp.mnh: receive
+
+nodes:
+  r0:
+    module: [ bgp ]
+    bgp.as: 65100
+    loopback.ipv4: 192.168.255.10/32
+  r11:
+  r12:
+  r13:
+  r14:
+  p1:
+    module: [ ospf, mpls ]
+  rr1:
+  rr2:
+  r3:
+    loopback.ipv4: 198.51.100.3/32
+  r4:
+    loopback.ipv4: 198.51.100.4/32
+
+links:
+# Bandwidth is in Mbps. PEs attach link-bandwidth communities on import;
+# RRs aggregate these into MNH endpoint bandwidths in bits per second.
+- r0:
+  r11:
+  bandwidth: 10000
+- r0:
+  r12:
+  bandwidth: 20000
+- r0:
+  r13:
+  bandwidth: 30000
+- r0:
+  r14:
+  bandwidth: 40000
+- r11-p1
+- r12-p1
+- r13-p1
+- r14-p1
+- rr1-p1
+- rr2-p1
+- r3-p1
+- r4-p1
+
+# Exergy Lab consumes resolved JSON and has no native BGP validation plugin.
+# Validate installed Linux IP/MPLS routes and traffic instead of CLI show output.
+validate:
+  egress_feed:
+    description: All egress PEs install the Internet feed learned over EBGP
+    devices: [ exergy-lab ]
+    wait: 60
+    nodes: [ r11, r12, r13, r14 ]
+    exec: ip -4 route show 192.168.255.10/32 proto 186
+    valid: >-
+      re.search(r'^192\.168\.255\.10\b[^\n]*\bvia\b', stdout) is not None
+
+  ingress_weights:
+    description: Ingress PEs install four MPLS next hops with weights 1 to 2 to 3 to 4
+    devices: [ exergy-lab ]
+    wait: 60
+    nodes: [ r3, r4 ]
+    exec: ip -4 route show 192.168.255.10/32 proto 186
+    valid: >-
+      stdout.count('nexthop') == 4
+      and re.search(r'\bnexthop\s+encap\s+mpls\s+{{ 16000 + hostvars.r11.id }}\b[^\n]*\bweight 1\b', stdout) is not None
+      and re.search(r'\bnexthop\s+encap\s+mpls\s+{{ 16000 + hostvars.r12.id }}\b[^\n]*\bweight 2\b', stdout) is not None
+      and re.search(r'\bnexthop\s+encap\s+mpls\s+{{ 16000 + hostvars.r13.id }}\b[^\n]*\bweight 3\b', stdout) is not None
+      and re.search(r'\bnexthop\s+encap\s+mpls\s+{{ 16000 + hostvars.r14.id }}\b[^\n]*\bweight 4\b', stdout) is not None
+
+  transit_labels:
+    description: The BGP-free P router forwards all four egress transport labels
+    devices: [ exergy-lab ]
+    wait: 60
+    nodes: [ p1 ]
+    exec: ip -f mpls route show proto 186
+    valid: >-
+      (
+      re.search(r'(?m)^{{ 16000 + hostvars.r11.id }}\s+as\s+(?:to\s+)?{{ 16000 + hostvars.r11.id }}\b'
+        r'[^\n]*\bvia inet\b[^\n]*\bdev\b', stdout) is not None
+      and re.search(r'(?m)^{{ 16000 + hostvars.r12.id }}\s+as\s+(?:to\s+)?{{ 16000 + hostvars.r12.id }}\b'
+        r'[^\n]*\bvia inet\b[^\n]*\bdev\b', stdout) is not None
+      and re.search(r'(?m)^{{ 16000 + hostvars.r13.id }}\s+as\s+(?:to\s+)?{{ 16000 + hostvars.r13.id }}\b'
+        r'[^\n]*\bvia inet\b[^\n]*\bdev\b', stdout) is not None
+      and re.search(r'(?m)^{{ 16000 + hostvars.r14.id }}\s+as\s+(?:to\s+)?{{ 16000 + hostvars.r14.id }}\b'
+        r'[^\n]*\bvia inet\b[^\n]*\bdev\b', stdout) is not None
+      )
+
+  egress_pop:
+    description: Each egress PE pops its local transport label into the IP table
+    devices: [ exergy-lab ]
+    wait: 60
+    nodes: [ r11, r12, r13, r14 ]
+    exec: ip -f mpls route show {{ 16000 + id }}
+    valid: >-
+      re.search(r'^{{ 16000 + id }}\s+dev lo\b', stdout) is not None
+
+  return_routes:
+    description: The Internet feed has BGP return routes to both ingress loopbacks
+    devices: [ exergy-lab ]
+    wait: 60
+    nodes: [ r0 ]
+    exec: ip -4 route show proto 186
+    valid: >-
+      re.search(r'(?m)^198\.51\.100\.3\b[^\n]*\bvia\b', stdout) is not None
+      and re.search(r'(?m)^198\.51\.100\.4\b[^\n]*\bvia\b', stdout) is not None
+
+  ingress_ping:
+    description: Both ingress PEs reach the Internet feed through MPLS with working replies
+    devices: [ exergy-lab ]
+    wait: 15
+    nodes: [ r3, r4 ]
+    exec: ping -c 3 -W 1 -I {{ loopback.ipv4.split('/')[0] }} 192.168.255.10
+    valid: '" 0% packet loss" in stdout'
