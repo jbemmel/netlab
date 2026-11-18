@@ -1,0 +1,58 @@
+---
+message: |
+  VPNv4 interoperability between an exergy-lab PE and an FRR PE. The hosts
+  in each VRF must reach their remote counterpart but not the other VRF.
+
+provider: clab
+bgp.as: 65001
+
+groups:
+  pe:
+    members: [ dut, pe2 ]
+    module: [ ospf, bgp, mpls, vrf ]
+    mpls.ldp: True
+    mpls.vpn.ipv4: [ ibgp ]
+    bgp.community.ibgp: [ standard, extended ]
+  hosts:
+    members: [ h1, h2, h3, h4 ]
+    device: linux
+
+nodes:
+  dut:
+    device: exergy-lab
+  pe2:
+    device: frr
+  h1:
+  h2:
+  h3:
+  h4:
+
+vrfs:
+  red:
+    links: [ h1-dut, h2-pe2 ]
+  blue:
+    links: [ h3-dut, h4-pe2 ]
+
+links: [ dut-pe2 ]
+
+validate:
+  vpn_session:
+    description: FRR negotiates VPNv4 with the exergy-lab PE
+    wait: 60
+    nodes: [ pe2 ]
+    plugin: bgp_neighbor(node.bgp.neighbors,'dut',activate='vpnv4')
+    stop_on_error: true
+  ping_red:
+    description: Hosts in the red VRF reach each other
+    wait: 60
+    nodes: [ h1 ]
+    plugin: ping('h2')
+  ping_blue:
+    description: Hosts in the blue VRF reach each other
+    wait: 60
+    nodes: [ h3 ]
+    plugin: ping('h4')
+  isolation:
+    description: The red and blue VRFs remain isolated
+    nodes: [ h1 ]
+    plugin: ping('h4',expect='fail')

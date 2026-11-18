@@ -200,6 +200,18 @@ netlab create tests/integration/exergy-lab/bgp-mnh.yml -o none
 
 Omitting `bgp.mnh` or setting it to `false` requests ordinary BGP behavior.
 
+## MPLS VPNv4
+
+Exergy Lab supports VPNv4 over BGP and LDP transport. Enable `bgp`, `mpls`,
+`vrf`, and an underlay IGP on the provider edge routers, and enable
+`mpls.vpn.ipv4` for the desired BGP session types. IPv6 VPN routes are not
+supported. VPNv4 sessions need extended community propagation for route targets.
+The image must include the `bgp_vpn`, `bgp`, `mpls`, `ldp`, and `vrf` features.
+
+`tests/integration/exergy-lab/vpnv4.yml` provides an FRR interoperability
+topology with two isolated VRFs. The Linux host needs the `mpls_router` and
+`mpls_iptunnel` kernel modules for forwarding.
+
 ## BGP Graceful Restart
 
 The `bgp.session` plugin's `bgp.gr` settings are supported at node, VRF, and

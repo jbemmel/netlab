@@ -42,6 +42,10 @@ features:
   bfd: True
   mpls:
     static: True
+    ldp: True
+    vpn:
+      ipv4: True
+      ipv6: False
   bgp:
     mnh: True
     import: [ isis, connected, vrf ]
