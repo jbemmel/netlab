@@ -77,17 +77,26 @@ features:
   evpn: false
 libvirt:
   image: netlab/sonic
+  docs_caveats: caveats-sonic-vm
+  node:
+    cpu: 2
+    memory: 4096
+    nic_model_type: virtio
+  build: https://netlab.tools/labs/sonic/#build-sonic-box
   mtu: 1500
   create_template: sonic.xml.j2
   group_vars:
-    ansible_connection: paramiko
+    ansible_connection: ssh
     ansible_user: admin
     ansible_ssh_pass: YourPaSsWoRd
     netlab_show_command: [ sudo, vtysh, -c, 'show $@' ]
+    netlab_config_mode: ''              # Use the Ansible task list (vtysh runs in the 'bgp' container)
 clab:
   # The generic templates/provider/clab/clab.j2 renders every clab.<key> below through its
   # key-value passthrough loop, so this device needs no provider template of its own.
   image: docker-sonic-vs:latest
+  docs_caveats: caveats-sonic-clab
+  build: https://netlab.tools/labs/sonic/#build-sonic-container
   mtu: 1500
   node:
     kind: sonic-vs

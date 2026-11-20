@@ -21,49 +21,28 @@ You have to be a member of the `clab_admins` group to start a _containerlab_ lab
 
 ## Supported Versions
 
-The latest _netlab_ release was tested with _containerlab_ version 0.80.0. That's also the version the **netlab install containerlab** command installs.
+The latest _netlab_ release was tested with _containerlab_ version 0.83.0. That's also the version the **netlab install containerlab** command installs.
 
 If needed, use ```sudo containerlab version upgrade``` to upgrade to the latest _containerlab_ version.
 
 (clab-images)=
 ## Container Images
 
-Lab topology file created by **[netlab up](../netlab/up.md)** or **[netlab create](../netlab/create.md)** command uses these container images (use **netlab show images** to display the actual system settings):
+Lab topology file created by **[netlab up](netlab-up)** or **[netlab create](netlab-create)** command uses these container images (use **netlab show images** to display the actual system settings). The images without a build recipe are automatically downloaded from a public registry.
 
-| Virtual network device | Container image              |
-|------------------------|------------------------------|
-| Arista cEOS            | ceos:4.31.2F                 |
-| Aruba CX               | vrnetlab/aruba_arubaos-cx:20240731173624 |
-| BIRD [❗](build-bird)  | netlab/bird:latest           |
-| Cisco 8000v            | cisco/cisco-8201-32fh:24.4.1 |
-| Cisco ASAv             | vrnetlab/cisco_asav:9-16-4-57 |
-| Cisco Catalyst 8000v   | vrnetlab/vr-c8000v:17.13.01a |
-| Cisco CSR 1000v        | vrnetlab/vr-csr:17.03.04     |
-| Cisco IOL [❗](caveats-iol)    | vrnetlab/cisco_iol:17.12.01 |
-| Cisco IOL L2 [❗](caveats-iol) | vrnetlab/cisco_iol:L2-17.12.01 |
-| Cisco IOSv             | vrnetlab/cisco_vios:15.9.3   |
-| Cisco IOS XRd [❗](build-iosxr-clab) | ios-xr/xrd-control-plane:25.2.1 |
-| Cisco Nexus OS         | vrnetlab/vr-n9kv:9.3.8       |
-| Citrix Netscaler       | netlab/netscaler:latest      |
-| Dell OS10              | vrnetlab/vr-ftosv            |
-| dnsmasq                | netlab/dnsmasq:latest        |
-| Extreme VOSS           | vrnetlab/extreme_voss:9.4.0.0 |
-| Fortinet FortiOS       | vrnetlab/vr-fortios:7.4.8    |
-| FRR                    | quay.io/frrouting/frr:10.1.2 |
-| IP Infusion OcNOS [❗](caveats-ocnos) | vrnetlab/ipinfusion_ocnos:7.0.0-262 |
-| Juniper vMX            | vrnetlab/vr-vmx:18.2R1.9     |
-| Juniper vPTX           | vrnetlab/juniper_vjunosevolved:23.4R2-S2.1 |
-| Juniper vSRX           | vrnetlab/vr-vsrx:23.1R1.8    |
-| vJunos-router          | vrnetlab/juniper_vjunos-router:23.4R2-S2.1 |
-| vJunos-switch          | vrnetlab/juniper_vjunos-switch:23.4R2-S2.1 |
-| Linux[❗](clab-linux)  | python:3.9-alpine            |
-| Mikrotik RouterOS 7    | vrnetlab/vr-routeros:7.6     |
-| Nokia SR Linux         | ghcr.io/nokia/srlinux:24.10.1 |
-| Nokia SR OS            | vrnetlab/vr-sros:latest      |
-| VPP [❗](build-vpp)    | netlab/vpp:latest            |
-| VyOS                   | ghcr.io/sysoleg/vyos-container |
+```{features}
+device:
+  caveats: clab.get('docs_caveats')
+features:
+- title: Container image
+  text: clab.image
+- title: Build<br>recipe
+  enabled: clab.get('build')
+  link: clab.get('build_recipe') or clab.get('build')
+  present: 🔗
+  missing: ''
+```
 
-* FRR, Linux, Nokia SR Linux, and VyOS images are automatically downloaded from public container registries.
 * Build the [BIRD](build-bird), [dnsmasq](build-dnsmasq), [VPP](build-vpp), and [Netscaler](build-netscaler) images with the **netlab clab build** command. BIRD and VPP FD.io build process supports configurable software releases.
 * The Arista cEOS image has to be [downloaded and installed manually](ceos.md).
 * Nokia SR OS and SR-SIM container images require a license; see also [vrnetlab instructions](https://containerlab.dev/manual/vrnetlab/).
@@ -334,28 +313,27 @@ You don't have to worry about dots in filenames: _netlab_ knows that the keys of
 (clab-config-template)=
 ### Generating and Binding Custom Configuration Files
 
-In addition to binding pre-existing files, _netlab_ can generate custom config files on the fly based on Jinja2 templates. For example, this is used internally to create the list of daemons for the **frr** container image:
+In addition to binding pre-existing files, _netlab_ can generate custom config files on the fly based on Jinja2 templates. For example, this is used internally to create the `/etc/hosts` file for the **frr** container image:
 
 ```
 frr:
  clab:
-  image: frrouting/frr:v8.3.1
-  mtu: 1500
+  image: quay.io/frrouting/frr:10.7.1
   node:
-    kind: linux
+    kind: frr
     config_templates:
-      daemons: /etc/frr/daemons
+      hosts: /etc/hosts:shared
 ```
 
-In the above example, the `daemons.j2` Jinja2 template from the configuration file templates search path[^CFSP] is rendered into the `daemons` file within the `clab_files/node-name` subdirectory of the current directory. That file is then mapped into the `/etc/frr/daemons` file within the container.
+In the above example, the `hosts.j2` Jinja2 template from the configuration file templates search path[^CFSP] is rendered into a file that is shared between all nodes (`shared` mode) and mapped into the `/etc/hosts` file within the container.
 
 [^CFSP]: See [](dev-config-deploy-paths) for more details.
 
-_netlab_ tries to locate the Jinja2 templates in the device-specific **paths.templates.dirs** directories[^CFTD]; the template file name is the dictionary key (for example, `daemons`) with the `.j2` suffix.
+_netlab_ tries to locate the Jinja2 templates in the device-specific **paths.templates.dirs** directories[^CFTD]; the template file name is the dictionary key (for example, `hosts`) with the `.j2` suffix.
 
 [^CFTD]: See [](change-search-paths) for more details.
 
-For example, with the default path settings, the user-specified `daemons.j2` template could be in the `templates/frr` subdirectory of:
+For example, with the default path settings, the user-specified `hosts.j2` template could be in the `templates/frr` subdirectory of:
 
 * The lab topology directory
 * The current directory

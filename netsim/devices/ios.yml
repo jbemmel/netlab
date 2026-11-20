@@ -75,9 +75,11 @@ features:
       ipv4: true
       ipv6: true
       routing: true
+      default: true
     relay: true
     vrf: true
     server: true
+    server_vrf: true
   eigrp: true
   initial:
     ipv4:
@@ -89,7 +91,7 @@ features:
     mgmt_vrf: true
     ra: true
     collect: true
-    reload: true
+    reload: custom
     config_mode: [ netmiko ]
   isis:
     circuit_type: true
@@ -114,6 +116,7 @@ features:
       config: nvram:replace-config
       command: configure replace nvram:replace-config force
       configure: |
+        hostname { name }
         ip scp server enable
       file_transfer: true
   ospf:

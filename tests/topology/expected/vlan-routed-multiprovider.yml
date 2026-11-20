@@ -99,6 +99,9 @@ nodes:
         access_id: 1000
         mode: route
         name: red
+    libvirt:
+      cpu: 2
+      memory: 2048
     loopback:
       ifindex: 0
       ifname: Loopback0
@@ -149,8 +152,6 @@ nodes:
         target: /etc/config/01-initial.sh
       - source: node_files/s/vlan
         target: /etc/config/02-vlan.sh
-      - source: node_files/s/daemons
-        target: /etc/frr/daemons
       - mode: ro
         source: node_files/-shared-hosts
         target: /etc/hosts
@@ -161,14 +162,14 @@ nodes:
       - mode: sh
         source: vlan
         target: /etc/config/02-vlan.sh
-      - source: daemons
-        target: /etc/frr/daemons
       - mode: shared
         source: hosts
         target: /etc/hosts
+      daemons:
+      - zebra
       exec:
       - sleep 1
-      kind: linux
+      kind: frr
     device: frr
     hostname: clab-input-s
     id: 2

@@ -1,4 +1,4 @@
-(install)=
+(install-netlab)=
 # Installation
 
 *netlab* is a Python3 package[^NSL] that uses Python 3.10[^P310] or later. It runs on Linux[^NLE] (we're doing all our tests on Ubuntu), including Windows Subsystem for Linux or [Multipass on macOS](https://blog.ipspace.net/2024/03/netlab-bgp-apple-silicon/).
@@ -36,7 +36,7 @@ You can also run *netlab* in a [Linux virtual machine](install-ubuntu-vm) or a [
 
 When selecting the virtualization environment, consider the following:
 
-* Ubuntu-based _netlab_ is the easiest to set up; the **[netlab install](netlab-install)** command does all the heavy lifting for you and installs all the prerequisite software (KVM, libvirt, Vagrant, Docker, containerlab, Ansible).
+* Ubuntu-based _netlab_ is the easiest to set up; the **[netlab install](netlab-install)** command does all the heavy lifting for you and installs all the prerequisite software (KVM, libvirt, Vagrant, Docker, containerlab, netmiko or Ansible).
 * **Containers** provisioned with containerlab start much faster than virtual machines, but you can get only a few network devices in native container format (Arista cEOS, Cisco IOS XRd, FRR, Juniper cRPD, Nokia SR Linux and SR-SIM, VyOS). The [**vrnetlab** fork by Roman Dodin](https://github.com/srl-labs/vrnetlab) can build containers that run virtual machines for many network devices, but those containers might take longer to start than Vagrant boxes.
 * **Vagrant provider for libvirt**[^VBR] supports parallel VM provisioning, resulting in pretty fast lab creation. Unfortunately, you'll have to build the libvirt Vagrant boxes manually, but the **[netlab libvirt package](netlab-libvirt-package)** usually does 90% of the work for you. However, we're [no longer developing new Vagrant functionality](libvirt-sunset), so you might be better off focusing on [containerlab](lab-clab).
 
@@ -63,6 +63,11 @@ If you decide to run the network labs within an Ubuntu VM, [create a new VM and 
 
 Finally, you can use _netlab_ on Apple Silicon ([basics](https://blog.ipspace.net/2024/03/netlab-bgp-apple-silicon/), [using Arista cEOS](https://blog.ipspace.net/2025/02/arista-ceos-arm-apple-silicon/)), but all we managed to do was run containers (Arista EOS, FRR, SR Linux) on a Multipass-provisioned Ubuntu VM. If you're using a laptop with Apple silicon, run more complex labs on a [Ubuntu VM](ubuntu-vm-manual) running on-premises or in a [public cloud](install-cloud), or a [bare-metal server](install-ubuntu).
 
+(install-netlab-ui)=
+## Using a Web User Interface
+
+_netlab_ is a CLI tool, but you can also use [netlab-ui](https://github.com/Muddyblack/netlab-ui), an independent web interface developed outside of the _netlab_ project. It lets you build and edit lab topologies on a canvas, deploy and destroy labs, and open device shells from your browser. It can use an existing _netlab_ installation or install _netlab_ for you; see its [quick start guide](https://github.com/Muddyblack/netlab-ui#quick-start) for details.
+
 ```eval_rst
 .. toctree::
    :caption: Next Steps
@@ -80,3 +85,4 @@ Finally, you can use _netlab_ on Apple Silicon ([basics](https://blog.ipspace.ne
 
 * [](lab-clab)
 * [](lab-libvirt)
+* [](install-netlab-ui)

@@ -10,6 +10,10 @@ mtu: 1500
 ifindex_offset: 2
 libvirt:
   image: fortinet/fortios
+  docs_caveats: caveats-fortios-74
+  node:
+    cpu: 1
+    memory: 2048
   build: https://netlab.tools/labs/fortios/
   create_template: fortios.xml.j2
   create_iso: fortios
@@ -17,6 +21,8 @@ clab:
   node.kind: fortinet_fortigate
   interface.name: "eth{ifindex}"
   image: vrnetlab/vr-fortios:7.4.8
+  docs_caveats: caveats-fortios-74
+  build: https://containerlab.dev/manual/kinds/fortinet_fortigate/
   features:
     initial:
       healthcheck: true
@@ -56,6 +62,7 @@ features:
       valid: [ enable, disable ]   # restart capability or stays silent
       caveats: true
   ospf:
+    caveats.core: caveats-fortios
     default: true
     gr: [ ipv4, ipv6 ]
     import: [ bgp, connected, static ]

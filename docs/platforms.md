@@ -31,6 +31,7 @@
 | Cumulus Linux 5.x (NVUE) [❗](caveats-cumulus-nvue) | cumulus_nvue | minimal |
 | Dell OS10 [❗](caveats-os10) | dellos10     | full          |
 | Extreme Networks EXOS [❗](caveats-exos) | exos | minimal  |
+| Extreme Networks VOSS [❗](caveats-voss) | voss | minimal  |
 | Fortinet FortiOS [❗](caveats-fortios) | fortios | minimal  |
 | FRRouting (FRR) [❗](caveats-frr) | frr     | full          |
 | [Generic Linux host](generic-linux-devices) | linux | full          |
@@ -118,82 +119,19 @@ You cannot use all supported network devices with all virtualization providers. 
 
 (platform-provider-support)=
 
-| Virtual network device | Vagrant<br />[Libvirt](labs/libvirt.md) | [Containerlab](labs/clab.md) |
-| ------------------ | :-: | :-: |
-| Arista vEOS        |  [✅](build-eos)  |  [✅](build-ceos)  |
-| Arrcus ArcOS       |  ❌  |  [✅](build-arcos)  |
-| Aruba AOS-CX       |  [✅](build-arubacx)  |  ✅[❗](clab-vrnetlab)  |
-| Cisco 8000v        |  ❌  |  ✅   |
-| Cisco ASAv         |  [✅](build-asav)  |  ✅ [❗](clab-vrnetlab)  |
-| Cisco Catalyst 8000v  |  [✅](build-cat8000v)  |  ✅[❗](clab-vrnetlab)  |
-| Cisco CSR 1000v    |  [✅](build-csr)  |  ✅[❗](clab-vrnetlab)  |
-| Cisco IOL          |  ❌  |  ✅[❗](clab-vrnetlab)  |
-| Cisco IOL L2       |  ❌  |  ✅[❗](clab-vrnetlab)  |
-| Cisco IOSv         |  [✅](build-iosv)  |  ✅[❗](clab-vrnetlab)  |
-| Cisco IOSvL2       | [✅](build-iosvl2) | ✅[❗](clab-vrnetlab) |
-| Cisco IOS XRv/XRd  | [✅](build-iosxr) | ✅[❗](build-iosxr-clab) |
-| Cisco Nexus 9300v  |  [✅](build-nxos) [❗](caveats-nxos) |  ✅[❗](clab-vrnetlab) |
-| Cumulus Linux      |  ✅  |  ✅[❗](caveats-cumulus)  |
-| Cumulus Linux 5.x (NVUE) |  ✅  |  ✅[❗](caveats-cumulus)  |
-| Dell OS10          |  [✅](build-dellos10)  |  ✅  |
-| Extreme Networks EXOS |  [✅](build-exos)  |  ✅[❗](clab-vrnetlab)  |
-| Fortinet FortiOS   |  [✅](build-fortios)  |  ✅  |
-| FRR |  [✅](build-frr)[❗](caveats-frr)  |  ✅  |
-| Generic Linux (Ubuntu/Alpine)  |  [❗](labs/linux.md)  |  ✅  |
-| IP Infusion OcNOS  |  ❌  |  ✅[❗](caveats-ocnos)  |
-| Juniper cRPD       |  ❌  |  ✅   |
-| Juniper cSRX       |  ❌  |  ✅   |
-| Juniper vMX        |  ❌  |  ✅[❗](clab-vrnetlab)   |
-| Juniper vPTX       |  [✅](build-vptx)  |  ✅[❗](clab-vrnetlab)  |
-| Juniper vSRX 3.0   |  [✅](build-vsrx)  |  ✅[❗](caveats-vsrx)  |
-| vJunos-switch       |  ❌  |  ✅[❗](clab-vrnetlab)  |
-| vJunos-router       |  ❌  |  ✅[❗](clab-vrnetlab)  |
-| Mikrotik RouterOS 6 |  ✅  |  ❌  |
-| Mikrotik RouterOS 7 |  [✅](build-chr7)  |  ❌  |
-| Netscaler CPX       |  ❌  |  ✅  |
-| Nokia SR Linux      |  ❌  |  ✅  |
-| Nokia SR OS         |  ❌  |  ✅  |
-| Nokia SR-SIM        |  ❌  |  ✅  |
-| OpenBSD             |  [✅](build-openbsd)  |  [✅](clab-vrnetlab)  |
-| SONiC               | [✅](build-sonic-box) | [✅](build-sonic-container) |
-| VPP                 |  ❌  |  ✅  |
-| VyOS                |  [✅](build-vyos)  |  ✅[❗](caveats-vyos)  |
+```{features}
+- title: Vagrant<br>[Libvirt](labs/libvirt.md)
+  enabled: libvirt.image
+  link: libvirt.get('build_recipe') or libvirt.get('build')
+- title: '[Containerlab](labs/clab.md)'
+  enabled: clab.image
+  link: clab.get('build_recipe') or clab.get('build')
+```
 
-**Note:**
+**Notes:**
 
 * *external* provider can be used with all devices supported by *netlab*.
-
-Vagrant configuration files for KVM/libvirt environments specify the number of virtual CPUs and the amount of memory allocated to each network device. These are the default values; you can change them with [node parameters](nodes.md#node-attributes).
-
-| Virtual network device     | netlab<br>device type | CPUs | memory | libvirt NIC model          |
-| -------------------------- | ------------------ | ---: | -----: | -------------------------: |
-| Arista vEOS                | eos                |    2 |   4096 | virtio |
-| Aruba AOS-CX               | arubacx            |    2 |   4096 | virtio |
-| Cisco ASAv                 | asav               |    1 |   2048 | virtio |
-| Cisco Catalyst 8000v       | cat8000v           |    2 |   4096 | virtio |
-| Cisco CSR 1000v            | csr                |    2 |   4096 | virtio |
-| Cisco IOSv                 | iosv               |    1 |    512 | e1000  |
-| Cisco IOSvL2               | iosvl2             |    1 |    1024 | e1000 |
-| Cisco IOS XRv              | iosxr              |    2 |    8192 | e1000 |
-| Cisco Nexus 9300v          | nxos               |    2 |   6144 [❗](caveats-nxos)| e1000 |
-| Cumulus Linux              | cumulus            |    2 |   1024 | virtio |
-| Cumulus Linux 5.x (NVUE)   | cumulus_nvue       |    2 |   1024 | virtio |
-| Dell OS10                  | dellos10           |    2 |   2048 | e1000  |
-| Extreme Networks EXOS      | exos               |    1 |   1024 | rtl8139 |
-| Fortinet FortiOS           | fortios            |    1 |   2048 | virtio |
-| FRR                        | frr                |    1 |   1024 | virtio |
-| Generic Linux host         | linux              |    1 |   1024 | virtio |
-| Juniper vSRX 3.0           | vsrx               |    2 |   4096 | virtio |
-| Juniper vPTX               | vptx               |    4 |   8192 | virtio |
-| Mikrotik RouterOS 6        | routeros           |    1 |    256 | virtio |
-| Mikrotik RouterOS 7        | routeros7          |    2 |    256 | e1000  |
-| OpenBSD                    | openbsd            |    1 | 1024 | virtio |
-| Sonic                      | sonic              |    2 | 4096 | virtio |
-| VyOS                       | vyos               |    2 |   1024 | virtio |
-
-```{tip}
-**‌virtio** is the default KVM/libvirt NIC model.
-```
+* See [libvirt provider documentation](platform-provider-vm-resources) for default memory/CPU/NIC VM settings.
 
 (platform-config-support)=
 ## Configuration Deployments
@@ -232,53 +170,37 @@ _netlab_ can use a variety of device configuration deployment mechanisms:
 | daemon<br>configurations | Daemon configuration files are generated on the host and mapped into the containers running [daemons](platform-daemons) like *dnsmasq* or *bird* |
 | **ansible** | Starts an Ansible playbook that uses device-specific task lists executing Ansible device modules. Use **netlab install ansible** to install Ansible and the prerequisite Python libraries. |
 | **sh** | Uses **docker exec** command to execute shell scripts *mapped* into containers[^CMSH] |
-| **cp_sh** | Copies shell scripts into containers (using **docker cp**) or virtual machines (using *netmiko* implementation of **scp**) and executes them with **docker exec** or **netmiko.send_command()**. |
+| **cp_sh** | Copies shell scripts into containers (using **docker cp**) and executes them with **docker exec** |
 | **ns** | Uses **ip netns exec** to execute shell scripts on the host within the container namespace[^CMNS] |
-| **netmiko** | Uses the *netmiko* library to send configuration commands over an SSH session. Use **netlab install netmiko** to install it. |
+| **netmiko** | Uses the *netmiko* library to send configuration commands over an SSH session, or to copy configuration scripts to Linux-based virtual machines (for example, FRR) and execute them. Use **netlab install netmiko** to install it. |
 | **startup** | Configuration files are merged into a partial startup configuration that is passed to the *containerlab* `startup-config` parameter. This experimental method works only for containers and [won't report device configuration errors](https://blog.ipspace.net/2026/02/netlab-startup-config-caveats/). |
 
 [^CMSH]: This method can be used in most native containers, but not in [containers running virtual machines](clab-vrnetlab).
 
 [^CMNS]: Used to configure networking parameters for containers that do not have the **ip** command
 
-_netlab_ uses Ansible playbooks and device-specific task lists to deploy device configuration snippets onto most devices, with these notable exceptions:
+_netlab_ uses Ansible playbooks and device-specific task lists to deploy device configuration snippets onto most devices. These devices use a different default deployment method:
 
-:::{table}
-:class: table-wrap
+```{features}
+- title: Default deployment method
+  text: >-
+    "**"+group_vars.netlab_config_mode+"**" if group_vars.netlab_config_mode else False
+```
 
-| Device | Provider | Default configuration deployment method |
-|--------|----------|---------------------------------|
-| BIRD   | clab     | Daemon configuration files and **bash** scripts[^BBS] |
-| dnsmasq | clab    | Daemon configuration files and **bash** scripts[^DBS] |
-| Arista EOS | all | **netmiko** |
-| Cisco ASAv | clab | **netmiko** |
-| Cisco IOS/IOS XE | all | **netmiko** |
-| Cisco IOS XR | all | **netmiko** |
-| Cisco Nexus OS | all | **netmiko** |
-| Extreme EXOS | all | **netmiko** |
-| Extreme VOSS | all | **netmiko** |
-| FRRouting    | clab     | **bash** and **vtysh** scripts[^FRRBV] |
-| IP Infusion OcNOS | all | **netmiko** |
-| Junos cRPD | clab | **bash** scripts[^cRBS] |
-| KinD   | clab     | **bash** scripts copied into and executed in containers |
-| Linux  | clab     | host- or container-side scripts[^LBS] |
-| Sonic  | clab | inherits FRRouting configuration methods |
-| VPP    | clab     | **bash** scripts, node configuration files, and VPP CLI configuration files[^VPPC] |
-:::
+Other exceptions:
 
-[^BBS]: Initial device configurations, VLANs, and link aggregation are configured with **bash** scripts. All other features are configured with the BIRD configuration files.
+{.table-wrap}
+| Device | Configuration deployment details |
+|--------|----------------------------------|
+| BIRD | Initial device configurations, VLANs, and link aggregation are configured with **bash** scripts. All other features are configured with the BIRD configuration files. |
+| dnsmasq | Initial device configurations, VLANs, static routes, and link aggregation are configured with **bash** scripts. All other features are configured with the dnsmasq configuration files. |
+| FRRouting | Configurations starting with a *shebang* are assumed to be Linux scripts; all other configurations are assumed to be **vtysh** scripts and get a `#!/usr/bin/vtysh -f` shebang prepended to them. On virtual machines, the scripts are deployed with **netmiko**. SONiC containers inherit the FRRouting configuration methods. |
+| Juniper cRPD | The configuration deployment uses a custom **bash** script that calls **cli** command to execute **load merge** followed by **commit**. The custom script is used as the *shebang* interpreter for the configuration snippets. |
+| KinD | **bash** scripts are copied into and executed in the containers. |
+| Linux | Initial device configurations, static routes, VLANs, and interface bonding are configured with host-side scripts executed in the container namespace. Custom configuration templates are assumed to be Linux scripts executed within the container ([more details](generic-linux-devices)). |
+| VPP | Initial device configuration is deployed with **bash** scripts executed within the container. VPP **startup.conf** is deployed as a node configuration file. The VPP startup configuration loads `/etc/vpp/config/setup.vpp`, a generated VPP CLI configuration file; the initial script creates `/etc/vpp/config/clab-interfaces.vpp`. The container waits for **netlab initial** to finish before starting VPP. |
 
-[^DBS]: Initial device configurations, VLANs, static routes, and link aggregation are configured with **bash** scripts. All other features are configured with the dnsmasq configuration files.
-
-[^FRRBV]: Configurations starting with a *shebang* are assumed to be Linux scripts; all other configurations are assumed to be **vtysh** scripts and get a `#!/usr/bin/vtysh -f` shebang prepended to them.
-
-[^cRBS]: The configuration deployment uses a custom **bash** script that calls **cli** command to execute **load merge** followed by **commit**. The custom script is used as the *shebang* interpreter for the configuration snippets.
-
-[^LBS]: Initial device configurations, static routes, VLANs, and interface bonding are configured with host-side scripts executed in the container namespace. Custom configuration templates are assumed to be Linux scripts executed within the container ([more details](generic-linux-devices)).
-
-[^VPPC]: Initial device configuration is deployed with **bash** scripts executed within the container. VPP **startup.conf** is deployed as a node configuration file. The VPP startup configuration loads `/etc/vpp/config/setup.vpp`, a generated VPP CLI configuration file; the initial script creates `/etc/vpp/config/clab-interfaces.vpp`. The container waits for **netlab initial** to finish before starting VPP.
-
-Several other devices can use configuration methods faster than Ansible playbooks. These configuration methods are not enabled by default; you have to set the **netlab_config_mode** device group variable[^NCMGV] or node parameter to use them:
+Several other devices can use configuration methods that might be faster than the device defaults. You have to set the **netlab_config_mode** device group variable[^NCMGV] or node parameter to use them:
 
 ```{features}
 - title: Alternate<br>deployment method
@@ -291,7 +213,7 @@ Several other devices can use configuration methods faster than Ansible playbook
 * When using the **sh** method on Arista cEOS containers, _netlab_ converts the device configurations into FastCli scripts and executes them as Linux scripts within the cEOS container. This method works on EOS software releases that have the **‌platform tfa phy control-frame disabled** interface configuration command (probably starting with EOS release 4.30)
 * The Cisco IOS XRd **sh** deployment method uses a custom **bash** script that calls the **xrapply** ZTP command to load and commit a configuration file. The custom script is used as the *shebang* interpreter for the configuration snippets. This deployment method *does not work* on XRd vRouter or XRv virtual machines packaged into *vrnetlab* containers.
 
-[^NCMGV]: For example, set the **defaults.devices.iol.clab.group_vars.netlab_config_mode** [topology default](topo-defaults) to **startup** to use startup configuration with Cisco IOL nodes, or **defaults.devices.asav.group_vars.netlab_config_mode** to **netmiko** to use *netmiko* to configure Cisco ASAv virtual machines.
+[^NCMGV]: For example, set the **defaults.devices.iol.clab.group_vars.netlab_config_mode** [topology default](topo-defaults) to **startup** to use startup configuration with Cisco IOL nodes.
 
 ## Initial Device Configurations
 
@@ -311,6 +233,7 @@ The following system-wide features are configured on supported network operating
 | Cumulus Linux 5.x (NVUE) | ✅  | ✅  | ✅  | ✅  | ✅  |
 | Dell OS10                | ✅  | ✅  | ✅  | ✅  | ✅  |
 | Extreme Networks EXOS    | ✅  |  ❌  | ✅  | ✅  | ✅  |
+| Extreme Networks VOSS    | ✅  |  ❌  |  ❌  |  ❌  |  ❌  |
 | Fortinet FortiOS         | ✅  |  ❌  | ✅  | ✅  | ✅  |
 | FRR                      | ✅  | ✅[^HIF]  |  ❌  | ✅  | ✅  |
 | Generic Linux            | ✅  | ✅[^HIF]  |  ✅[❗](linux-lldp) | ✅  | ✅  |
@@ -346,6 +269,7 @@ The following interface parameters are configured on supported network operating
 | Cumulus Linux 5.x (NVUE) | ✅ | ❌ | ✅  | ✅  |
 | Dell OS10             | ✅  |  ❌  | ✅  | ✅  |
 | Extreme Networks EXOS | ✅  | ❌  |  ✅  |  ❌  |
+| Extreme Networks VOSS | ✅  | ❌  |  ❌  |  ❌  |
 | Fortinet FortiOS      | ✅  | ✅  |  ✅[❗](caveats-fortios)  |  ❌  |
 | FRR                   | ✅  | ✅  | ✅  | ✅  |
 | Generic Linux         |  ❌  |  ❌  | ✅  |  ❌  |
@@ -378,6 +302,7 @@ The following interface addresses are supported on various platforms; most daemo
 | Cumulus Linux 5.x (NVUE) | ✅ | ✅ | ✅ |  ❌  |
 | Dell OS10             | ✅  | ✅  |  ❌  |  ❌  |
 | Extreme Networks EXOS | ✅  | ✅  |  ❌  | ✅  |
+| Extreme Networks VOSS | ✅[❗](caveats-voss) | ❌  |  ❌  |  ❌  |
 | Fortinet FortiOS      | ✅  | ✅  |  ❌  |  ❌  |
 | FRR                   | ✅  | ✅  | ✅  | ✅  |
 | Generic Linux         | ✅  | ✅  |  ❌  |  ❌  |
@@ -416,62 +341,38 @@ Routing protocol [configuration modules](module-reference.md) are supported on t
 
 [^NSM]: Use **[netlab show module-support](netlab/show.md)** command to display the current system settings
 
-| Operating system      | [OSPF](module/ospf.md) | [IS-IS](module/isis.md) | [EIGRP](module/eigrp.md) | [BGP](module/bgp.md) | [RIPv2/ng](module/ripv2.md)
-| --------------------- | :--: | :--: | :--: | :--: | :--: |
-| Arista EOS            | ✅   |  ✅  |   ❌  |  ✅  |  ✅  |
-| Arrcus ArcOS [❗](caveats-arcos) | ✅ | ✅ | ❌ | ✅ | ❌ |
-| Aruba AOS-CX          | ✅   |  ❌   |   ❌  |  ✅  |   ❌  |
-| BIRD Internet Routing Daemon | ✅ [❗](caveats-bird) | ❌ | ❌ | ✅ [❗](caveats-bird) | ❌ |
-| Cisco ASAv            | ✅ [❗](caveats-asav) | ✅ [❗](caveats-asav) | ❌ | ✅ [❗](caveats-asav) | ❌ |
-| Cisco IOS/IOS XE[^18v]| ✅   |  ✅  |  ✅  |  ✅  |  ✅  |
-| Cisco IOS XR[^XR]     | ✅   |  ✅  |   ❌  |  ✅  |   ❌  |
-| Cisco Nexus OS        | ✅   |  ✅  |  ✅  |  ✅  |   ❌  |
-| Cumulus Linux         | ✅   |   ❌  |   ❌  |  ✅  |  ✅  |
-| Cumulus Linux 5.x (NVUE) | ✅ |  ❌  |   ❌   | ✅ [❗](caveats-cumulus-nvue)  |  ❌  |
-| Dell OS10             | ✅ [❗](caveats-os10) |   ❌   |   ❌   | ✅  |  ❌  |
-| Extreme Networks EXOS | ✅   |   ❌   |   ❌   |   ❌   |  ❌  |
-| Fortinet FortiOS      | ✅ [❗](caveats-fortios) |   ❌   |   ❌   |  ✅  |  ❌  |
-| FRR                   | ✅   |  ✅   |   ❌  | ✅  |  ✅  |
-| IP Infusion OcNOS     | ✅   |  ✅   |   ❌  | ✅  |   ❌  |
-| Junos[^Junos]         | ✅   |  ✅   |   ❌  | ✅  |   ❌  |
-| Mikrotik RouterOS 6   | ✅   |   ❌   |   ❌  | ✅  |   ❌  |
-| Mikrotik RouterOS 7   | ✅   |   ❌   |   ❌  | ✅  |   ❌  |
-| Nokia SR Linux        | ✅   |  ✅   |   ❌  | ✅  |   ❌  |
-| Nokia SR OS[^SROS]    | ✅   |  ✅   |   ❌  | ✅  | ✅  |
-| OpenBSD               | ✅   |   ❌   |   ❌  | ✅   | ✅   |
-| Sonic                 |  ❌   |   ❌   |   ❌  | ✅  |   ❌  |
-| Sonic (containerlab)  | ✅   |  ✅   |   ❌  | ✅  |  ✅  |
-| VyOS                  | ✅   |  ✅   |   ❌  | ✅  |   ❌  |
+```{features}
+- title: '[OSPF](module/ospf.md)'
+  enabled: ospf
+  caveats: ospf.caveats.core
+- title: '[IS-IS](module/isis.md)'
+  enabled: isis
+  caveats: isis.caveats
+- title: '[EIGRP](module/eigrp.md)'
+  enabled: eigrp
+- title: '[BGP](module/bgp.md)'
+  enabled: bgp
+  caveats: bgp.caveats.core
+- title: '[RIPv2/ng](module/ripv2.md)'
+  enabled: ripv2
+  caveats: ripv2.caveats.core
+```
 
 These devices support additional control-plane protocols or BGP address families:
 
-| Operating system | [BFD](module/bfd.md) | [EVPN](module/evpn.md) | [MPLS/VPN](module/mpls.md) | [FHRP](module/gateway.md) |
-| --------------------- | :-: | :-: | :-: | :-: |
-| Arista EOS            | ✅  | ✅  | ✅  | ✅  |
-| Arrcus ArcOS [❗](caveats-arcos) | ✅  | ✅  | ✅  | ✅  |
-| Aruba AOS-CX          | ✅  | ✅  | ✅  | ✅  |
-| BIRD                  |  ❌  | ✅  |  ❌  | ✅  |
-| Cisco IOS XE[^XE]     | ✅  | ✅  | ✅  | ✅  |
-| Cisco IOSv/IOSvL2     | ✅  |  ❌  | ✅  | ✅  |
-| Cisco IOS XR[^XR]     |  ❌  | ✅  | ✅  | ✅  |
-| Cisco Nexus OS        | ✅  | ✅  |  ❌  | ✅  |
-| Cumulus Linux         | ✅  | ✅  |  ❌  | ✅  |
-| Dell OS10             | ✅  | ✅  |  ❌  |  ❌  |
-| Extreme Networks EXOS |  ❌  |  ❌  |  ❌  | ✅  |
-| FRR                   | ✅  | ✅  | ✅  |  ❌  |
-| IP Infusion OcNOS     | ✅  |  ❌  |  ❌  |  ❌  |
-| Juniper cRPD          | ✅  |  ❌  | ✅  |  ❌  |
-| Juniper vMX           | ✅  |  ❌  | ✅  | ✅  |
-| Juniper vPTX          | ✅  | ✅  | ✅  | ✅  |
-| Juniper vSRX 3.0      | ✅  |  ❌  | ✅  | ✅  |
-| vJunos-switch         | ✅  |  ✅ | ✅  | ✅  |
-| vJunos-router         | ✅  |  ❌  | ✅  | ✅  |
-| Mikrotik RouterOS 6   | ✅  |  ❌  | ✅  |  ❌  |
-| Mikrotik RouterOS 7   | ✅  |  ❌  | ✅  |  ❌  |
-| Nokia SR Linux        | ✅  | ✅  | ✅  | ✅  |
-| Nokia SR OS[^SROS]    | ✅  | ✅  | ✅  | ✅  |
-| Sonic (containerlab)  | ✅  | ✅  | ✅  | ✅  |
-| VyOS                  | ✅  | ✅  | ✅  |  ❌  |
+```{features}
+- title: '[BFD](module/bfd.md)'
+  enabled: bfd
+  caveats: bfd.caveats
+- title: '[EVPN](module/evpn.md)'
+  enabled: evpn
+  caveats: evpn.caveats.core
+- title: '[MPLS/VPN](module/mpls.md)'
+  enabled: mpls.vpn
+- title: '[FHRP](module/gateway.md)'
+  enabled: gateway
+  caveats: gateway.caveats.core
+```
 
 **Notes:**
 * FRHP = First-Hop Redundancy Protocol (anycast gateway or VRRP)
@@ -479,67 +380,50 @@ These devices support additional control-plane protocols or BGP address families
 (platform-layer-2-support)=
 The layer-2 control plane [configuration modules](module-reference.md) are supported on these devices[^NSM]:
 
-| Operating system          | [Spanning<br>Tree Protocol](module/stp.md) | [Link Aggregation<br>Groups](module/lag.md) |
-| ------------------------- |:--:|:--:|
-| Arista EOS                | ✅ | ✅ |
-| Arrcus ArcOS [❗](caveats-arcos) | ✅[❗](caveats-arcos) | ✅ |
-| Aruba CX                  | ✅ | ✅ |
-| BIRD                      | ❌  | ✅ |
-| Cumulus Linux             | ✅ | ✅ |
-| Cumulus Linux 5.x (NVUE)  | ✅ | ✅ |
-| Dell OS10                 | ✅ | ✅ |
-| dnsmasq                   | ❌  | ✅ |
-| FRR                       | ✅ | ✅ |
-| IP Infusion OcNOS         | ✅ | ❌  |
-| Linux                     | ❌  | ✅ |
-| Sonic (containerlab)      | ❌  | ✅ |
+```{features}
+- title: '[STP](module/stp.md)'
+  enabled: stp
+  caveats: stp.caveats.core
+- title: '[LAG](module/lag.md)'
+  enabled: lag
+  caveats: lag.caveats.core
+```
 
 (platform-dataplane-support)=
 The data plane [configuration modules](module-reference.md) are supported on these devices[^NSM]:
 
-| Operating system      | [VLAN](module/vlan.md) | [VRF](module/vrf.md) | [VXLAN](module/vxlan.md) | [MPLS](module/mpls.md) | [SR-MPLS](module/sr-mpls.md) | [SRv6](module/srv6.md) |
-| --------------------- |:--:|:--:|:--:|:--:|:--:|:--:|
-| Arista EOS            | ✅ | ✅ | ✅ | ✅ | ✅ |  ❌ |
-| Arrcus ArcOS [❗](caveats-arcos) | ✅ | ✅ | ✅[❗](caveats-arcos) | ✅[❗](caveats-arcos) | ✅[❗](caveats-arcos) | ✅[❗](caveats-arcos) |
-| Aruba AOS-CX          | ✅ | ✅ |  ✅[❗](caveats-aruba) | [❗](caveats-aruba) | ❌ | ❌ |
-| BIRD                  | ✅ | ✅ | ✅ |  ❌ |  ❌ |  ❌ |
-| Cisco 8000v (IOS XR)  | ✅ | ✅ |  ❌ | ✅ | ✅ | ✅ |
-| Cisco Catalyst 8000v  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Cisco CSR 1000v       | ✅ | ✅ | ✅ | ✅ | ✅ |  ❌ |
-| Cisco IOL/IOLL2       | ✅ | ✅ | ✅[❗](caveats-iol) | ✅ | ✅ | ✅ |
-| Cisco IOSv/IOSvL2     | ✅ | ✅ |  ❌ | ✅ |  ❌ |  ❌ |
-| Cisco IOS XR          |  ❌ | ✅ |  ❌ | ✅ | ✅ | ✅ |
-| Cisco Nexus OS        | ✅ | ✅ | ✅ |  ❌ |  ❌ |  ❌ |
-| Cumulus Linux         | ✅ | ✅ | ✅ |  ❌ |  ❌ |  ❌ |
-| Cumulus Linux 5.x (NVUE) | ✅ |[❗](module-vrf-platform-support)| ❌ | ❌ | ❌ | ❌ |
-| Dell OS10             | ✅ | ✅ | ✅ |  ❌ |  ❌ |  ❌ |
-| Extreme Networks EXOS | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| FRR                   | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| IP Infusion OcNOS     | ✅ | ✅ |  ❌ |  ❌ |  ❌ |  ❌ |
-| Juniper cRPD          |  ❌ |  ❌ |   ❌ | ✅ | ✅ |  ❌ |
-| Juniper vMX           | ✅ | ✅ |  ❌ | ✅ | ✅ |  ❌ |
-| Juniper vPTX          | ✅ | ✅ | ✅ [❗](caveats-vptx) | ✅ | ✅ |  ❌ |
-| Juniper vSRX 3.0      | ❌  | ✅ |  ❌ |  ❌ |  ❌ |  ❌ |
-| vJunos-switch         | ✅ | ✅ | ✅ |  ❌ |  ❌ |  ❌ |
-| vJunos-router         | ❌  | ✅ |  ❌ |  ❌ |  ❌ |  ❌ |
-| Mikrotik RouterOS 6   | ✅ | ✅ |  ❌ | ✅ |  ❌ |  ❌ |
-| Mikrotik RouterOS 7   | ✅ | ✅ | ✅ | ✅ |  ❌ |  ❌ |
-| Nokia SR Linux        | ✅ | ✅ | ✅ | ✅ | ✅ |  ❌ |
-| Nokia SR OS[^SROS]    | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| OpenBSD               | ✅ | ❌ | ✅ | ❌  | ❌ |
-| Sonic (containerlab)  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅[❗](caveats-sonic-clab) |
-| VyOS                  | ✅ | ✅ | ✅ | ✅ |  ❌ |  ❌ |
+```{features}
+- title: '[VLAN](module/vlan.md)'
+  enabled: vlan
+  caveats: vlan.caveats.core
+- title: '[VRF](module/vrf.md)'
+  enabled: vrf
+  caveats: vrf.caveats.core
+- title: '[VXLAN](module/vxlan.md)'
+  enabled: vxlan
+  caveats: vxlan.caveats.core
+- title: '[MPLS](module/mpls.md)'
+  enabled: mpls
+  caveats: mpls.caveats.core
+- title: '[SR-MPLS](module/sr-mpls.md)'
+  enabled: sr
+  caveats: sr.caveats.core
+- title: '[SRv6](module/srv6.md)'
+  enabled: srv6
+  caveats: srv6.caveats.core
+```
 
 (platform-services-support)=
 Network services [configuration modules](module-reference.md) are supported on these devices[^NSM]
 
-| Operating system      | [DHCP](module/dhcp.md) | [DHCPv6](module/dhcp.md) |
-| --------------------- | :--: | :--: |
-| Arista EOS            | ✅   |  ✅  |
-| dnsmasq               | ✅   |  ✅  |
-| Cisco CSR 1000v       | ✅   |  ✅  |
-| Cisco IOSv/IOSvL2     | ✅   |  ✅  |
-| Cumulus Linux         | ✅   |  ✅  |
+```{features}
+- title: '[DHCP](module/dhcp.md)'
+  enabled: dhcp
+  caveats: dhcp.caveats.core
+- title: '[DHCPv6](module/dhcp.md)'
+  enabled: >-
+    dhcp.get('server') or dhcp.get('client',{}).get('ipv6') or dhcp.get('relay') is True or dhcp.get('relay',{}).get('ipv6')
+```
 
 ```{tip}
 See [integration test results](https://release.netlab.tools/) for more details.

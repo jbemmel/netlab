@@ -158,13 +158,17 @@ features:
     isis: true
     leaking: false
   srv6:
+    caveats.core: caveats-arcos
     isis: true
   sr:
+    caveats.core: caveats-arcos
     af: [ ipv4 ]
     protocol: [ isis ]
   mpls:
+    caveats.core: caveats-arcos
     ldp: true
-  vxlan: true
+  vxlan:
+    caveats.core: caveats-arcos
   evpn:
     irb: true            # L2VNI / distributed-anycast-gateway form only -- see templates/evpn/arcos.j2
     transport: [ vxlan ]
@@ -177,8 +181,10 @@ features:
     subif_name: "{ifname}.{vlan.access_id}"
     native_routed: true
   lag:
+    static: true
     passive: false        # ArcOS bonds are LACP-active; STATIC = balance-xor
   stp:
+    caveats.core: caveats-arcos
     # ArcOS runs spanning tree by default and speaks exactly one flavour: the "stp
     # enabled-protocol" leaf's own value list is { NONE | RAPID_PVST } with RAPID_PVST the
     # default. There is no 802.1D, no plain RSTP and no MSTP, so only 'pvrst' is declared -- every
@@ -196,6 +202,8 @@ features:
     # anycast form is untested on this image. VRRP itself is declared for both address families,
     # but only IPv6 interoperates with other netlab devices -- see the IPv4-checksum caveat above.
     protocol: [ vrrp ]
+    caveats:
+      vrrp: True
   dhcp:
     relay: true
     vrf: true
@@ -252,6 +260,7 @@ clab:
   # Users obtain their own ArcOS image (commercial NOS, same pattern as arubacx/dellos10/sros)
   # and tag it as below, or override clab.image in their topology.
   image: arcos:8.2.1A.P2
+  docs_caveats: caveats-arcos
   build: https://netlab.tools/labs/arcos/
   node:
     kind: arrcus_arcos

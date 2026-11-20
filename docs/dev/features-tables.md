@@ -41,6 +41,30 @@ Each column definition (feature) can have these parameters:
 * **title** (required) -- the column header. Use `<br>` to create multi-line headers.
 * **enabled** or **text** (exactly one required) -- see below
 * **caveats** (optional) -- the Python expression that checks whether the device/feature entry should include a link to caveats. The value of the specified device feature could be **true**, in which case the link pointing to the caveat is `caveats-_device_`, or a documentation anchor ID.
+* **link** (optional, **enabled** columns only) -- the Python expression that evaluates to the link target for the checkmark, for example, `clab.get('build_recipe') or clab.get('build')`. Non-string values (for example, `build: True`) produce no link. Links to _netlab_ documentation (`https://netlab.tools/...`) are converted into internal links; when they include an anchor (`#build-sonic-box`), the anchor is used as the MyST label.
+* **missing** (optional) -- the text displayed instead of the red cross when the feature is not supported (the **enabled** expression or the **text** expression is falsy). Use `missing: ''` to leave the table cell empty.
+* **present** (optional, **enabled** columns only) -- the text displayed instead of the green checkmark when the feature is supported, for example, `present: 🔗` in a column with links to build instructions.
+* **align** (optional) -- the alignment of the table cells in the column: **left**, **center**, or **right**. The default is **left** for **text** columns and **center** for **enabled** columns. For example, use `align: right` in columns displaying numbers.
+
+The `{features}` directive content can also be a dictionary with the list of columns in the **features** key and the device column parameters in the **device** key:
+
+* **caveats** (optional) -- the Python expression that checks whether the device name should be followed by a link to caveats. The expression value is interpreted like the column **caveats** value (see below).
+
+For example, the following table has empty cells for the devices without a build recipe, and adds the caveat links to the devices with the **clab.docs_caveats** device parameter:
+
+````md
+```{features}
+device:
+  caveats: clab.get('docs_caveats')
+features:
+- title: Container image
+  text: clab.image
+- title: Build<br>recipe
+  enabled: clab.get('build_recipe') or clab.get('build')
+  link: clab.get('build_recipe') or clab.get('build')
+  missing: ''
+```
+````
 
 ### Feature Display Modes
 
@@ -62,6 +86,18 @@ For example, to display the list of non-default configuration deployment methods
 ### Caveats
 
 The **caveats** parameter links a cell to an explanation of feature limitations. A truthy caveat value generates a link to an anchor with ID `caveats-_device_` (usually defined in `caveats.md`). A string value is used as the link target. A caveat value of `yes` generates a warning emoji with no link (for caveats explained below the table).
+
+The module-level caveats (displayed in the module support tables in [](supported-platforms)) are stored in the **_module_.caveats.core** device feature, for example:
+
+```yaml
+features:
+  vxlan:
+    caveats.core: caveats-arcos
+```
+
+Use an explicit anchor ID instead of **true** in parent devices (for example, `iol`); the child devices inherit the feature, and **true** would generate a link to a nonexistent `caveats-_child_` anchor.
+
+The device caveats (**device.caveats** expression) are displayed next to the device name. A child device with a different device caveat than its parent device is not merged into the parent device row.
 
 ### Built-in Functions
 
