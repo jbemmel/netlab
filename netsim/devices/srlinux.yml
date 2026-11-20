@@ -37,7 +37,7 @@ group_vars:
   ansible_user: admin
   ansible_ssh_pass: NokiaSrl1!
   ansible_network_os: srlinux # nokia.srlinux.srlinux
-  ansible_connection: paramiko
+  ansible_connection: ssh
   netlab_console_connection: ssh
   netlab_match_protomap:
     ospf: [ ospfv2, ospfv3 ]
@@ -55,6 +55,7 @@ bfd:                                    # SR Linux supports lower BFD timers tha
   min_rx: 100
 clab:
   image: ghcr.io/nokia/srlinux:26.7.2
+  docs_caveats: caveats-srlinux
   node:
     kind: srl
     type: ixr-d2
@@ -72,7 +73,7 @@ features:
     ipv6:
       lla: True
     collect: true
-    reload: true
+    reload: custom
   bfd: True
   bgp:
     caveats:
@@ -119,6 +120,7 @@ features:
     ldp: True
     vpn: True
     _platforms: [ ixr-6, ixr-10, ixr-18, ixr-x, sxr- ]
+    caveats.core: caveats-srlinux
   ospf:
     caveats:
       import: caveats-srlinux
@@ -126,7 +128,8 @@ features:
     unnumbered: True
     import: [ bgp, isis, connected, static, vrf, no_policy ]
     default: true
-    areas: true
+    areas:
+      caveats.stub: caveats-srlinux
   routing:
     policy:
       match:
@@ -146,6 +149,7 @@ features:
       transport_vrf: False
     syslog: True
   sr:
+    caveats.core: caveats-srlinux
     af: [ ipv4, ipv6 ]
     protocol: [ isis ]
   srv6:
@@ -165,6 +169,7 @@ features:
     isis: True
     leaking_caveats: True
   vxlan:
+    caveats.core: caveats-srlinux
     requires: [ evpn ]                  # vrf for l3 vxlan
 external:
   image: none

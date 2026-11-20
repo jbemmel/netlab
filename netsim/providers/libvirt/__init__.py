@@ -20,7 +20,7 @@ from .. import (
   tc_netem_set,
   validate_mgmt_ip,
 )
-from . import configs, labops, stats
+from . import labops, stats
 
 
 class Libvirt(_Provider):
@@ -89,12 +89,39 @@ class Libvirt(_Provider):
       labops.pad_node_interfaces(node,topology)
     validate_mgmt_ip(node,required=True,v4only=True,provider='libvirt',mgmt=topology.addressing.mgmt)
 
+    # The device defaults should include libvirt.node.cpu and libvirt.node.memory (used in define-domain.j2)
+    # unless the node is not a real VM ('none' device and its descendants use 'none' image)
+    #
+    if node.box != 'none':
+      for kw in ('cpu','memory'):
+        if kw not in node.libvirt and kw not in node:
+          log.error(
+            f'Device {node.device} used by node {node.name} does not define the default libvirt VM {kw}',
+            category=log.MissingValue,
+            module='libvirt',
+            more_hints=f'Set defaults.devices.{node.device}.libvirt.node.{kw} or nodes.{node.name}.libvirt.{kw}')
+
     # libvirt does not support provider-specific netlab_config_mode parameter (it can work with 'netmiko),
     # but we have to make it work with "none" device to pass CI/CD integration tests.
     #
     ncm = devices.get_node_group_var(node,'netlab_config_mode',topology.defaults)
     if not ncm:
       return
+
+    # Backward compatibility: sh/cp_sh config modes were used to deploy netmiko-based scripts
+    # on Linux VMs. Replace them with netmiko and tell the user to fix their settings.
+    # TODO: remove in a future release
+    #
+    if ncm in ('sh','cp_sh') and \
+        'netmiko' in devices.get_device_features(node,topology.defaults).get('initial.config_mode',[]):
+      log.warning(
+        text=f'netlab_config_mode {ncm} is deprecated on {node.device} virtual machines, using netmiko instead',
+        more_hints=[
+          "Use 'netlab defaults --user --regex config_mode' to find user default settings that might need fixing",
+          "Set the netlab_config_mode to 'netmiko' to deploy configuration scripts with netmiko"],
+        module='libvirt',
+        once=True)
+      node.netlab_config_mode = ncm = 'netmiko'
 
     if ncm not in topology.defaults.providers.libvirt.config_mode and node.device != 'none':
       log.error(
@@ -221,12 +248,6 @@ class Libvirt(_Provider):
         log.error(f"Cannot disable STP on Linux bridge {linux_bridge}")
         continue
       log.print_verbose(f"... disabled STP on {linux_bridge}")
-
-  def deploy_node_config(self, node: Box, topology: Box, deploy_list: list) -> None:
-    cfg_files = node.get('_node_config',[])
-    if not cfg_files:                                          # No node files => no config to deploy here
-      return
-    configs.deploy_config(node,topology,deploy_list)
 
   def get_lab_status(self,collect_status: dict) -> Box:
     return stats.get_lab_status(collect_status)

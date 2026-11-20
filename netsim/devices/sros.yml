@@ -13,7 +13,7 @@ group_vars:
   ansible_user: admin
   ansible_ssh_pass: admin
   ansible_network_os: sros
-  ansible_connection: paramiko_ssh
+  ansible_connection: ssh
   netlab_console_connection: ssh
   netlab_ready: [ ansible ]
   sros_use_openconfig: False
@@ -85,6 +85,7 @@ features:
     ipv6: True
     passive: True
     unnumbered: True
+    timers: True
   routing:
     policy:
       set:
@@ -120,6 +121,7 @@ features:
 
 clab:
   image: vrnetlab/vr-sros
+  docs_caveats: caveats-sros
   build: https://containerlab.dev/manual/kinds/vr-sros/
   mtu: 1500
   node:

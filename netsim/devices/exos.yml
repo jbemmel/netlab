@@ -29,14 +29,21 @@ features:
     priority: true
     timers: true
   vlan:
+    caveats.bridging: caveats-exos
     model: switch
     svi_interface_name: vlan{vlan}
   gateway:
     protocol: [ vrrp ]
+    caveats.vrrp: caveats-exos
 
 libvirt:
   create_template: exos.xml.j2
   image: netlab/exos
+  node:
+    cpu: 1
+    memory: 512
+    nic_model_type: rtl8139
+  build: https://netlab.tools/labs/exos/
 clab:
   build: https://github.com/srl-labs/vrnetlab/tree/master/extreme/exos
   image: vrnetlab/extreme_exos

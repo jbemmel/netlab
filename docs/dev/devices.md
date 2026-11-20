@@ -116,7 +116,7 @@ Device parameters file can also include numerous *features*. The following featu
 * **features.initial.ipv6.use_ra** -- The device (when running as a host) listens to IPv6 RA messages to generate a default route
 * **features.initial.roles** -- The list of roles a device can have (default: `[ router ]`)
 * **features.initial.collect** (bool) -- netlab knows how to collect device configuration (default: False). When this feature is set, the device MUST have the `fetch-config` tasklist.
-* **features.initial.reload** (bool) -- netlab can reload the complete saved device configuration after starting the lab (default: False). Device configuration reload uses the `deploy-config` tasklist to merge the saved configuration with the startup configuration. Add a `reload-config` tasklist if your device requires a different approach (for example, **configure replace** command).
+* **features.initial.reload** (bool or `custom`) -- netlab can reload the complete saved device configuration after starting the lab (default: False). When set to `True`, the saved configuration is deployed like a custom configuration template (using the [device configuration method](platform-config-mode) or the `deploy-config` tasklist) and merged with the running configuration. Set it to `custom` if your device requires a different approach (for example, **configure replace** command) implemented in the `reload-config` tasklist; the saved configuration is then deployed with the **reload-config.ansible** playbook. Devices with the **features.netmiko.reload** feature use *netmiko* to reload the configuration regardless of this setting ([more details](dev-config-netmiko-reload)).
 * **features.initial.normalize** -- The device needs the configuration normalization step before the initial configuration is applied to any devices in the lab. Usually used for devices that act as simple bridges when started (Arista cEOS, Cisco IOLL2). When this feature is set, the device MUST have the `normalize` template.
 * **features.groups** -- The groups this device belongs to. You can set this feature to [`[ unprovisioned ]`](group-special-names) for devices that _netlab_ cannot configure yet. Don't forget to remove the **unprovisioned** group once you implement the Ansible [device configuration task list](dev-new-devices-configure).
 
@@ -237,6 +237,7 @@ plugin: [ kind ]
 
 If you'll use a Vagrant box to start the network device as a VM, you have to add a template that will generate the part of *Vagrantfile* (or *containerlab* configuration file) describing your virtual machine. See `netsim/templates/provider/...` directories for more details.
 
+(dev-devices-ansible-vars)=
 ## Using Your Device with Ansible Playbooks
 
 If you want to configure your device with **[netlab initial](../netlab/initial.md)** or **[netlab config](../netlab/config.md)**, or connect to your device with **[netlab connect](../netlab/connect.md)**, you'll have to add Ansible variables that will be copied into **group_vars** part of the Ansible inventory. Add those variables into the **group_vars** part of your device parameter file.
@@ -352,6 +353,7 @@ To add a device that is already supported by *netlab* to a new virtualization en
 * Get or build a Vagrant box or container image.
 * Add the [image/box/container name](device-box.md#adding-new-device-settings) for the new virtualization provider to device parameters file.
 * Add device-specific virtualization provider configuration template to provider-specific subdirectory of `netsim/templates/provider` directory. Use existing templates to figure out what exactly needs to be done.
+* When adding a *libvirt* device, specify the default number of virtual CPUs and VM memory (in MB) in the **libvirt.node.cpu** and **libvirt.node.memory** device parameters, and the NIC model (when it's not **virtio**) in the **libvirt.node.nic_model_type** device parameter. Do not set them in the device provisioning template.
 * You might need to add provider-specific device settings to device parameters file. See the above Arista cEOS examples for more details.
 * You might have to add provider-specific [device readiness checks](dev-ready) (for example, the container health check and the SSH server check for *vrnetlab* containers).
 

@@ -41,7 +41,7 @@ features:
     activate_af: true
     advertise: true
     bfd: true
-    import: [ connected, static, isis, ospf, vrf ]
+    import: [ connected, static, isis, ospf, ripv2, vrf ]
     local_as: true
     multihop: true
     password: true
@@ -49,14 +49,22 @@ features:
     vrf_local_as: true
   isis:
     circuit_type: true
+    import: [ bgp, ospf, connected, static, vrf, no_policy ]
   ospf:
     areas:
+      caveats.range: caveats-ocnos
       external_range: OcNOS template does not configure NSSA type-7 ranges
       external_filter: OcNOS template does not configure NSSA type-7 range suppression
     default: true
-    import: [ bgp, isis, connected, static, vrf, no_policy ]
+    import: [ bgp, isis, ripv2, connected, static, vrf, no_policy ]
     password: true
     priority: true
+    timers: true
+  ripv2:
+    ipv4: true
+    ipv6: true
+    passive: true
+    import: [ bgp, isis, ospf, connected, static, no_policy ]
     timers: true
   routing:
     policy:
@@ -83,15 +91,18 @@ features:
     supported_protocols: [ stp, rstp, mstp ]
     enable_per_port: true
   vlan:
+    caveats.bridging: caveats-ocnos
     model: switch
     svi_interface_name: "vlan1.{vlan}"
   vrf:
     ospfv2: true
     ospfv3: true
+    isis: true
     bgp: true
     leaking_caveats: True
 clab:
   image: vrnetlab/ipinfusion_ocnos:7.0.0-262
+  docs_caveats: caveats-ocnos
   build: https://containerlab.dev/manual/kinds/ipinfusion-ocnos/
   features:
     initial:

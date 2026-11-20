@@ -7,6 +7,7 @@ import argparse
 import concurrent.futures
 import re
 import sys
+import typing
 from pathlib import Path
 
 from box import Box
@@ -14,11 +15,12 @@ from box import Box
 from ... import devices as q_devices
 from ...augment import devices as a_devices
 from ...data import get_a_list
-from ...utils import log, netmiko
+from ...utils import log, netmiko, strings
 from .. import ansible, error_and_exit, is_dry_run
 from ..initial import deploy as i_deploy
 from ..initial import ready as i_ready
 from ..initial import utils as i_utils
+from .config import deploy_custom_config
 from .utils import create_node_files, get_ansible_args
 
 
@@ -83,33 +85,48 @@ def skip_nodes_without_configs(cfg_path: Path,nodeset: list) -> list:
 
 def prepare_devices(topology: Box,nodeset: list) -> None:
   """
-  Check that the devices are ready and normalize their configuration (when needed)
-  before trying to reload the config
+  Check that the devices are ready and prepare them for the config reload:
+
+  * Deploy the initial configuration (rendered with the 'netlab_initial_reload' flag set)
+    on devices with 'netlab_initial' set to 'always'. 'netlab initial' also normalizes the
+    configuration of these devices (when needed).
+  * Normalize the configuration on the other devices (when needed)
   """
   (ready_args,_) = i_utils.initial_config_parse(['--ready'])
   i_ready.run(topology,ready_args,rest=[],nodeset=nodeset)
 
-  (norm_args,_) = i_utils.initial_config_parse(['--normalize','--deploy','--skip-ready'])
-  i_deploy.run(topology,norm_args,rest=[],nodeset=nodeset)
+  defaults = topology.defaults
+  init_nodes = [ n_name for n_name in nodeset
+                   if a_devices.get_node_group_var(topology.nodes[n_name],'netlab_initial',defaults) == 'always' ]
+  norm_nodes = [ n_name for n_name in nodeset if n_name not in init_nodes ]
+
+  if norm_nodes:
+    (norm_args,_) = i_utils.initial_config_parse(['--normalize','--deploy','--skip-ready'])
+    i_deploy.run(topology,norm_args,rest=[],nodeset=norm_nodes)
+
+  if init_nodes:
+    for n_name in init_nodes:                         # Set "we're reloading configuration" flag
+      topology.nodes[n_name].netlab_initial_reload = True
+    (init_args,_) = i_utils.initial_config_parse(
+                      ['--initial','--skip-ready','--no-message','--limit',','.join(init_nodes)])
+    i_deploy.run(topology,init_args,rest=[],nodeset=init_nodes)
 
 def create_reload_configs(topology: Box,nodeset: list,args: argparse.Namespace,cfg_path: Path) -> None:
   """
   Prepare the environment for the "netlab initial" processing
 
-  * Set the "we're doing initial configuration for reload" node flag
   * Limit the custom template search path to the config directory
-  * Create initial- and custom config files
+  * Create custom config files
   * Change the node "config" parameter to request configuration reload
   """
   topology.defaults.paths.custom.dirs = [ str(cfg_path.parent) ]
   for n in nodeset:                                   # Change the node parameters for 'create_node_files'
     ndata = topology.nodes[n]
     n_provider = a_devices.get_provider(ndata,topology.defaults)
-    ndata.netlab_initial_reload = True                # Set "we're reloading configuration" flag
     ndata.netlab_config_mode = None                   # Fall back to Ansible config mode (we're using Ansible playbook to reload config)
     ndata.pop(f'{n_provider}.config_templates',None)  # And do not generate fancy container configuration files
 
-  create_node_files(topology,nodeset,args,str(cfg_path.name),initial=True,cfg_suffix='.cfg')
+  create_node_files(topology,nodeset,args,str(cfg_path.name),cfg_suffix='.cfg')
 
 def get_netmiko_nodes(nodeset: list, topology: Box, cfg_path: Path) -> dict:
   """
@@ -117,6 +134,8 @@ def get_netmiko_nodes(nodeset: list, topology: Box, cfg_path: Path) -> dict:
   """
   defaults = topology.defaults
   nm_nodes: dict = {}
+  if netmiko.NETMIKO_IS_MISSING:
+    return nm_nodes
 
   for n_name in nodeset:
     n_data = topology.nodes[n_name]
@@ -129,25 +148,52 @@ def get_netmiko_nodes(nodeset: list, topology: Box, cfg_path: Path) -> dict:
     if not nm_params:
       continue
 
+    cfg = features.get('netmiko.reload.configure',None)
+
     nm_nodes[n_name] = {
       'src': str(next(cfg_path.glob(f'{n_name}.*'))),
       'dst': features.get('netmiko.reload.config','replace-config'),
       'cmd': nm_cmd,
       'ok':  features.get('netmiko.reload.success',None),
-      'err': '|'.join(get_a_list(features.get('netmiko.error_regexp'))),
+      'err': '|'.join(get_a_list(features.get('netmiko.error_regexp',[]))),
       'ft':  features.get('netmiko.reload.file_transfer',False),
-      'cfg': features.get('netmiko.reload.configure',None),
+      'cfg': strings.eval_format(cfg,n_data) if isinstance(cfg,str) else cfg,
+      'rce': features.get('netmiko.execute',None) == 'rce',
+      'timeout': features.get('netmiko.reload.timeout',30),
       'params': nm_params }
+
+    if log.debug_active('netmiko'):
+      print(f'netmiko reload parameters for {n_name}: {nm_nodes[n_name]}')
 
   return nm_nodes
 
-def reload_with_netmiko(cfg_path: Path, nodeset: list, topology: Box) -> list:
-  if netmiko.NETMIKO_IS_MISSING:
-    return nodeset
-
-  nm_nodes = get_netmiko_nodes(nodeset,topology,cfg_path)
+def reload_with_netmiko(nm_nodes: dict, nodeset: list, topology: Box) -> list:
   if not nm_nodes:
     return nodeset
+
+  def netmiko_rce_replace(
+        conn: netmiko._netmiko.BaseConnection,
+        n_name: str,
+        nm_data: dict) -> typing.Optional[str]:
+    """
+    Execute the "replace config" command over a separate SSH (RCE) channel.
+    Returns the command printout, or None (after reporting an error) when the command failed
+    """
+    result = netmiko.execute(conn,n_name,nm_data['cmd'],timeout=nm_data['timeout'])
+    if result is None:                        # SSH error or timeout, already reported
+      return None
+
+    (output,errors,rc) = result
+    if rc == 0:
+      return output + errors
+
+    log.error(
+      f'Failed to replace configuration on {n_name} (exit code {rc})',
+      more_data=(output+errors).strip() or None,
+      module='netmiko',
+      category=log.ErrorAbort,
+      skip_header=True)
+    return None
 
   def netmiko_scp_replace(
         conn: netmiko._netmiko.BaseConnection,
@@ -155,7 +201,8 @@ def reload_with_netmiko(cfg_path: Path, nodeset: list, topology: Box) -> list:
         nm_data: dict) -> bool:
     conn.enable()
     if nm_data['cfg']:                        # Extra configuration required?
-      conn.send_config_set(nm_data['cfg'])
+      conn.send_config_set(nm_data['cfg'].split('\n'))
+      conn.set_base_prompt()
 
     if nm_data['ft']:                         # Use netmiko file_transfer function?
       status = netmiko.file_transfer(conn,n_name,nm_data['src'],nm_data['dst'])
@@ -164,8 +211,19 @@ def reload_with_netmiko(cfg_path: Path, nodeset: list, topology: Box) -> list:
     if not status:
       return False
 
-    # Execute the "replace config" command, check its results against known error pattern
-    result = conn.send_command(nm_data['cmd'])
+    # Execute the "replace config" command (as a remote command when possible),
+    # check its results against known error pattern
+    #
+    # We cannot respond to the sudo password prompt on a separate SSH channel; when netmiko
+    # used the sudo password to get a root shell, execute the command in that session
+    #
+    result: typing.Any
+    if nm_data['rce'] and not conn.secret:
+      result = netmiko_rce_replace(conn,n_name,nm_data)
+      if result is None:                      # Command failed, error already reported
+        return False
+    else:
+      result = conn.send_command(nm_data['cmd'],read_timeout=nm_data['timeout'])
     if isinstance(result,list):
       result = '\n'.join(result)
     if not isinstance(result,str):
@@ -223,6 +281,18 @@ def reload_with_netmiko(cfg_path: Path, nodeset: list, topology: Box) -> list:
 
   return [ n_name for n_name in nodeset if n_name not in nm_nodes ]
 
+def split_reload_nodes(topology: Box, nodeset: list) -> typing.Tuple[list,list]:
+  """
+  Split the nodeset into nodes that need the reload-config.ansible playbook (devices with
+  custom reload task lists have features.initial.reload set to 'custom') and nodes that can
+  have their saved configuration deployed as a custom configuration template
+  """
+  defaults = topology.defaults
+  pb_nodes = [ n_name for n_name in nodeset
+                 if a_devices.get_device_features(topology.nodes[n_name],defaults).get('initial.reload',None) == 'custom' ]
+  cfg_nodes = [ n_name for n_name in nodeset if n_name not in pb_nodes ]
+  return (pb_nodes,cfg_nodes)
+
 def run_reload_playbook(topology: Box,nodeset: list,cfg_path: Path,rest: list) -> None:
   """
   Run the reload-config.ansible playbook with modified path variables and an adjusted nodeset
@@ -241,10 +311,17 @@ def reload_node_configs(topology: Box,nodeset: list,args: argparse.Namespace, re
   nodeset = skip_nodes_without_configs(cfg_path,nodeset)
   prepare_devices(topology,nodeset)
 
-  create_reload_configs(topology,nodeset,args,cfg_path)
-  nodeset = reload_with_netmiko(cfg_path,nodeset,topology)
-  if nodeset:
-    run_reload_playbook(topology,nodeset,cfg_path,rest)
+  nm_nodes = get_netmiko_nodes(nodeset,topology,cfg_path)
+  nodeset = reload_with_netmiko(nm_nodes,nodeset,topology)
+
+  (pb_nodes,cfg_nodes) = split_reload_nodes(topology,nodeset)
+  if pb_nodes:
+    create_reload_configs(topology,pb_nodes,args,cfg_path)
+    run_reload_playbook(topology,pb_nodes,cfg_path,rest)
+
+  if cfg_nodes:                                       # Deploy saved configs as custom configs
+    args.template = str(cfg_path)                     # ... using absolute path to config directory
+    deploy_custom_config(topology,cfg_nodes,args,rest)
 
   if log.get_error_count():
     sys.exit(1)

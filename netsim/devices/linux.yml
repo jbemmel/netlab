@@ -20,19 +20,26 @@ features:
     passive: False
   netmiko:
     device_type: linux
+    config:
+      method: script                # Copy config scripts to the device and execute them
+      directory: /tmp
+      become: true
   routing:
     static: true
 libvirt:
   image: bento/ubuntu-24.04
+  node:
+    cpu: 1
+    memory: 1024
+  build_recipe: https://netlab.tools/labs/linux/    # Documentation only (the box is downloadable)
   create_image: netlab/linux
   create_template: frr.xml.j2
   create_iso: linux
   group_vars:
     netlab_linux_distro: ubuntu
-    netlab_config_path: /tmp/
   features:
     initial:
-      config_mode: [ cp_sh ]
+      config_mode: [ netmiko ]
     dhcp:
       client:
         ipv4: true
@@ -40,9 +47,10 @@ libvirt:
       server: true
       relay:
         ipv4: true
+      caveats.relay: linux-dhcp-relay
 group_vars:
   ansible_network_os: linux
-  ansible_connection: paramiko
+  ansible_connection: ssh
   ansible_user: vagrant
   ansible_ssh_pass: vagrant
   docker_shell: sh -il
@@ -50,6 +58,7 @@ group_vars:
   netlab_lldp_enable: False
   netlab_net_tools: False
 clab:
+  build_recipe: https://netlab.tools/labs/linux/    # Documentation only (the container is downloadable)
   node_config:
     initial: :ns
     lag: :ns
@@ -73,6 +82,7 @@ clab:
         ipv6: True
         transport_vrf: False
   image: python:3.13-alpine
+  docs_caveats: clab-linux
   mtu: 1500
   kmods:
   node:

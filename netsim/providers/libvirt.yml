@@ -3,7 +3,7 @@
 #
 description: Vagrant with libvirt/KVM
 config: Vagrantfile
-config_mode: [ netmiko, sh, cp_sh ]
+config_mode: [ netmiko ]
 start: vagrant up --provider libvirt
 stop: vagrant destroy -f
 probe:
@@ -37,6 +37,8 @@ attributes:
     uuid: str
     ports: list
     machine_type: str
+    cpu: int
+    memory: int
   link:
     permanent: bool
     public: { type: str, valid_values: [ bridge, vepa, passthrough, private ], true_value: bridge }
